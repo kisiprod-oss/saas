@@ -1,4 +1,4 @@
-import { EDITEUR } from "@/lib/editeur";
+import { avantImmatriculation, EDITEUR } from "@/lib/editeur";
 import { Article, PageLegale } from "@/components/page-legale";
 import { PLANS } from "@/lib/tarifs";
 import { fcfa } from "@/lib/format";
@@ -27,6 +27,22 @@ export default function PageCgu() {
           créé avec de fausses informations peut être fermé sans préavis.
         </p>
       </Article>
+
+      {avantImmatriculation() && (
+        <Article titre="2 bis. Phase gratuite">
+          <p>
+            Le service est actuellement en phase de mise au point, avec un nombre
+            limité d&apos;agences partenaires. <strong>Il est fourni gratuitement :
+            aucune somme n&apos;est due, et aucune facture n&apos;est émise.</strong>
+          </p>
+          <p>
+            Les tarifs présentés sur la page « Tarifs » sont donnés à titre
+            indicatif et n&apos;entreront en vigueur qu&apos;à l&apos;issue de cette
+            phase, après information préalable des utilisateurs et immatriculation
+            de la société éditrice.
+          </p>
+        </Article>
+      )}
 
       <Article titre="3. Formules et paiement">
         <ul className="ml-5 list-disc space-y-1.5">

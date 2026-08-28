@@ -166,6 +166,13 @@ Ouvrez `src/lib/editeur.ts` et remplacez toutes les valeurs commençant par
 Tant qu'il en reste une, un bandeau d'avertissement s'affiche en haut des
 pages légales — impossible de l'oublier.
 
+**Avant l'immatriculation de la société.** Le champ `statut` de
+`src/lib/editeur.ts` vaut `"personne_physique"` par défaut : les pages légales
+indiquent alors que le service est fourni **gratuitement** par une personne
+physique, sans NINEA ni RCCM, ce qui est cohérent. Basculez-le sur `"societe"`
+et renseignez NINEA et RCCM dès l'immatriculation obtenue — **avant la première
+facture.**
+
 **Déclaration CDP.** Vous stockez des numéros de pièce d'identité de
 locataires. L'article 18 de la loi n° 2008-12 impose de déclarer le traitement
 à la Commission de protection des données personnelles **avant** sa mise en

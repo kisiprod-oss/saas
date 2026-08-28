@@ -1,4 +1,4 @@
-import { EDITEUR } from "@/lib/editeur";
+import { avantImmatriculation, EDITEUR } from "@/lib/editeur";
 import { Article, PageLegale } from "@/components/page-legale";
 
 export const metadata = { title: "Mentions légales" };
@@ -10,12 +10,12 @@ export default function PageMentions() {
         <dl className="divide-y divide-slate-100 rounded-lg border border-slate-200">
           {[
             ["Service", EDITEUR.service],
-            ["Raison sociale", EDITEUR.raisonSociale],
+            [avantImmatriculation() ? "Éditeur" : "Raison sociale", EDITEUR.raisonSociale],
             ["Forme juridique", EDITEUR.formeJuridique],
             ["Responsable de la publication", EDITEUR.responsable],
-            ["NINEA", EDITEUR.ninea],
-            ["RCCM", EDITEUR.rccm],
-            ["Siège", `${EDITEUR.adresse}, ${EDITEUR.ville}, ${EDITEUR.pays}`],
+            ...(EDITEUR.ninea ? [["NINEA", EDITEUR.ninea] as const] : []),
+            ...(EDITEUR.rccm ? [["RCCM", EDITEUR.rccm] as const] : []),
+            [avantImmatriculation() ? "Adresse" : "Siège", `${EDITEUR.adresse}, ${EDITEUR.ville}, ${EDITEUR.pays}`],
             ["Téléphone", EDITEUR.telephone],
             ["Adresse e-mail", EDITEUR.email],
           ].map(([k, v]) => (
@@ -26,6 +26,21 @@ export default function PageMentions() {
           ))}
         </dl>
       </Article>
+
+      {avantImmatriculation() && (
+        <Article titre="Situation de l'éditeur">
+          <p>
+            Le service est actuellement édité par une personne physique, dont
+            l&apos;immatriculation au registre du commerce est en cours.
+            <strong> Aucune prestation n&apos;est facturée à ce jour :</strong> le
+            service est mis à disposition gratuitement, le temps de cette phase.
+          </p>
+          <p>
+            Les mentions d&apos;immatriculation (NINEA, RCCM) seront ajoutées ici dès
+            leur obtention, avant toute facturation.
+          </p>
+        </Article>
+      )}
 
       <Article titre="Hébergement">
         <p>Le service est hébergé par : {EDITEUR.hebergeur}.</p>
