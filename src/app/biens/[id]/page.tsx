@@ -91,7 +91,7 @@ export default async function PageBienPublic({
             <div className="mt-6 flex flex-wrap gap-3">
               {[
                 bien.chambres > 0 && { icone: <IconeLit className="h-5 w-5" />, valeur: `${bien.chambres}`, label: bien.chambres > 1 ? "chambres" : "chambre" },
-                bien.salles_bain > 0 && { icone: <IconeDouche className="h-5 w-5" />, valeur: `${bien.salles_bain}`, label: "salle de bain" },
+                bien.salles_bain > 0 && { icone: <IconeDouche className="h-5 w-5" />, valeur: `${bien.salles_bain}`, label: bien.salles_bain > 1 ? "salles de bain" : "salle de bain" },
                 bien.surface && { icone: <IconeSurface className="h-5 w-5" />, valeur: `${bien.surface}`, label: "m² habitables" },
               ].filter(Boolean).map((c, i) => {
                 const carte = c as { icone: React.ReactNode; valeur: string; label: string };
