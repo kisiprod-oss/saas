@@ -1,0 +1,100 @@
+@import "tailwindcss";
+
+/* ================================================================
+   Palette : vert "teranga" (drapeau senegalais) + sable et ocre.
+   ================================================================ */
+@theme {
+  --color-brand-50:  #eefbf4;
+  --color-brand-100: #d5f5e3;
+  --color-brand-200: #aeeaca;
+  --color-brand-300: #78d8ab;
+  --color-brand-400: #41bd87;
+  --color-brand-500: #1ea16c;
+  --color-brand-600: #0f8156;
+  --color-brand-700: #0c6747;
+  --color-brand-800: #0c523a;
+  --color-brand-900: #0a4331;
+  --color-brand-950: #04261c;
+
+  --color-sable-50:  #fbf8f1;
+  --color-sable-100: #f4ecdb;
+  --color-sable-200: #e8d8b7;
+  --color-sable-300: #d9bd89;
+  --color-sable-400: #cb9f5d;
+  --color-sable-500: #c1873f;
+  --color-sable-600: #a96e34;
+  --color-sable-700: #8c542d;
+
+  --font-sans: "Inter", ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+}
+
+html { -webkit-text-size-adjust: 100%; }
+
+body {
+  background-color: #f7f8f7;
+  color: #16211c;
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ---------------- Composants reutilisables ----------------
+   Places dans la couche `components` pour que les utilitaires
+   Tailwind (w-auto, px-3, text-xs...) restent prioritaires.     */
+@layer components {
+  .carte {
+    @apply rounded-xl border border-slate-200 bg-white shadow-sm;
+  }
+
+  /* Base commune a tous les boutons, puis une variante de couleur par usage. */
+  .btn,
+  .btn-primaire,
+  .btn-secondaire,
+  .btn-danger,
+  .btn-sable {
+    @apply inline-flex items-center justify-center gap-2 rounded-lg px-4 py-2.5
+           text-sm font-semibold transition-colors cursor-pointer
+           disabled:cursor-not-allowed disabled:opacity-50;
+  }
+  .btn-primaire   { @apply bg-brand-600 text-white hover:bg-brand-700; }
+  .btn-secondaire { @apply border border-slate-300 bg-white text-slate-700 hover:bg-slate-50; }
+  .btn-danger     { @apply border border-rose-200 bg-white text-rose-700 hover:bg-rose-50; }
+  .btn-sable      { @apply bg-sable-500 text-white hover:bg-sable-600; }
+
+  .champ {
+    @apply w-full rounded-lg border border-slate-300 bg-white px-3 py-2.5 text-sm text-slate-900
+           placeholder:text-slate-400
+           focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-500/30;
+  }
+
+  .etiquette {
+    @apply mb-1.5 block text-sm font-medium text-slate-700;
+  }
+
+  .badge {
+    @apply inline-flex items-center whitespace-nowrap rounded-full px-2.5 py-0.5
+           text-xs font-semibold ring-1 ring-inset;
+  }
+
+  .lien-nav {
+    @apply flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium
+           text-slate-600 transition-colors hover:bg-brand-50 hover:text-brand-800;
+  }
+  .lien-nav-actif {
+    @apply bg-brand-600 text-white hover:bg-brand-600 hover:text-white;
+  }
+
+  .tableau          { @apply w-full text-left text-sm; }
+  .tableau thead th {
+    @apply whitespace-nowrap bg-slate-50 px-4 py-3 text-xs font-semibold uppercase
+           tracking-wide text-slate-500;
+  }
+  .tableau tbody td { @apply border-t border-slate-100 px-4 py-3 align-middle text-slate-700; }
+  .tableau tbody tr:hover { @apply bg-slate-50/70; }
+}
+
+/* ---------------- Impression des factures ---------------- */
+@media print {
+  .sans-impression { display: none !important; }
+  body { background: #fff; }
+  @page { size: A4; margin: 14mm; }
+}
