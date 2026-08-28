@@ -235,6 +235,44 @@ demanderait un abonnement WhatsApp Business API.
 
 ---
 
+## 9 ter. Donner un accès à votre locataire
+
+Menu **« Locataires »** → ouvrez la fiche → encadré **« Espace locataire »**
+à droite → **« Activer l'accès »**.
+
+Un mot de passe est généré et affiché **une seule fois**. Un bouton
+**« Envoyer par WhatsApp »** prépare le message avec le numéro de téléphone et
+le mot de passe. Envoyez-le tout de suite : après, il faudra en générer un
+nouveau.
+
+### Ce que votre locataire peut faire
+
+Il se connecte sur **votre-site.com/espace-locataire** avec **son numéro de
+téléphone** et ce mot de passe. Il voit alors :
+
+- son **solde restant dû**, en rouge s'il doit quelque chose ;
+- **toutes ses quittances**, qu'il peut imprimer ou enregistrer en PDF ;
+- un bouton pour **signaler un règlement** après un paiement Orange Money,
+  Wave ou en espèces, avec la référence de transaction.
+
+### Le point important : rien n'est réglé sans votre accord
+
+Quand un locataire signale un paiement, **le solde ne bouge pas**. Le règlement
+apparaît en attente, surligné en orange, avec une pastille sur le menu
+« Paiements ».
+
+Vous vérifiez auprès de votre compte Orange Money ou Wave, puis vous cliquez
+sur **Confirmer** — le solde se met alors à jour — ou sur **Rejeter** si la
+somme n'est jamais arrivée.
+
+> ⚠️ Ne confirmez jamais sans avoir vérifié l'arrivée réelle de l'argent.
+> Le locataire déclare ce qu'il veut : c'est votre vérification qui fait foi.
+
+**Pour couper l'accès** (fin de bail, litige) : bouton **« Couper »**. Le
+locataire est déconnecté immédiatement et ne peut plus se reconnecter.
+
+---
+
 ## 10. Traiter les demandes de visite
 
 Menu **« Demandes »**. Le chiffre rouge dans le menu indique les demandes
@@ -284,6 +322,14 @@ formule depuis le même encadré.
 **Que se passe-t-il si j'atteins la limite ?**
 Le logiciel vous prévient au moment d'ajouter un bien de trop et vous indique la
 formule adaptée. Rien n'est perdu ni bloqué par ailleurs.
+
+**Mon locataire a perdu son mot de passe.**
+Ouvrez sa fiche, cliquez sur **« Réinitialiser le mot de passe »**. Un nouveau
+mot de passe est généré et l'ancien cesse de fonctionner immédiatement.
+
+**Un locataire a déclaré un paiement que je n'ai jamais reçu.**
+Cliquez sur **Rejeter**. La déclaration disparaît et n'a jamais compté dans son
+solde. Rien n'est perdu de votre côté.
 
 **Comment repartir de zéro ?**
 Lancez `npm run reset` puis `npm run seed`.

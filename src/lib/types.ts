@@ -40,6 +40,8 @@ export type Locataire = {
   garant_nom: string | null;
   garant_telephone: string | null;
   notes: string | null;
+  mot_de_passe_hash: string | null;
+  acces_actif: number;
   cree_le: string;
 };
 
@@ -112,6 +114,8 @@ export type Paiement = {
   mode: string;
   reference: string | null;
   note: string | null;
+  declare_par_locataire: number;
+  confirme: number;
   cree_le: string;
 };
 

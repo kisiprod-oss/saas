@@ -102,9 +102,21 @@ CREATE TABLE IF NOT EXISTS locataires (
   garant_nom        TEXT,
   garant_telephone  TEXT,
   notes             TEXT,
+  -- Acces a l'espace locataire (facultatif : active par l'agence)
+  mot_de_passe_hash TEXT,
+  acces_actif       INTEGER NOT NULL DEFAULT 0,
   cree_le           TEXT NOT NULL DEFAULT (datetime('now'))
 );
 CREATE INDEX IF NOT EXISTS idx_locataires_agence ON locataires(agence_id);
+
+-- ---------- Sessions de l'espace locataire ----------
+CREATE TABLE IF NOT EXISTS sessions_locataires (
+  token          TEXT PRIMARY KEY,
+  locataire_id   INTEGER NOT NULL REFERENCES locataires(id) ON DELETE CASCADE,
+  expire_le      TEXT NOT NULL,
+  cree_le        TEXT NOT NULL DEFAULT (datetime('now'))
+);
+CREATE INDEX IF NOT EXISTS idx_sessions_loc_locataire ON sessions_locataires(locataire_id);
 
 -- ---------- Contrats de bail ----------
 CREATE TABLE IF NOT EXISTS contrats (

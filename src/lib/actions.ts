@@ -10,6 +10,10 @@ import {
   reinitialiserTentatives, tropDeTentatives, verifierMotDePasse,
 } from "./auth";
 import { adresseDuSite, envoyerEmail } from "./email";
+import {
+  activerAccesLocataire, desactiverAccesLocataire, exigerSessionLocataire,
+  fermerSessionLocataire, ouvrirSessionLocataire, verifierIdentifiantsLocataire,
+} from "./auth-locataire";
 import { genererFacturesDuMois, numeroFactureSuivant, referenceSuivante } from "./requetes";
 import { aujourdhui } from "./format";
 import { enregistrerPhotos, supprimerPhoto } from "./photos";
@@ -679,4 +683,124 @@ export async function actionReinitialiser(fd: FormData) {
 
   appliquerNouveauMotDePasse(token, motDePasse);
   redirect("/connexion?reinitialise=1");
+}
+
+// ---------------------------------------------------------- espace locataire
+
+export async function actionConnexionLocataire(fd: FormData) {
+  const telephone = txt(fd, "telephone");
+  const motDePasse = String(fd.get("motDePasse") ?? "");
+  const origine = await adresseIp();
+  const cle = `loc:${telephone.replace(/\D/g, "")}`;
+
+  if (tropDeTentatives(cle) || (origine !== null && tropDeTentatives(origine))) {
+    erreur(
+      "/espace-locataire/connexion",
+      `Trop de tentatives de connexion. Réessayez dans ${MINUTES_BLOCAGE} minutes.`,
+    );
+  }
+
+  const resultat = verifierIdentifiantsLocataire(telephone, motDePasse);
+  if (!resultat.ok) {
+    noterTentative(cle, false);
+    if (origine !== null) noterTentative(origine, false);
+    erreur("/espace-locataire/connexion", resultat.erreur);
+  }
+
+  reinitialiserTentatives(cle);
+  if (origine !== null) reinitialiserTentatives(origine);
+  await ouvrirSessionLocataire(resultat.id);
+  redirect("/espace-locataire");
+}
+
+export async function actionDeconnexionLocataire() {
+  await fermerSessionLocataire();
+  redirect("/espace-locataire/connexion");
+}
+
+/** Le locataire signale un règlement effectué : il reste en attente jusqu'à vérification par l'agence. */
+export async function actionDeclarerPaiement(fd: FormData) {
+  const locataire = await exigerSessionLocataire();
+  const factureId = entier(fd, "facture_id");
+  const somme = montant(fd, "montant");
+  const retour = `/espace-locataire/factures/${factureId}`;
+
+  const facture = un<{ id: number; agence_id: number; contrat_id: number }>(
+    `SELECT f.id, f.agence_id, f.contrat_id FROM factures f
+      JOIN contrats c ON c.id = f.contrat_id
+     WHERE f.id = ? AND c.locataire_id = ?`,
+    factureId, locataire.id,
+  );
+  if (!facture) erreur("/espace-locataire", "Facture introuvable.");
+  if (somme <= 0) erreur(retour, "Le montant doit être supérieur à zéro.");
+
+  ecrire(
+    `INSERT INTO paiements
+       (agence_id, facture_id, montant, date_paiement, mode, reference, note, declare_par_locataire, confirme)
+     VALUES (?, ?, ?, ?, ?, ?, ?, 1, 0)`,
+    facture.agence_id, factureId, somme,
+    txt(fd, "date_paiement") || aujourdhui(),
+    txt(fd, "mode") || "orange_money",
+    vide(txt(fd, "reference")), vide(txt(fd, "note")),
+  );
+
+  revalidatePath("/espace-locataire");
+  revalidatePath("/dashboard/factures");
+  revalidatePath("/dashboard/paiements");
+  redirect(`${retour}?declare=1`);
+}
+
+/** L'agence vérifie un paiement déclaré par un locataire : il compte désormais dans le solde réglé. */
+export async function actionConfirmerPaiement(fd: FormData) {
+  const { agence } = await exigerSession();
+  const id = entier(fd, "id");
+  ecrire(
+    "UPDATE paiements SET confirme = 1 WHERE id = ? AND agence_id = ? AND declare_par_locataire = 1",
+    id, agence.id,
+  );
+  revalidatePath("/dashboard/factures");
+  revalidatePath("/dashboard/paiements");
+  redirect(`/dashboard/factures/${entier(fd, "facture_id")}?ok=1`);
+}
+
+/** L'agence rejette une déclaration incorrecte ou frauduleuse : le paiement disparaît sans affecter le solde. */
+export async function actionRejeterPaiement(fd: FormData) {
+  const { agence } = await exigerSession();
+  const id = entier(fd, "id");
+  ecrire(
+    "DELETE FROM paiements WHERE id = ? AND agence_id = ? AND declare_par_locataire = 1",
+    id, agence.id,
+  );
+  revalidatePath("/dashboard/factures");
+  revalidatePath("/dashboard/paiements");
+  redirect(`/dashboard/factures/${entier(fd, "facture_id")}?rejete=1`);
+}
+
+/** Active ou réinitialise l'accès au portail : un mot de passe lisible est généré, à communiquer au locataire. */
+export async function actionActiverAccesLocataire(fd: FormData) {
+  const { agence } = await exigerSession();
+  const locataireId = entier(fd, "id");
+
+  const locataire = un<{ id: number }>(
+    "SELECT id FROM locataires WHERE id = ? AND agence_id = ?", locataireId, agence.id,
+  );
+  if (!locataire) erreur("/dashboard/locataires", "Locataire introuvable.");
+
+  const motDePasse = activerAccesLocataire(locataireId);
+  revalidatePath(`/dashboard/locataires/${locataireId}`);
+  redirect(`/dashboard/locataires/${locataireId}?acces=${motDePasse}`);
+}
+
+export async function actionDesactiverAccesLocataire(fd: FormData) {
+  const { agence } = await exigerSession();
+  const locataireId = entier(fd, "id");
+
+  const locataire = un<{ id: number }>(
+    "SELECT id FROM locataires WHERE id = ? AND agence_id = ?", locataireId, agence.id,
+  );
+  if (!locataire) erreur("/dashboard/locataires", "Locataire introuvable.");
+
+  desactiverAccesLocataire(locataireId);
+  revalidatePath(`/dashboard/locataires/${locataireId}`);
+  redirect(`/dashboard/locataires/${locataireId}?ok=1`);
 }

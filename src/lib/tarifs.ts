@@ -54,6 +54,7 @@ export const PLANS: Plan[] = [
       "10 biens",
       "Photos prises depuis le téléphone",
       "Relances WhatsApp des impayés",
+      "Espace locataire : quittances et déclaration des paiements",
       "Suivi des paiements Orange Money et Wave",
       "Téléchargement de vos données à tout moment",
       "Tout ce que contient la formule Découverte",

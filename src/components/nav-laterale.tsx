@@ -20,8 +20,8 @@ const LIENS = [
 ];
 
 export function NavLaterale({
-  nouvellesDemandes, aRelancer,
-}: { nouvellesDemandes: number; aRelancer: number }) {
+  nouvellesDemandes, aRelancer, paiementsEnAttente,
+}: { nouvellesDemandes: number; aRelancer: number; paiementsEnAttente: number }) {
   const chemin = usePathname();
 
   const estActif = (href: string) =>
@@ -45,6 +45,11 @@ export function NavLaterale({
           {href === "/dashboard/relances" && aRelancer > 0 && (
             <span className="ml-auto rounded-full bg-rose-500 px-2 py-0.5 text-xs font-bold text-white">
               {aRelancer}
+            </span>
+          )}
+          {href === "/dashboard/paiements" && paiementsEnAttente > 0 && (
+            <span className="ml-auto rounded-full bg-amber-500 px-2 py-0.5 text-xs font-bold text-white">
+              {paiementsEnAttente}
             </span>
           )}
         </Link>

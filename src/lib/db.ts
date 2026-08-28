@@ -43,6 +43,10 @@ function ouvrirBase(): Database.Database {
 function migrer(base: Database.Database) {
   const colonnes = [
     ["agences", "plan", "TEXT NOT NULL DEFAULT 'decouverte'"],
+    ["locataires", "mot_de_passe_hash", "TEXT"],
+    ["locataires", "acces_actif", "INTEGER NOT NULL DEFAULT 0"],
+    ["paiements", "declare_par_locataire", "INTEGER NOT NULL DEFAULT 0"],
+    ["paiements", "confirme", "INTEGER NOT NULL DEFAULT 1"],
     ["agences", "modele_rappel", "TEXT"],
     ["agences", "modele_relance", "TEXT"],
     ["agences", "modele_mise_en_demeure", "TEXT"],

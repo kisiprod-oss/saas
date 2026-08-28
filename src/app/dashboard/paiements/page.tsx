@@ -1,9 +1,10 @@
 import Link from "next/link";
 import { exigerSession } from "@/lib/auth";
-import { listerPaiements } from "@/lib/requetes";
+import { listerPaiements, listerPaiementsEnAttente } from "@/lib/requetes";
 import { dateFr, fcfa, moisCourant, periodeLisible } from "@/lib/format";
 import { libelle, MODES_PAIEMENT } from "@/lib/constantes";
-import { Carte, EnTetePage, EtatVide, MessagesUrl } from "@/components/ui";
+import { Alerte, Carte, EnTetePage, EtatVide, MessagesUrl } from "@/components/ui";
+import { actionConfirmerPaiement, actionRejeterPaiement } from "@/lib/actions";
 
 export const metadata = { title: "Paiements" };
 export const dynamic = "force-dynamic";
@@ -23,6 +24,7 @@ export default async function PagePaiements({ searchParams }: { searchParams: Pr
   const { agence } = await exigerSession();
   const params = await searchParams;
   const paiements = listerPaiements(agence.id);
+  const enAttente = listerPaiementsEnAttente(agence.id);
 
   const mois = moisCourant();
   const duMois = paiements.filter((p) => p.date_paiement.slice(0, 7) === mois);
@@ -43,6 +45,63 @@ export default async function PagePaiements({ searchParams }: { searchParams: Pr
       />
 
       <MessagesUrl params={params} />
+
+      {enAttente.length > 0 && (
+        <div className="mb-6">
+          <Alerte type="info">
+            {enAttente.length} règlement(s) déclaré(s) par des locataires attendent votre vérification.
+          </Alerte>
+          <Carte className="mt-3 overflow-hidden">
+            <div className="overflow-x-auto">
+              <table className="tableau">
+                <thead>
+                  <tr>
+                    <th>Date déclarée</th><th>Locataire</th><th>Bien</th><th>Facture</th>
+                    <th>Mode</th><th className="text-right">Montant</th><th></th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {enAttente.map((p) => (
+                    <tr key={p.id} className="bg-amber-50/60">
+                      <td className="whitespace-nowrap">{dateFr(p.date_paiement)}</td>
+                      <td className="whitespace-nowrap font-medium text-slate-900">
+                        {p.locataire_prenom} {p.locataire_nom}
+                      </td>
+                      <td className="max-w-[12rem] truncate">{p.bien_titre}</td>
+                      <td className="whitespace-nowrap">
+                        <Link href={`/dashboard/factures/${p.facture_id}`} className="font-medium text-brand-700 hover:underline">
+                          {p.facture_numero}
+                        </Link>
+                        <span className="ml-1 text-xs text-slate-400">{periodeLisible(p.periode)}</span>
+                      </td>
+                      <td className="whitespace-nowrap">{libelle(MODES_PAIEMENT, p.mode)}</td>
+                      <td className="whitespace-nowrap text-right font-semibold text-slate-900">{fcfa(p.montant)}</td>
+                      <td className="whitespace-nowrap text-right">
+                        <div className="flex justify-end gap-2">
+                          <form action={actionConfirmerPaiement}>
+                            <input type="hidden" name="id" value={p.id} />
+                            <input type="hidden" name="facture_id" value={p.facture_id} />
+                            <button type="submit" className="text-xs font-semibold text-brand-700 hover:underline">
+                              Confirmer
+                            </button>
+                          </form>
+                          <form action={actionRejeterPaiement}>
+                            <input type="hidden" name="id" value={p.id} />
+                            <input type="hidden" name="facture_id" value={p.facture_id} />
+                            <button type="submit" className="text-xs font-semibold text-rose-600 hover:underline">
+                              Rejeter
+                            </button>
+                          </form>
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </Carte>
+        </div>
+      )}
 
       <div className="mb-6 grid gap-4 sm:grid-cols-3">
         <Carte className="p-5">

@@ -51,6 +51,7 @@ export function MessagesUrl({ params }: { params: Record<string, string | string
   const genere = lire("genere");
   const avertissement = lire("avertissement");
   const relances = lire("relances");
+  const rejete = lire("rejete");
 
   return (
     <>
@@ -64,6 +65,7 @@ export function MessagesUrl({ params }: { params: Record<string, string | string
           {relances === "1" ? "1 relance enregistrée." : `${relances} relances enregistrées.`}
         </Alerte>
       )}
+      {rejete && <Alerte type="info">La déclaration de paiement a été rejetée.</Alerte>}
       {genere !== undefined && (
         <Alerte type={Number(genere) > 0 ? "succes" : "info"}>
           {Number(genere) > 0

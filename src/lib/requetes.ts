@@ -32,7 +32,7 @@ const SELECT_FACTURE = `
     JOIN contrats   c ON c.id = f.contrat_id
     JOIN locataires l ON l.id = c.locataire_id
     JOIN biens      b ON b.id = c.bien_id
-    LEFT JOIN (SELECT facture_id, SUM(montant) AS paye FROM paiements GROUP BY facture_id) p
+    LEFT JOIN (SELECT facture_id, SUM(montant) AS paye FROM paiements WHERE confirme = 1 GROUP BY facture_id) p
            ON p.facture_id = f.id
 `;
 
@@ -148,7 +148,7 @@ export function listerContrats(agenceId: number, statut?: string) {
             COALESCE((
               SELECT SUM(f.montant_total) - COALESCE(SUM(pp.paye), 0)
                 FROM factures f
-                LEFT JOIN (SELECT facture_id, SUM(montant) AS paye FROM paiements GROUP BY facture_id) pp
+                LEFT JOIN (SELECT facture_id, SUM(montant) AS paye FROM paiements WHERE confirme = 1 GROUP BY facture_id) pp
                        ON pp.facture_id = f.id
                WHERE f.contrat_id = c.id AND f.statut != 'annulee'
             ), 0) AS impayes
@@ -225,10 +225,50 @@ export function listerPaiements(agenceId: number, limite = 200) {
        JOIN contrats   c ON c.id = f.contrat_id
        JOIN locataires l ON l.id = c.locataire_id
        JOIN biens      b ON b.id = c.bien_id
-      WHERE p.agence_id = ?
+      WHERE p.agence_id = ? AND p.confirme = 1
       ORDER BY p.date_paiement DESC, p.id DESC
       LIMIT ?`,
     agenceId, limite,
+  );
+}
+
+/** Paiements déclarés par un locataire depuis son espace, en attente de vérification. */
+export function listerPaiementsEnAttente(agenceId: number) {
+  return tous<Paiement & {
+    facture_numero: string; periode: string;
+    locataire_prenom: string; locataire_nom: string; bien_titre: string;
+  }>(
+    `SELECT p.*, f.numero AS facture_numero, f.periode,
+            l.prenom AS locataire_prenom, l.nom AS locataire_nom, b.titre AS bien_titre
+       FROM paiements p
+       JOIN factures   f ON f.id = p.facture_id
+       JOIN contrats   c ON c.id = f.contrat_id
+       JOIN locataires l ON l.id = c.locataire_id
+       JOIN biens      b ON b.id = c.bien_id
+      WHERE p.agence_id = ? AND p.confirme = 0
+      ORDER BY p.cree_le ASC`,
+    agenceId,
+  );
+}
+
+export function compterPaiementsEnAttente(agenceId: number): number {
+  const r = un<{ n: number }>(
+    "SELECT COUNT(*) AS n FROM paiements WHERE agence_id = ? AND confirme = 0",
+    agenceId,
+  );
+  return r?.n ?? 0;
+}
+
+/** Les paiements que ce locataire a déclarés et qui attendent une vérification. */
+export function paiementsEnAttenteLocataire(locataireId: number) {
+  return tous<Paiement & { facture_numero: string; periode: string }>(
+    `SELECT p.*, f.numero AS facture_numero, f.periode
+       FROM paiements p
+       JOIN factures f ON f.id = p.facture_id
+       JOIN contrats c ON c.id = f.contrat_id
+      WHERE c.locataire_id = ? AND p.confirme = 0
+      ORDER BY p.cree_le DESC`,
+    locataireId,
   );
 }
 
@@ -308,7 +348,7 @@ export function statistiques(agenceId: number): Statistiques {
 
   const encaisse = un<{ total: number }>(
     `SELECT COALESCE(SUM(montant), 0) AS total
-       FROM paiements WHERE agence_id = ? AND strftime('%Y-%m', date_paiement) = ?`,
+       FROM paiements WHERE agence_id = ? AND confirme = 1 AND strftime('%Y-%m', date_paiement) = ?`,
     agenceId, periode,
   );
 
@@ -316,7 +356,7 @@ export function statistiques(agenceId: number): Statistiques {
     `SELECT COALESCE(SUM(f.montant_total - COALESCE(p.paye, 0)), 0) AS total,
             COUNT(*) AS nb
        FROM factures f
-       LEFT JOIN (SELECT facture_id, SUM(montant) AS paye FROM paiements GROUP BY facture_id) p
+       LEFT JOIN (SELECT facture_id, SUM(montant) AS paye FROM paiements WHERE confirme = 1 GROUP BY facture_id) p
               ON p.facture_id = f.id
       WHERE f.agence_id = ? AND f.statut != 'annulee'
         AND f.montant_total > COALESCE(p.paye, 0)
@@ -341,7 +381,7 @@ export function statistiques(agenceId: number): Statistiques {
     );
     const e = un<{ t: number }>(
       `SELECT COALESCE(SUM(montant), 0) AS t FROM paiements
-        WHERE agence_id = ? AND strftime('%Y-%m', date_paiement) = ?`,
+        WHERE agence_id = ? AND confirme = 1 AND strftime('%Y-%m', date_paiement) = ?`,
       agenceId, p,
     );
     historique.push({ periode: p, attendu: a?.t ?? 0, encaisse: e?.t ?? 0 });
@@ -372,7 +412,7 @@ export function statistiques(agenceId: number): Statistiques {
        JOIN contrats   c ON c.id = f.contrat_id
        JOIN locataires l ON l.id = c.locataire_id
        JOIN biens      b ON b.id = c.bien_id
-       LEFT JOIN (SELECT facture_id, SUM(montant) AS paye FROM paiements GROUP BY facture_id) p
+       LEFT JOIN (SELECT facture_id, SUM(montant) AS paye FROM paiements WHERE confirme = 1 GROUP BY facture_id) p
               ON p.facture_id = f.id
       WHERE f.agence_id = ? AND f.statut != 'annulee'
         AND f.montant_total > COALESCE(p.paye, 0)
@@ -401,6 +441,40 @@ export function statistiques(agenceId: number): Statistiques {
     prochainesEcheances,
     topImpayes,
   };
+}
+
+// ---------------------------------------------------------- Espace locataire
+
+export type ContratLocataire = ContratDetaille & { agence_nom: string };
+
+/** Le bail actif du locataire connecté, avec le nom de son agence. */
+export function contratActifLocataire(locataireId: number) {
+  return un<ContratLocataire>(
+    `SELECT c.*,
+            b.titre AS bien_titre, b.reference AS bien_reference,
+            b.quartier AS bien_quartier, b.ville AS bien_ville,
+            l.prenom AS locataire_prenom, l.nom AS locataire_nom,
+            l.telephone AS locataire_telephone,
+            a.nom AS agence_nom
+       FROM contrats c
+       JOIN biens      b ON b.id = c.bien_id
+       JOIN locataires l ON l.id = c.locataire_id
+       JOIN agences    a ON a.id = c.agence_id
+      WHERE c.locataire_id = ? AND c.statut = 'actif'
+      ORDER BY c.date_debut DESC
+      LIMIT 1`,
+    locataireId,
+  );
+}
+
+/** Toutes les factures du locataire, tous baux confondus (actif ou passés). */
+export function listerFacturesLocataire(locataireId: number) {
+  return tous<FactureDetaillee>(
+    `${SELECT_FACTURE}
+      WHERE c.locataire_id = ? AND f.statut != 'annulee'
+      ORDER BY f.periode DESC`,
+    locataireId,
+  );
 }
 
 // --------------------------------------------------------------- Relances
@@ -455,7 +529,7 @@ export function listerRelances(agenceId: number): LigneRelance[] {
        JOIN contrats   c ON c.id = f.contrat_id
        JOIN locataires l ON l.id = c.locataire_id
        JOIN biens      b ON b.id = c.bien_id
-       LEFT JOIN (SELECT facture_id, SUM(montant) AS paye FROM paiements GROUP BY facture_id) p
+       LEFT JOIN (SELECT facture_id, SUM(montant) AS paye FROM paiements WHERE confirme = 1 GROUP BY facture_id) p
               ON p.facture_id = f.id
        LEFT JOIN (SELECT facture_id, COUNT(*) AS total FROM relances GROUP BY facture_id) nb
               ON nb.facture_id = f.id

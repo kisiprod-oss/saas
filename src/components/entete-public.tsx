@@ -25,6 +25,9 @@ export function EntetePublic() {
           <Link href="/tarifs" className="hidden rounded-lg px-3 py-2 text-sm font-medium text-slate-600 hover:text-brand-700 sm:block">
             Tarifs
           </Link>
+          <Link href="/espace-locataire/connexion" className="hidden rounded-lg px-3 py-2 text-sm font-medium text-slate-600 hover:text-brand-700 sm:block">
+            Espace locataire
+          </Link>
           <Link href="/connexion" className="btn-secondaire">Espace agence</Link>
           <Link href="/inscription" className="btn-primaire hidden sm:inline-flex">Créer mon agence</Link>
         </nav>
@@ -51,6 +54,7 @@ export function PiedPublic() {
               <li><Link href="/tarifs" className="hover:text-brand-700">Tarifs et formules</Link></li>
               <li><Link href="/connexion" className="hover:text-brand-700">Se connecter</Link></li>
               <li><Link href="/inscription" className="hover:text-brand-700">Inscrire mon agence</Link></li>
+              <li><Link href="/espace-locataire/connexion" className="hover:text-brand-700">Espace locataire</Link></li>
             </ul>
           </div>
         </div>

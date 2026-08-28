@@ -21,6 +21,7 @@ Tous les montants sont en francs CFA (XOF).
 | **Factures & quittances** | Génération de toutes les factures du mois en un clic, impression au format A4 (montant en toutes lettres, NINEA, RCCM, cachet). |
 | **Paiements** | Orange Money, Wave, Free Money, espèces, virement, chèque — avec la référence de transaction. |
 | **Relances** | Le logiciel repère les loyers en retard, choisit le ton du message selon l'ancienneté de la dette et l'envoie sur WhatsApp ou par SMS en un clic. |
+| **Espace locataire** | Chaque locataire consulte ses quittances et signale ses règlements (Orange Money, Wave…). L'agence vérifie et confirme : rien n'est compté comme réglé avant sa validation. |
 | **Demandes** | Les demandes de visite reçues depuis la vitrine, avec appel direct et WhatsApp. |
 | **Formules** | Page tarifs publique, limites appliquées automatiquement selon l'abonnement. |
 | **Compte** | Récupération du mot de passe par e-mail, blocage après 8 essais infructueux. |
@@ -133,6 +134,7 @@ src/app/               Les pages du site
   biens/[id]/            Fiche publique d'une annonce
   connexion/             Connexion et inscription
   tarifs/                Page publique des formules et des prix
+  espace-locataire/      Portail du locataire : quittances et déclarations
   mot-de-passe-oublie/   Demande de réinitialisation
   reinitialiser/[token]/ Choix d'un nouveau mot de passe
   cgu/ confidentialite/ mentions-legales/   Pages légales
@@ -145,6 +147,7 @@ src/lib/               Le « moteur » : base de données, calculs, actions
   actions.ts             Écritures : créer, modifier, supprimer
   format.ts              Affichage des montants en FCFA, dates, montants en lettres
   constantes.ts          Villes, quartiers, types de biens, modes de paiement
+  auth-locataire.ts      Connexion des locataires (par téléphone, séparée de l'agence)
   photos.ts              Réception, compression et stockage des photos
   relances.ts            Niveaux de relance et modèles de messages
   tarifs.ts              Formules d'abonnement, prix et limites
@@ -298,8 +301,10 @@ ils doivent être livrés avant l'ouverture publique.
 2. **Export comptable** (Excel/CSV).
 3. **Reversement aux propriétaires** : relevé mensuel loyer − honoraires.
 4. **Encaissement des abonnements** par Orange Money / Wave (PayDunya, CinetPay…).
-5. **Envoi automatique** des relances via un opérateur (voir ci-dessus).
-6. **Espace locataire** : consulter ses quittances et son solde.
+5. **Paiement en ligne réel** depuis l'espace locataire : aujourd'hui le locataire
+   *déclare* son règlement et l'agence confirme. Brancher une passerelle
+   (PayDunya, CinetPay, InTouch) supprimerait cette étape de vérification.
+6. **Envoi automatique** des relances via un opérateur (voir ci-dessus).
 7. **États des lieux** avec photos, à l'entrée et à la sortie.
 
 Voir **[GUIDE.md](GUIDE.md)** pour le mode d'emploi au quotidien.

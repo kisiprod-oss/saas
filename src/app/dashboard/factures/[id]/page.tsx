@@ -3,7 +3,8 @@ import { notFound } from "next/navigation";
 import { exigerSession } from "@/lib/auth";
 import { lireFacture, listerPaiementsFacture } from "@/lib/requetes";
 import {
-  actionAnnulerFacture, actionEnregistrerPaiement, actionSupprimerFacture, actionSupprimerPaiement,
+  actionAnnulerFacture, actionConfirmerPaiement, actionEnregistrerPaiement, actionRejeterPaiement,
+  actionSupprimerFacture, actionSupprimerPaiement,
 } from "@/lib/actions";
 import { aujourdhui, dateFr, fcfa, periodeLisible, telephoneFr } from "@/lib/format";
 import { libelle, MODES_PAIEMENT } from "@/lib/constantes";
@@ -126,23 +127,51 @@ export default async function PageFacture({
             ) : (
               <table className="tableau">
                 <thead>
-                  <tr><th>Date</th><th>Mode</th><th>Référence</th><th className="text-right">Montant</th><th></th></tr>
+                  <tr><th>Date</th><th>Mode</th><th>Référence</th><th>Origine</th><th className="text-right">Montant</th><th></th></tr>
                 </thead>
                 <tbody>
                   {paiements.map((p) => (
-                    <tr key={p.id}>
+                    <tr key={p.id} className={p.confirme === 0 ? "bg-amber-50/60" : ""}>
                       <td className="whitespace-nowrap">{dateFr(p.date_paiement)}</td>
                       <td className="whitespace-nowrap">{libelle(MODES_PAIEMENT, p.mode)}</td>
                       <td className="text-slate-500">{p.reference ?? "—"}</td>
+                      <td className="whitespace-nowrap">
+                        {p.declare_par_locataire === 1 ? (
+                          p.confirme === 1
+                            ? <span className="badge bg-emerald-100 text-emerald-800 ring-emerald-600/20">Confirmé</span>
+                            : <span className="badge bg-amber-100 text-amber-800 ring-amber-600/20">Déclaré par le locataire</span>
+                        ) : (
+                          <span className="text-xs text-slate-400">Saisi par l&apos;agence</span>
+                        )}
+                      </td>
                       <td className="whitespace-nowrap text-right font-semibold text-brand-700">{fcfa(p.montant)}</td>
-                      <td className="text-right">
-                        <form action={actionSupprimerPaiement}>
-                          <input type="hidden" name="id" value={p.id} />
-                          <input type="hidden" name="facture_id" value={facture.id} />
-                          <button type="submit" className="text-xs font-semibold text-rose-600 hover:underline">
-                            Supprimer
-                          </button>
-                        </form>
+                      <td className="whitespace-nowrap text-right">
+                        {p.confirme === 0 ? (
+                          <div className="flex justify-end gap-2">
+                            <form action={actionConfirmerPaiement}>
+                              <input type="hidden" name="id" value={p.id} />
+                              <input type="hidden" name="facture_id" value={facture.id} />
+                              <button type="submit" className="text-xs font-semibold text-brand-700 hover:underline">
+                                Confirmer
+                              </button>
+                            </form>
+                            <form action={actionRejeterPaiement}>
+                              <input type="hidden" name="id" value={p.id} />
+                              <input type="hidden" name="facture_id" value={facture.id} />
+                              <button type="submit" className="text-xs font-semibold text-rose-600 hover:underline">
+                                Rejeter
+                              </button>
+                            </form>
+                          </div>
+                        ) : (
+                          <form action={actionSupprimerPaiement}>
+                            <input type="hidden" name="id" value={p.id} />
+                            <input type="hidden" name="facture_id" value={facture.id} />
+                            <button type="submit" className="text-xs font-semibold text-rose-600 hover:underline">
+                              Supprimer
+                            </button>
+                          </form>
+                        )}
                       </td>
                     </tr>
                   ))}

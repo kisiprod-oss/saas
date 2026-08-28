@@ -300,15 +300,20 @@ const LOCATAIRES = [
 
 const insererLocataire = db.prepare(`
   INSERT INTO locataires (agence_id, prenom, nom, telephone, email, cni, profession, employeur,
-                          garant_nom, garant_telephone, adresse)
-  VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                          garant_nom, garant_telephone, adresse, mot_de_passe_hash, acces_actif)
+  VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
 `);
 
-const idsLocataires = LOCATAIRES.map(([prenom, nom, tel, cni, prof, emp, gnom, gtel]) =>
+// Le premier locataire a l'espace locataire deja active, pour la demonstration.
+const MOT_DE_PASSE_LOCATAIRE_DEMO = "Loyer2026";
+
+const idsLocataires = LOCATAIRES.map(([prenom, nom, tel, cni, prof, emp, gnom, gtel], i) =>
   Number(insererLocataire.run(
     agenceId, prenom, nom, tel,
     `${prenom.toLowerCase()}.${nom.toLowerCase()}@exemple.sn`,
     cni, prof, emp, gnom, gtel, "Dakar, Sénégal",
+    i === 0 ? hacher(MOT_DE_PASSE_LOCATAIRE_DEMO) : null,
+    i === 0 ? 1 : 0,
   ).lastInsertRowid),
 );
 
@@ -454,6 +459,11 @@ console.log(`
 Base de demonstration creee : ${cheminBase}
 
   Agence      : Teranga Immobilier (Dakar) — formule Agence\n  Titulaire   : Isidore Mendy
+
+  Espace locataire de demonstration :
+    Locataire   : ${LOCATAIRES[0][0]} ${LOCATAIRES[0][1]}
+    Telephone   : ${LOCATAIRES[0][2]}
+    Mot de passe: ${MOT_DE_PASSE_LOCATAIRE_DEMO}
   Biens       : ${compter("biens")}
   Locataires  : ${compter("locataires")}
   Baux        : ${compter("contrats")}

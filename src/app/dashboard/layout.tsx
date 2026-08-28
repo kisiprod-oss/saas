@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { exigerSession } from "@/lib/auth";
-import { compterARelancer, compterDemandesNouvelles } from "@/lib/requetes";
+import { compterARelancer, compterDemandesNouvelles, compterPaiementsEnAttente } from "@/lib/requetes";
 import { actionDeconnexion } from "@/lib/actions";
 import { NavLaterale } from "@/components/nav-laterale";
 import { LogoSen } from "@/components/entete-public";
@@ -10,6 +10,7 @@ export default async function DashboardLayout({ children }: { children: React.Re
   const { utilisateur, agence } = await exigerSession();
   const nouvellesDemandes = compterDemandesNouvelles(agence.id);
   const aRelancer = compterARelancer(agence.id);
+  const paiementsEnAttente = compterPaiementsEnAttente(agence.id);
 
   return (
     <div className="min-h-screen lg:flex">
@@ -27,7 +28,7 @@ export default async function DashboardLayout({ children }: { children: React.Re
         </div>
 
         <div className="px-2 pb-3 lg:px-3">
-          <NavLaterale nouvellesDemandes={nouvellesDemandes} aRelancer={aRelancer} />
+          <NavLaterale nouvellesDemandes={nouvellesDemandes} aRelancer={aRelancer} paiementsEnAttente={paiementsEnAttente} />
         </div>
 
         <div className="mt-auto hidden border-t border-slate-100 p-3 lg:block">
