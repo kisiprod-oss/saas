@@ -249,6 +249,52 @@ base **et** les photos. Les 14 dernières sont conservées.
 régulièrement ailleurs — un autre serveur, un espace de stockage, une clé USB.
 Une sauvegarde qui disparaît avec le serveur ne sert à rien.
 
+### 5. (Facultatif) Activer la connexion avec Google
+
+Vos clientes agences peuvent s'inscrire et se connecter en un clic avec leur
+compte Google, sans mot de passe à retenir. C'est facultatif : sans
+configuration, le bouton n'apparaît pas et rien d'autre ne change.
+
+1. Ouvrez [console.cloud.google.com](https://console.cloud.google.com) avec
+   votre compte Google, puis créez un projet (par exemple « Sen Gestion »).
+2. Menu **APIs et services → Écran de consentement OAuth** : type
+   « Externe », nom de l'application « Sen Gestion », votre adresse d'assistance,
+   puis publiez l'écran.
+3. Menu **Identifiants → Créer des identifiants → ID client OAuth →
+   Application Web**.
+4. Dans **URI de redirection autorisés**, ajoutez l'adresse exacte de retour —
+   c'est l'étape où les erreurs sont fréquentes, un seul caractère de
+   différence suffit à tout bloquer :
+
+   ```
+   https://votre-adresse.hostingersite.com/connexion/google/retour
+   http://localhost:3000/connexion/google/retour
+   ```
+
+   Plus tard, ajoutez la même ligne avec votre vrai domaine ; l'ancienne peut
+   rester.
+5. Google affiche un **ID client** et un **code secret**. Recopiez-les dans
+   `.env.local` (ou dans les variables d'environnement de l'hébergeur) :
+
+   ```
+   GOOGLE_CLIENT_ID=...apps.googleusercontent.com
+   GOOGLE_CLIENT_SECRET=...
+   ```
+
+⚠️ Le code secret est un mot de passe : il se colle uniquement dans le panneau
+de l'hébergeur, jamais dans un message, un e-mail ou une conversation.
+
+**Ce que fait l'application au retour de Google :**
+
+- si le compte Google est déjà connu, l'agence est reconnue ;
+- si l'adresse e-mail correspond à un compte existant **et que Google a vérifié
+  cette adresse**, les deux sont rattachés ;
+- sinon, une nouvelle agence est créée avec son premier utilisateur.
+
+Un compte créé par Google n'a pas de mot de passe. Pour en ajouter un (utile
+si Google devient indisponible), passez par « Mot de passe oublié » depuis la
+page de connexion.
+
 ---
 
 ## Mettre l'application en ligne

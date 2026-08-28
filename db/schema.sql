@@ -36,7 +36,11 @@ CREATE TABLE IF NOT EXISTS utilisateurs (
   nom               TEXT NOT NULL,
   email             TEXT NOT NULL UNIQUE,
   telephone         TEXT,
-  mot_de_passe_hash TEXT NOT NULL,
+  -- Vide pour un compte cree via Google : l'identite est alors verifiee par Google.
+  mot_de_passe_hash TEXT,
+  -- Identifiant Google (sub), unique et stable dans le temps.
+  google_id         TEXT,
+  avatar_url        TEXT,
   role              TEXT NOT NULL DEFAULT 'proprietaire',  -- proprietaire | agent
   actif             INTEGER NOT NULL DEFAULT 1,
   cree_le           TEXT NOT NULL DEFAULT (datetime('now'))

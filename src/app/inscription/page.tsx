@@ -4,6 +4,7 @@ import { actionInscription } from "@/lib/actions";
 import { utilisateurCourant } from "@/lib/auth";
 import { Alerte } from "@/components/ui";
 import { LogoSen } from "@/components/entete-public";
+import { BoutonGoogle } from "@/components/bouton-google";
 
 export const metadata = { title: "Créer mon agence" };
 
@@ -29,6 +30,8 @@ export default async function PageInscription({ searchParams }: { searchParams: 
           </p>
 
           {erreur && <div className="mt-5"><Alerte type="erreur">{erreur}</Alerte></div>}
+
+          <BoutonGoogle libelle="S’inscrire avec Google" />
 
           <form action={actionInscription} className="mt-6 space-y-4">
             <div>

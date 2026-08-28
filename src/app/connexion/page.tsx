@@ -4,6 +4,7 @@ import { actionConnexion } from "@/lib/actions";
 import { utilisateurCourant } from "@/lib/auth";
 import { Alerte } from "@/components/ui";
 import { LogoSen } from "@/components/entete-public";
+import { BoutonGoogle } from "@/components/bouton-google";
 
 export const metadata = { title: "Connexion" };
 
@@ -35,6 +36,8 @@ export default async function PageConnexion({ searchParams }: { searchParams: Pr
               </Alerte>
             </div>
           )}
+
+          <BoutonGoogle libelle="Se connecter avec Google" />
 
           <form action={actionConnexion} className="mt-6 space-y-4">
             <div>

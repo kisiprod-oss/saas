@@ -61,12 +61,19 @@ export async function actionConnexion(fd: FormData) {
     );
   }
 
-  const utilisateur = un<{ id: number; mot_de_passe_hash: string; actif: number }>(
+  const utilisateur = un<{ id: number; mot_de_passe_hash: string | null; actif: number }>(
     "SELECT id, mot_de_passe_hash, actif FROM utilisateurs WHERE email = ?",
     email,
   );
 
-  if (!utilisateur || !utilisateur.actif || !verifierMotDePasse(motDePasse, utilisateur.mot_de_passe_hash)) {
+  // mot_de_passe_hash est nul pour un compte cree via Google : il n'a jamais
+  // eu de mot de passe. On refuse alors, sans reveler que le compte existe.
+  if (
+    !utilisateur
+    || !utilisateur.actif
+    || !utilisateur.mot_de_passe_hash
+    || !verifierMotDePasse(motDePasse, utilisateur.mot_de_passe_hash)
+  ) {
     noterTentative(email, false);
     if (origine !== null) noterTentative(origine, false);
     erreur("/connexion", "E-mail ou mot de passe incorrect.");

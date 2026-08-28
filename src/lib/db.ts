@@ -43,6 +43,8 @@ function ouvrirBase(): Database.Database {
 function migrer(base: Database.Database) {
   const colonnes = [
     ["agences", "plan", "TEXT NOT NULL DEFAULT 'decouverte'"],
+    ["utilisateurs", "google_id", "TEXT"],
+    ["utilisateurs", "avatar_url", "TEXT"],
     ["locataires", "mot_de_passe_hash", "TEXT"],
     ["locataires", "acces_actif", "INTEGER NOT NULL DEFAULT 0"],
     ["paiements", "declare_par_locataire", "INTEGER NOT NULL DEFAULT 0"],
@@ -58,6 +60,14 @@ function migrer(base: Database.Database) {
       base.exec(`ALTER TABLE ${table} ADD COLUMN ${colonne} ${type}`);
     }
   }
+
+  // Index — et non contrainte inline : ALTER TABLE ne sait pas ajouter de
+  // contrainte UNIQUE a une table existante. Il se cree ici, apres les
+  // colonnes : place dans schema.sql, il s'executerait avant elles.
+  base.exec(
+    `CREATE UNIQUE INDEX IF NOT EXISTS idx_utilisateurs_google
+       ON utilisateurs(google_id) WHERE google_id IS NOT NULL`,
+  );
 }
 
 // En developpement, Next.js recharge les modules a chaque modification :
