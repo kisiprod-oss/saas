@@ -20,6 +20,10 @@ CREATE TABLE IF NOT EXISTS agences (
   ville         TEXT DEFAULT 'Dakar',
   logo_url      TEXT,
   commission_pct REAL NOT NULL DEFAULT 10,
+  -- Modeles de messages de relance (vides = modeles par defaut du logiciel)
+  modele_rappel           TEXT,
+  modele_relance          TEXT,
+  modele_mise_en_demeure  TEXT,
   cree_le       TEXT NOT NULL DEFAULT (datetime('now'))
 );
 
@@ -175,3 +179,16 @@ CREATE TABLE IF NOT EXISTS demandes (
   cree_le     TEXT NOT NULL DEFAULT (datetime('now'))
 );
 CREATE INDEX IF NOT EXISTS idx_demandes_agence ON demandes(agence_id, statut);
+
+-- ---------- Relances des loyers impayes ----------
+CREATE TABLE IF NOT EXISTS relances (
+  id          INTEGER PRIMARY KEY AUTOINCREMENT,
+  agence_id   INTEGER NOT NULL REFERENCES agences(id) ON DELETE CASCADE,
+  facture_id  INTEGER NOT NULL REFERENCES factures(id) ON DELETE CASCADE,
+  niveau      TEXT NOT NULL,   -- rappel | relance | mise_en_demeure
+  canal       TEXT NOT NULL,   -- whatsapp | sms | appel | email
+  message     TEXT,
+  envoye_le   TEXT NOT NULL DEFAULT (datetime('now'))
+);
+CREATE INDEX IF NOT EXISTS idx_relances_agence  ON relances(agence_id);
+CREATE INDEX IF NOT EXISTS idx_relances_facture ON relances(facture_id, niveau);

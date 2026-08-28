@@ -19,7 +19,28 @@ function ouvrirBase(): Database.Database {
   base.pragma("foreign_keys = ON");
   const schema = fs.readFileSync(path.join(racine, "db", "schema.sql"), "utf8");
   base.exec(schema);
+  migrer(base);
   return base;
+}
+
+/**
+ * Ajoute les colonnes apparues apres la creation d'une base existante.
+ * `CREATE TABLE IF NOT EXISTS` ne modifie pas une table deja presente :
+ * il faut donc completer les tables anciennes une par une.
+ */
+function migrer(base: Database.Database) {
+  const colonnes = [
+    ["agences", "modele_rappel", "TEXT"],
+    ["agences", "modele_relance", "TEXT"],
+    ["agences", "modele_mise_en_demeure", "TEXT"],
+  ] as const;
+
+  for (const [table, colonne, type] of colonnes) {
+    const existantes = base.pragma(`table_info(${table})`) as { name: string }[];
+    if (!existantes.some((c) => c.name === colonne)) {
+      base.exec(`ALTER TABLE ${table} ADD COLUMN ${colonne} ${type}`);
+    }
+  }
 }
 
 // En developpement, Next.js recharge les modules a chaque modification :

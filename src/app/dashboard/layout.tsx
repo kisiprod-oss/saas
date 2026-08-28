@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { exigerSession } from "@/lib/auth";
-import { compterDemandesNouvelles } from "@/lib/requetes";
+import { compterARelancer, compterDemandesNouvelles } from "@/lib/requetes";
 import { actionDeconnexion } from "@/lib/actions";
 import { NavLaterale } from "@/components/nav-laterale";
 import { LogoKeur } from "@/components/entete-public";
@@ -9,11 +9,12 @@ import { IconeSortie } from "@/components/icones";
 export default async function DashboardLayout({ children }: { children: React.ReactNode }) {
   const { utilisateur, agence } = await exigerSession();
   const nouvellesDemandes = compterDemandesNouvelles(agence.id);
+  const aRelancer = compterARelancer(agence.id);
 
   return (
     <div className="min-h-screen lg:flex">
       {/* ------------------------------ Barre laterale ------------------------------ */}
-      <aside className="border-b border-slate-200 bg-white lg:sticky lg:top-0 lg:h-screen lg:w-64 lg:shrink-0 lg:border-b-0 lg:border-r">
+      <aside className="border-b border-slate-200 bg-white lg:sticky lg:top-0 lg:flex lg:h-screen lg:w-64 lg:shrink-0 lg:flex-col lg:border-b-0 lg:border-r">
         <div className="flex items-center justify-between px-4 py-4 lg:block">
           <Link href="/dashboard"><LogoKeur /></Link>
           <Link
@@ -26,10 +27,10 @@ export default async function DashboardLayout({ children }: { children: React.Re
         </div>
 
         <div className="px-2 pb-3 lg:px-3">
-          <NavLaterale nouvellesDemandes={nouvellesDemandes} />
+          <NavLaterale nouvellesDemandes={nouvellesDemandes} aRelancer={aRelancer} />
         </div>
 
-        <div className="hidden border-t border-slate-100 p-3 lg:mt-auto lg:block">
+        <div className="mt-auto hidden border-t border-slate-100 p-3 lg:block">
           <div className="rounded-lg bg-slate-50 p-3">
             <p className="truncate text-sm font-semibold text-slate-900">{utilisateur.nom}</p>
             <p className="truncate text-xs text-slate-500">{agence.nom}</p>

@@ -39,6 +39,7 @@ const jourDu = (periode, jour) => {
 
 // --------------------------------------------------------------- nettoyage
 db.exec(`
+  DELETE FROM relances;
   DELETE FROM paiements; DELETE FROM factures; DELETE FROM contrats;
   DELETE FROM demandes;  DELETE FROM locataires; DELETE FROM biens;
   DELETE FROM sessions;  DELETE FROM utilisateurs; DELETE FROM agences;
@@ -287,6 +288,10 @@ const idsLocataires = LOCATAIRES.map(([prenom, nom, tel, cni, prof, emp, gnom, g
 
 // ---------------------------------------------------------------- contrats
 // [indice du bien, indice du locataire, mois de debut (relatif), jour d'echeance]
+// Echeance tombant il y a 3 jours : garantit un impaye « tout frais »,
+// pour que les trois niveaux de relance soient visibles dans la demo.
+const JOUR_RECENT = Math.min(28, Math.max(1, new Date().getUTCDate() - 3));
+
 const BAUX = [
   [0, 0, -14, 5],
   [1, 1, -22, 1],
@@ -294,7 +299,7 @@ const BAUX = [
   [4, 3, -18, 5],
   [6, 4, -5,  3],
   [7, 5, -11, 5],
-  [8, 6, -3,  10],
+  [8, 6, -3,  JOUR_RECENT],
 ];
 
 const insererContrat = db.prepare(`
@@ -353,7 +358,9 @@ for (let m = -5; m <= 0; m++) {
     // Les mois passes sont regles ; le mois en cours l'est partiellement.
     const tirage = suivant();
     let part = 1;
-    if (m === 0) part = tirage < 0.55 ? 1 : tirage < 0.8 ? 0.5 : 0;
+    // Le dernier bail reste impaye ce mois-ci : c'est le cas « rappel amical ».
+    if (m === 0 && c === contrats[contrats.length - 1]) part = 0;
+    else if (m === 0) part = tirage < 0.55 ? 1 : tirage < 0.8 ? 0.5 : 0;
     else if (m === -1 && tirage < 0.18) part = 0;   // un impaye recent
     else if (tirage < 0.08) part = 0.6;             // un paiement partiel plus ancien
 
@@ -370,6 +377,32 @@ for (let m = -5; m <= 0; m++) {
       );
     }
   }
+}
+
+// ---------------------------------------------------------------- relances
+// Quelques relances deja envoyees, pour illustrer l'historique.
+const insererRelance = db.prepare(`
+  INSERT INTO relances (agence_id, facture_id, niveau, canal, message, envoye_le)
+  VALUES (?, ?, ?, ?, ?, ?)
+`);
+
+const impayees = db.prepare(`
+  SELECT f.id, f.periode,
+         CAST(julianday('now') - julianday(f.date_echeance) AS INTEGER) AS retard
+    FROM factures f
+    LEFT JOIN (SELECT facture_id, SUM(montant) AS paye FROM paiements GROUP BY facture_id) p
+           ON p.facture_id = f.id
+   WHERE f.montant_total > COALESCE(p.paye, 0)
+     AND date(f.date_echeance) < date('now')
+   ORDER BY retard DESC
+`).all();
+
+// Les deux plus anciens impayes ont deja ete relances il y a une dizaine de jours.
+for (const [i, f] of impayees.slice(0, 2).entries()) {
+  const niveau = f.retard >= 30 ? "mise_en_demeure" : f.retard >= 8 ? "relance" : "rappel";
+  const jours = 10 + i * 2;
+  const date = new Date(Date.now() - jours * 86400000).toISOString().slice(0, 19).replace("T", " ");
+  insererRelance.run(agenceId, f.id, niveau, i === 0 ? "whatsapp" : "sms", null, date);
 }
 
 // ---------------------------------------------------------------- demandes
@@ -401,6 +434,7 @@ Base de demonstration creee : ${cheminBase}
   Factures    : ${compter("factures")}
   Paiements   : ${compter("paiements")}
   Demandes    : ${compter("demandes")}
+  Relances    : ${compter("relances")}
 
 Connexion :  demo@keurgestion.sn  /  demo1234
 `);

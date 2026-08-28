@@ -38,12 +38,42 @@ Points importants :
 - **Loyer** : tapez uniquement les chiffres, sans espace ni « FCFA ».
   Écrivez `450000`, pas `450 000 FCFA`.
 - **Caution** : indiquez le **nombre de mois** (2 = deux mois de loyer).
-- **Photos** : collez une adresse web d'image par ligne. Sans photo, une
-  illustration est affichée automatiquement.
+- **Photos** : voir la section suivante.
 - **« Publier sur la vitrine publique »** : décochez si le bien ne doit pas
   apparaître dans les annonces.
 
 Le bien reçoit automatiquement une référence : `BIEN-0001`, `BIEN-0002`…
+
+---
+
+## 3 bis. Les photos du bien
+
+Dans le formulaire d'un bien, section **« Propriétaire et publication »**.
+
+**Depuis un téléphone**, appuyez sur **« Envoyer des photos »** : votre téléphone
+propose *Appareil photo* ou *Galerie*. Vous pouvez donc photographier
+l'appartement pendant la visite et l'annonce est prête en sortant.
+
+**Depuis un ordinateur**, le même bouton ouvre vos dossiers. Vous pouvez
+sélectionner plusieurs images d'un coup.
+
+Ce que le logiciel fait tout seul :
+
+- il **redresse** la photo si le téléphone l'a prise de travers ;
+- il la **réduit** à une taille raisonnable pour le web ;
+- il l'**allège** fortement — une photo de 5 Mo tombe autour de 200 Ko.
+  C'est important : vos clients consultent souvent les annonces en données
+  mobiles.
+
+Une fois les photos enregistrées, chaque vignette propose :
+
+- **Principale** : la photo qui apparaît en premier sur l'annonce et dans les
+  listes. Cochez-en une autre pour changer la vitrine.
+- **Retirer** : cochez, puis enregistrez. La photo est supprimée définitivement.
+
+Jusqu'à 12 photos par bien, 15 Mo maximum par photo. Si vous avez déjà vos
+images en ligne, le lien **« Ajouter une photo par son adresse web »** reste
+disponible.
 
 ---
 
@@ -136,6 +166,60 @@ conversation pour la relance.
 
 ---
 
+## 9 bis. Relancer les impayés sur WhatsApp
+
+Menu **« Relances »**. Le chiffre rouge indique combien de locataires sont à
+relancer aujourd'hui.
+
+### Le logiciel décide pour vous
+
+Il regarde le retard de chaque facture et choisit le ton :
+
+| Retard | Niveau | Ton du message |
+|---|---|---|
+| 1 à 7 jours | **Rappel amical** | « Nous vous rappelons que… » |
+| 8 à 29 jours | **Relance ferme** | « Sauf erreur de notre part, le loyer demeure impayé… » |
+| 30 jours et plus | **Mise en demeure** | « Nous vous mettons en demeure de régler sous 8 jours… » |
+
+Il évite aussi de harceler : **un même locataire n'est pas relancé deux fois en
+moins de 7 jours**. Ceux déjà contactés passent dans la liste
+« Relancés récemment ».
+
+### Envoyer
+
+Chaque carte affiche le locataire, le bien, le montant dû, l'échéance et le
+retard. Cliquez sur **« Voir et modifier le message »** pour lire le texte déjà
+rédigé — nom du locataire, montant, période, tout est rempli. Vous pouvez le
+retoucher.
+
+Puis un seul clic :
+
+- **Envoyer sur WhatsApp** — ouvre la conversation avec le message déjà écrit ;
+- **Par SMS** — même chose dans l'application de messages ;
+- **Appeler** — lance l'appel ;
+- **Noter comme relancé** — si vous avez appelé depuis un autre téléphone.
+
+Dans tous les cas, la relance est **enregistrée automatiquement** dans
+l'historique, en bas de la page. Vous savez toujours qui a été contacté, quand
+et comment.
+
+> ⚠️ Si un locataire a plusieurs mois impayés, un bandeau orange vous le signale :
+> mieux vaut lui en parler une seule fois que d'envoyer trois messages.
+
+### Vos propres messages
+
+Bouton **« Modifier mes messages »**. Vous réécrivez les trois messages comme
+vous parlez à vos clients. Les mots entre accolades sont remplacés
+automatiquement : `{prenom}`, `{montant}`, `{periode}`, `{bien}`, `{jours}`,
+`{agence}`… La liste complète est affichée à droite de la page.
+
+**À savoir :** l'envoi se fait par votre WhatsApp ou votre téléphone, pas par un
+serveur. C'est volontaire : c'est gratuit, vos clients reconnaissent votre
+numéro, et vous gardez la main sur ce qui part. Un envoi 100 % automatique
+demanderait un abonnement WhatsApp Business API.
+
+---
+
 ## 10. Traiter les demandes de visite
 
 Menu **« Demandes »**. Le chiffre rouge dans le menu indique les demandes
@@ -161,7 +245,16 @@ Oui. Dakar, Thiès, Mbour, Saint-Louis… sont proposées, et vous pouvez saisir
 n'importe quelle autre ville ou quartier à la main.
 
 **Comment sauvegarder mes données ?**
-Copiez le fichier `data/keur-gestion.db`. Il contient absolument tout.
+Copiez le dossier `data/` en entier : il contient la base *et* les photos.
+
+**Une photo est à l'envers.**
+Le logiciel redresse automatiquement les photos prises au téléphone. Si l'une
+reste de travers, retirez-la et renvoyez-la après l'avoir tournée dans la
+galerie du téléphone.
+
+**J'ai relancé un locataire qui avait déjà payé.**
+Enregistrez son paiement : la facture sort immédiatement de la liste des
+relances.
 
 **Comment repartir de zéro ?**
 Lancez `npm run reset` puis `npm run seed`.

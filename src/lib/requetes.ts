@@ -1,6 +1,7 @@
 import "server-only";
 import { db, tous, un } from "./db";
 import { aujourdhui, decalerMois, moisCourant } from "./format";
+import { DELAI_ENTRE_RELANCES, niveauPour, type Niveau } from "./relances";
 import type {
   Bien, ContratDetaille, Demande, FactureDetaillee, Locataire, Paiement,
 } from "./types";
@@ -400,6 +401,109 @@ export function statistiques(agenceId: number): Statistiques {
     prochainesEcheances,
     topImpayes,
   };
+}
+
+// --------------------------------------------------------------- Relances
+
+export type LigneRelance = {
+  facture_id: number;
+  numero: string;
+  periode: string;
+  date_echeance: string;
+  reste: number;
+  jours_retard: number;
+  contrat_reference: string;
+  locataire_id: number;
+  locataire_prenom: string;
+  locataire_nom: string;
+  locataire_telephone: string;
+  bien_titre: string;
+  derniere_relance_niveau: string | null;
+  derniere_relance_canal: string | null;
+  derniere_relance_le: string | null;
+  jours_depuis_relance: number | null;
+  nb_relances: number;
+  /** Niveau de relance conseille, calcule d'apres le retard. */
+  niveau: Niveau;
+  /** Vrai si le locataire doit etre relance aujourd'hui. */
+  a_relancer: boolean;
+};
+
+/**
+ * Toutes les factures echues et non soldees, avec l'historique des relances
+ * et le niveau conseille. Les plus anciennes d'abord.
+ */
+export function listerRelances(agenceId: number): LigneRelance[] {
+  const lignes = tous<Omit<LigneRelance, "niveau" | "a_relancer">>(
+    `SELECT f.id AS facture_id, f.numero, f.periode, f.date_echeance,
+            f.montant_total - COALESCE(p.paye, 0) AS reste,
+            CAST(julianday('now') - julianday(f.date_echeance) AS INTEGER) AS jours_retard,
+            c.reference AS contrat_reference,
+            l.id        AS locataire_id,
+            l.prenom    AS locataire_prenom,
+            l.nom       AS locataire_nom,
+            l.telephone AS locataire_telephone,
+            b.titre     AS bien_titre,
+            r.niveau    AS derniere_relance_niveau,
+            r.canal     AS derniere_relance_canal,
+            r.envoye_le AS derniere_relance_le,
+            CASE WHEN r.envoye_le IS NULL THEN NULL
+                 ELSE CAST(julianday('now') - julianday(r.envoye_le) AS INTEGER) END
+                        AS jours_depuis_relance,
+            COALESCE(nb.total, 0) AS nb_relances
+       FROM factures f
+       JOIN contrats   c ON c.id = f.contrat_id
+       JOIN locataires l ON l.id = c.locataire_id
+       JOIN biens      b ON b.id = c.bien_id
+       LEFT JOIN (SELECT facture_id, SUM(montant) AS paye FROM paiements GROUP BY facture_id) p
+              ON p.facture_id = f.id
+       LEFT JOIN (SELECT facture_id, COUNT(*) AS total FROM relances GROUP BY facture_id) nb
+              ON nb.facture_id = f.id
+       LEFT JOIN relances r
+              ON r.id = (SELECT id FROM relances WHERE facture_id = f.id
+                          ORDER BY envoye_le DESC, id DESC LIMIT 1)
+      WHERE f.agence_id = ? AND f.statut != 'annulee'
+        AND f.montant_total > COALESCE(p.paye, 0)
+        AND date(f.date_echeance) < date('now')
+      ORDER BY jours_retard DESC`,
+    agenceId,
+  );
+
+  return lignes.map((ligne) => {
+    const niveau = niveauPour(ligne.jours_retard);
+
+    // On relance si le locataire n'a jamais ete contacte a ce niveau,
+    // ou si la derniere relance date de plus d'une semaine.
+    const a_relancer =
+      ligne.derniere_relance_niveau !== niveau ||
+      (ligne.jours_depuis_relance ?? 999) >= DELAI_ENTRE_RELANCES;
+
+    return { ...ligne, niveau, a_relancer };
+  });
+}
+
+/** Nombre de locataires a relancer aujourd'hui (pastille du menu). */
+export function compterARelancer(agenceId: number): number {
+  return listerRelances(agenceId).filter((l) => l.a_relancer).length;
+}
+
+/** Historique complet des relances envoyees. */
+export function historiqueRelances(agenceId: number, limite = 100) {
+  return tous<{
+    id: number; niveau: string; canal: string; envoye_le: string; message: string | null;
+    numero: string; periode: string; locataire_prenom: string; locataire_nom: string;
+  }>(
+    `SELECT r.id, r.niveau, r.canal, r.envoye_le, r.message,
+            f.numero, f.periode, l.prenom AS locataire_prenom, l.nom AS locataire_nom
+       FROM relances r
+       JOIN factures   f ON f.id = r.facture_id
+       JOIN contrats   c ON c.id = f.contrat_id
+       JOIN locataires l ON l.id = c.locataire_id
+      WHERE r.agence_id = ?
+      ORDER BY r.envoye_le DESC, r.id DESC
+      LIMIT ?`,
+    agenceId, limite,
+  );
 }
 
 // ------------------------------------------- Generation des factures du mois

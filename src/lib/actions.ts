@@ -8,6 +8,7 @@ import {
 } from "./auth";
 import { genererFacturesDuMois, numeroFactureSuivant, referenceSuivante } from "./requetes";
 import { aujourdhui } from "./format";
+import { enregistrerPhotos, supprimerPhoto } from "./photos";
 
 // ------------------------------------------------------------- utilitaires
 
@@ -102,18 +103,23 @@ export async function actionEnregistrerBien(fd: FormData) {
   const { agence } = await exigerSession();
   const id = entier(fd, "id");
   const titre = txt(fd, "titre");
-  if (!titre) erreur(id ? `/dashboard/biens/${id}` : "/dashboard/biens/nouveau", "Le titre est obligatoire.");
+  const retour = id ? `/dashboard/biens/${id}` : "/dashboard/biens/nouveau";
+  if (!titre) erreur(retour, "Le titre est obligatoire.");
 
+  const { photos, avertissements } = await rassemblerPhotos(fd);
   const equipements = fd.getAll("equipements").map(String).join(", ");
+
   const champs = [
     titre, txt(fd, "type") || "appartement", vide(txt(fd, "description")),
     txt(fd, "ville") || "Dakar", vide(txt(fd, "quartier")), vide(txt(fd, "adresse")),
     entier(fd, "chambres"), entier(fd, "salles_bain"), entier(fd, "surface") || null,
-    vide(txt(fd, "etage")), coche(fd, "meuble"), vide(equipements), vide(txt(fd, "photos")),
+    vide(txt(fd, "etage")), coche(fd, "meuble"), vide(equipements), vide(photos.join("\n")),
     montant(fd, "loyer"), montant(fd, "charges"), entier(fd, "caution_mois", 2),
     txt(fd, "statut") || "disponible", coche(fd, "publie"),
     vide(txt(fd, "proprietaire_nom")), vide(txt(fd, "proprietaire_telephone")),
   ];
+
+  let bienId = id;
 
   if (id) {
     ecrire(
@@ -133,12 +139,48 @@ export async function actionEnregistrerBien(fd: FormData) {
        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       agence.id, referenceSuivante(agence.id, "biens", "BIEN"), ...champs,
     );
-    revalidatePath("/dashboard/biens");
-    redirect(`/dashboard/biens/${res.lastInsertRowid}?ok=1`);
+    bienId = Number(res.lastInsertRowid);
   }
 
   revalidatePath("/dashboard/biens");
-  redirect(`/dashboard/biens/${id}?ok=1`);
+  revalidatePath("/");
+
+  const suffixe = avertissements.length > 0
+    ? `?avertissement=${encodeURIComponent(avertissements.join(" "))}`
+    : "?ok=1";
+  redirect(`/dashboard/biens/${bienId}${suffixe}`);
+}
+
+/**
+ * Reconstitue la liste des photos d'un bien a partir du formulaire :
+ * celles conservees, celles ajoutees par adresse web, et les fichiers
+ * envoyes depuis l'ordinateur ou le telephone. La photo cochee
+ * « principale » est placee en tete ; les photos retirees sont effacees.
+ */
+async function rassemblerPhotos(fd: FormData) {
+  const conservees = fd.getAll("photos_existantes").map(String);
+  const retirees = new Set(fd.getAll("photos_supprimees").map(String));
+  const principale = txt(fd, "photo_principale");
+
+  const parAdresse = txt(fd, "photos_url")
+    .split(/[\n,]/).map((u) => u.trim()).filter(Boolean);
+
+  const fichiers = fd.getAll("fichiers").filter((f): f is File => f instanceof File);
+  const { urls: televersees, erreurs: avertissements } = await enregistrerPhotos(fichiers);
+
+  let photos = [...new Set([
+    ...conservees.filter((u) => !retirees.has(u)),
+    ...parAdresse,
+    ...televersees,
+  ])];
+
+  if (principale && photos.includes(principale)) {
+    photos = [principale, ...photos.filter((u) => u !== principale)];
+  }
+
+  for (const url of retirees) await supprimerPhoto(url);
+
+  return { photos, avertissements };
 }
 
 export async function actionSupprimerBien(fd: FormData) {
@@ -150,8 +192,18 @@ export async function actionSupprimerBien(fd: FormData) {
     erreur("/dashboard/biens", "Ce bien est rattaché à un contrat : supprimez d'abord le contrat.");
   }
 
+  const bien = un<{ photos: string | null }>(
+    "SELECT photos FROM biens WHERE id = ? AND agence_id = ?", id, agence.id,
+  );
   ecrire("DELETE FROM biens WHERE id = ? AND agence_id = ?", id, agence.id);
+
+  // Les photos du bien n'ont plus de raison d'occuper le disque.
+  for (const url of (bien?.photos ?? "").split(/[\n,]/).map((u) => u.trim()).filter(Boolean)) {
+    await supprimerPhoto(url);
+  }
+
   revalidatePath("/dashboard/biens");
+  revalidatePath("/");
   redirect("/dashboard/biens");
 }
 
@@ -450,4 +502,42 @@ export async function actionStatutDemande(fd: FormData) {
   );
   revalidatePath("/dashboard/demandes");
   redirect("/dashboard/demandes");
+}
+
+// ---------------------------------------------------------------- relances
+
+/** Note qu'un locataire a bien ete relance, pour ne pas le solliciter deux fois. */
+export async function actionEnregistrerRelance(fd: FormData) {
+  const { agence } = await exigerSession();
+  const factureId = entier(fd, "facture_id");
+  const niveau = txt(fd, "niveau") || "rappel";
+  const canal = txt(fd, "canal") || "whatsapp";
+
+  const facture = un<{ id: number }>(
+    "SELECT id FROM factures WHERE id = ? AND agence_id = ?", factureId, agence.id,
+  );
+  if (!facture) erreur("/dashboard/relances", "Facture introuvable.");
+
+  ecrire(
+    "INSERT INTO relances (agence_id, facture_id, niveau, canal, message) VALUES (?, ?, ?, ?, ?)",
+    agence.id, factureId, niveau, canal, vide(txt(fd, "message")),
+  );
+
+  revalidatePath("/dashboard/relances");
+  redirect("/dashboard/relances?relances=1");
+}
+
+/** Enregistre les trois modeles de messages de relance de l'agence. */
+export async function actionEnregistrerModeles(fd: FormData) {
+  const { agence } = await exigerSession();
+  ecrire(
+    `UPDATE agences SET modele_rappel = ?, modele_relance = ?, modele_mise_en_demeure = ?
+      WHERE id = ?`,
+    vide(txt(fd, "modele_rappel")),
+    vide(txt(fd, "modele_relance")),
+    vide(txt(fd, "modele_mise_en_demeure")),
+    agence.id,
+  );
+  revalidatePath("/dashboard/relances");
+  redirect("/dashboard/relances/modeles?ok=1");
 }

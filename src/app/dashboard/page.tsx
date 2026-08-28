@@ -171,9 +171,16 @@ export default async function PageTableauBord({ searchParams }: { searchParams: 
             <h2 className="font-semibold text-slate-900">Factures en retard</h2>
             <p className="text-xs text-slate-500">Les relances les plus urgentes</p>
           </div>
-          <Link href="/dashboard/factures?etat=retard" className="text-sm font-semibold text-brand-700 hover:underline">
-            Tout voir →
-          </Link>
+          <div className="flex items-center gap-2">
+            <Link href="/dashboard/factures?etat=retard" className="text-sm font-semibold text-brand-700 hover:underline">
+              Tout voir
+            </Link>
+            {s.facturesEnRetard > 0 && (
+              <Link href="/dashboard/relances" className="btn-primaire px-3 py-2 text-xs">
+                Relancer les locataires
+              </Link>
+            )}
+          </div>
         </div>
 
         {s.topImpayes.length === 0 ? (

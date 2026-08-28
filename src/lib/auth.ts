@@ -28,6 +28,9 @@ export type Agence = {
   ville: string | null;
   logo_url: string | null;
   commission_pct: number;
+  modele_rappel: string | null;
+  modele_relance: string | null;
+  modele_mise_en_demeure: string | null;
 };
 
 /** Hache un mot de passe avec scrypt et un sel aleatoire. */

@@ -85,3 +85,6 @@ export const IconeCorbeille = (p: Props) => (
 export const IconeCrayon = (p: Props) => (
   <Svg {...p}><path d="M4 20h4L19 9a2.1 2.1 0 0 0-3-3L5 17z" /><path d="M15 6l3 3" /></Svg>
 );
+export const IconeRelance = (p: Props) => (
+  <Svg {...p}><path d="M21 11.5a8.4 8.4 0 0 1-9 8.4 8.9 8.9 0 0 1-3.8-.9L3 20.5l1.6-4.9A8.4 8.4 0 0 1 12 3.1a8.4 8.4 0 0 1 9 8.4z" /><path d="M12 8v4M12 15.5v.01" /></Svg>
+);

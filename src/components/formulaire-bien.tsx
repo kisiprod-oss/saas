@@ -2,10 +2,12 @@ import Link from "next/link";
 import { actionEnregistrerBien } from "@/lib/actions";
 import { EQUIPEMENTS, QUARTIERS, STATUTS_BIEN, TYPES_BIEN, VILLES } from "@/lib/constantes";
 import { Case, Champ, Section, Selection, ZoneTexte } from "@/components/ui";
+import { ChampPhotos } from "@/components/champ-photos";
 import type { Bien } from "@/lib/types";
 
 export function FormulaireBien({ bien }: { bien?: Bien }) {
   const equipementsActuels = (bien?.equipements ?? "").split(",").map((e) => e.trim()).filter(Boolean);
+  const photosActuelles = (bien?.photos ?? "").split(/[\n,]/).map((p) => p.trim()).filter(Boolean);
 
   return (
     <form action={actionEnregistrerBien} className="space-y-5">
@@ -103,12 +105,7 @@ export function FormulaireBien({ bien }: { bien?: Bien }) {
         <Champ label="Nom du propriétaire" nom="proprietaire_nom" valeur={bien?.proprietaire_nom} />
         <Champ label="Téléphone du propriétaire" nom="proprietaire_telephone" valeur={bien?.proprietaire_telephone}
                placeholder="77 123 45 67" />
-        <div className="sm:col-span-2">
-          <ZoneTexte
-            label="Photos (une adresse web par ligne)" nom="photos" valeur={bien?.photos} lignes={3}
-            placeholder={"https://exemple.com/photo1.jpg\nhttps://exemple.com/photo2.jpg"}
-          />
-        </div>
+        <ChampPhotos photos={photosActuelles} />
         <div className="sm:col-span-2">
           <Case label="Publier ce bien sur la vitrine publique" nom="publie" coche={bien ? bien.publie === 1 : true} />
         </div>

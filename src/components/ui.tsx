@@ -40,7 +40,7 @@ export function Alerte({ type = "info", children }: { type?: "info" | "succes" |
   );
 }
 
-/** Affiche le message porte par ?erreur=, ?ok= ou ?genere= dans l'URL. */
+/** Affiche le message porte par ?erreur=, ?ok=, ?genere=, ?avertissement= ou ?relances=. */
 export function MessagesUrl({ params }: { params: Record<string, string | string[] | undefined> }) {
   const lire = (c: string) => {
     const v = params[c];
@@ -49,11 +49,21 @@ export function MessagesUrl({ params }: { params: Record<string, string | string
   const err = lire("erreur");
   const ok = lire("ok");
   const genere = lire("genere");
+  const avertissement = lire("avertissement");
+  const relances = lire("relances");
 
   return (
     <>
       {err && <Alerte type="erreur">{err}</Alerte>}
       {ok && <Alerte type="succes">Enregistré avec succès.</Alerte>}
+      {avertissement && (
+        <Alerte type="info">Enregistré, mais&nbsp;: {avertissement}</Alerte>
+      )}
+      {relances && (
+        <Alerte type="succes">
+          {relances === "1" ? "1 relance enregistrée." : `${relances} relances enregistrées.`}
+        </Alerte>
+      )}
       {genere !== undefined && (
         <Alerte type={Number(genere) > 0 ? "succes" : "info"}>
           {Number(genere) > 0

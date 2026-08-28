@@ -4,7 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
   IconeAgence, IconeArgent, IconeBoiteReception, IconeContrat, IconeFacture,
-  IconeMaison, IconeTableauBord, IconeUtilisateurs,
+  IconeMaison, IconeRelance, IconeTableauBord, IconeUtilisateurs,
 } from "./icones";
 
 const LIENS = [
@@ -14,11 +14,14 @@ const LIENS = [
   { href: "/dashboard/contrats",    libelle: "Contrats de bail",Icone: IconeContrat },
   { href: "/dashboard/factures",    libelle: "Factures",        Icone: IconeFacture },
   { href: "/dashboard/paiements",   libelle: "Paiements",       Icone: IconeArgent },
+  { href: "/dashboard/relances",    libelle: "Relances",        Icone: IconeRelance },
   { href: "/dashboard/demandes",    libelle: "Demandes",        Icone: IconeBoiteReception },
   { href: "/dashboard/agence",      libelle: "Mon agence",      Icone: IconeAgence },
 ];
 
-export function NavLaterale({ nouvellesDemandes }: { nouvellesDemandes: number }) {
+export function NavLaterale({
+  nouvellesDemandes, aRelancer,
+}: { nouvellesDemandes: number; aRelancer: number }) {
   const chemin = usePathname();
 
   const estActif = (href: string) =>
@@ -37,6 +40,11 @@ export function NavLaterale({ nouvellesDemandes }: { nouvellesDemandes: number }
           {href === "/dashboard/demandes" && nouvellesDemandes > 0 && (
             <span className="ml-auto rounded-full bg-rose-500 px-2 py-0.5 text-xs font-bold text-white">
               {nouvellesDemandes}
+            </span>
+          )}
+          {href === "/dashboard/relances" && aRelancer > 0 && (
+            <span className="ml-auto rounded-full bg-rose-500 px-2 py-0.5 text-xs font-bold text-white">
+              {aRelancer}
             </span>
           )}
         </Link>

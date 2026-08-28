@@ -14,11 +14,13 @@ Tous les montants sont en francs CFA (XOF).
 |---|---|
 | **Vitrine publique** | Vos annonces visibles par tous, avec recherche par ville, type, budget et nombre de chambres. Un formulaire permet aux visiteurs de demander une visite. |
 | **Tableau de bord** | Loyers encaissés du mois, impayés, taux d'occupation, échéances à venir et graphique des 6 derniers mois. |
-| **Biens** | Appartements, villas, studios, locaux commerciaux… avec photos, équipements, loyer et caution. |
+| **Biens** | Appartements, villas, studios, locaux commerciaux… avec équipements, loyer et caution. |
+| **Photos** | Envoi direct depuis l'appareil photo du téléphone. Les images sont compressées automatiquement (une photo de 5 Mo tombe à environ 200 Ko). |
 | **Locataires** | Fiches complètes : identité, CNI, profession, garant, historique des factures. |
 | **Contrats de bail** | Relie un bien à un locataire : loyer, charges, caution, jour d'échéance, honoraires d'agence. |
 | **Factures & quittances** | Génération de toutes les factures du mois en un clic, impression au format A4 (montant en toutes lettres, NINEA, RCCM, cachet). |
 | **Paiements** | Orange Money, Wave, Free Money, espèces, virement, chèque — avec la référence de transaction. |
+| **Relances** | Le logiciel repère les loyers en retard, choisit le ton du message selon l'ancienneté de la dette et l'envoie sur WhatsApp ou par SMS en un clic. |
 | **Demandes** | Les demandes de visite reçues depuis la vitrine, avec appel direct et WhatsApp. |
 
 Chaque agence a son espace : **une agence ne voit jamais les données d'une autre.**
@@ -70,11 +72,16 @@ Vous pouvez aussi créer votre propre agence depuis **« Créer mon agence »**.
 
 ## Où sont mes données ?
 
-Dans un seul fichier : **`data/keur-gestion.db`** (base SQLite).
+Dans un seul dossier : **`data/`**
 
-- Pour **sauvegarder**, copiez ce fichier sur une clé USB ou dans un cloud.
-- Pour **restaurer**, remettez le fichier à sa place.
-- Ce fichier n'est jamais envoyé sur Internet.
+| | |
+|---|---|
+| `data/keur-gestion.db` | La base : agences, biens, locataires, baux, factures, paiements. |
+| `data/televersements/` | Les photos envoyées depuis vos téléphones. |
+
+- Pour **sauvegarder**, copiez le dossier `data/` sur une clé USB ou dans un cloud.
+- Pour **restaurer**, remettez le dossier à sa place.
+- Rien n'est envoyé sur Internet.
 
 ---
 
@@ -89,12 +96,15 @@ src/app/               Les pages du site
   connexion/             Connexion et inscription
   dashboard/             Espace agence (toutes les pages de gestion)
   factures/[id]/imprimer Quittance au format A4
+  api/photos/[fichier]   Sert les photos rangées dans data/televersements/
 src/lib/               Le « moteur » : base de données, calculs, actions
   db.ts                  Connexion à la base
   requetes.ts            Lectures : listes, statistiques, génération des factures
   actions.ts             Écritures : créer, modifier, supprimer
   format.ts              Affichage des montants en FCFA, dates, montants en lettres
   constantes.ts          Villes, quartiers, types de biens, modes de paiement
+  photos.ts              Réception, compression et stockage des photos
+  relances.ts            Niveaux de relance et modèles de messages
 src/components/        Les éléments visuels réutilisés (boutons, cartes, formulaires)
 ```
 
@@ -106,22 +116,40 @@ L'application fonctionne sur n'importe quel serveur qui accepte Node.js
 (VPS, Render, Railway, un serveur au Sénégal…). Deux points d'attention :
 
 1. **Le dossier `data/` doit être conservé** entre deux mises à jour, sinon vous
-   perdez vos données. Sur les hébergeurs « sans disque », il faut brancher un
-   disque persistant ou passer sur une base PostgreSQL.
+   perdez vos données **et vos photos**. Sur les hébergeurs « sans disque », il
+   faut brancher un disque persistant, ou passer sur une base PostgreSQL avec
+   un stockage de fichiers séparé.
 2. Lancez `npm run build` puis `npm start`.
 
 ---
+
+## Envoi réellement automatique des relances
+
+Aujourd'hui, le logiciel fait **tout sauf le dernier clic** : il détecte les
+retards, choisit le niveau du message, le rédige avec les bonnes informations
+et enregistre l'envoi. L'agent appuie sur « Envoyer sur WhatsApp ».
+
+Pour un envoi **sans aucune intervention humaine**, il faut un compte payant
+chez un opérateur de messagerie (WhatsApp Business API via Twilio, Meta ou un
+agrégateur local, ou une passerelle SMS sénégalaise). Le code est prêt pour
+cela : il suffira d'appeler l'opérateur à l'endroit où la relance est
+enregistrée (`actionEnregistrerRelance` dans `src/lib/actions.ts`), puis de
+déclencher la fonction chaque matin par une tâche planifiée.
+
+Nous avons volontairement gardé l'humain dans la boucle pour cette première
+version : une relance envoyée à tort à un locataire qui vient de payer coûte
+plus cher que le temps gagné.
 
 ## Pour aller plus loin
 
 Pistes naturelles pour la suite, par ordre d'utilité :
 
-1. **Relances automatiques par SMS ou WhatsApp** des loyers en retard.
+1. **Reversement aux propriétaires** : relevé mensuel loyer − honoraires.
 2. **Paiement en ligne** (Orange Money / Wave) directement par le locataire.
-3. **Espace locataire** : consulter ses quittances et son solde.
-4. **Plusieurs utilisateurs par agence**, avec des droits différents (agent / comptable).
-5. **États des lieux** avec photos, à l'entrée et à la sortie.
-6. **Reversement aux propriétaires** : relevé mensuel loyer − honoraires.
+3. **Envoi automatique** des relances via un opérateur (voir ci-dessus).
+4. **Espace locataire** : consulter ses quittances et son solde.
+5. **Plusieurs utilisateurs par agence**, avec des droits différents (agent / comptable).
+6. **États des lieux** avec photos, à l'entrée et à la sortie.
 7. **Export comptable** (Excel/CSV) et déclarations fiscales.
 
 Voir **[GUIDE.md](GUIDE.md)** pour le mode d'emploi au quotidien.
