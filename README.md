@@ -24,7 +24,8 @@ Tous les montants sont en francs CFA (XOF).
 | **Espace locataire** | Chaque locataire consulte ses quittances et signale ses règlements (Orange Money, Wave…). L'agence vérifie et confirme : rien n'est compté comme réglé avant sa validation. |
 | **Demandes** | Les demandes de visite reçues depuis la vitrine, avec appel direct et WhatsApp. |
 | **Formules** | Page tarifs publique, limites appliquées automatiquement selon l'abonnement. |
-| **Compte** | Récupération du mot de passe par e-mail, blocage après 8 essais infructueux. |
+| **Assistant** | Une bulle de discussion répond aux visiteurs sur le logiciel et les formules, jour et nuit. Elle ne lit aucun dossier et n'invente rien : ce qu'elle ignore, elle le dit. |
+| **Compte** | Connexion par mot de passe **ou avec un compte Google**. Récupération du mot de passe par e-mail, blocage après 8 essais infructueux. |
 | **Sauvegarde** | Script quotidien et téléchargement de ses données depuis l'espace agence. |
 
 Chaque agence a son espace : **une agence ne voit jamais les données d'une autre.**
@@ -133,6 +134,7 @@ src/app/               Les pages du site
   page.tsx               Vitrine publique (accueil)
   biens/[id]/            Fiche publique d'une annonce
   connexion/             Connexion et inscription
+  connexion/google/      Aller-retour avec Google pour la connexion des agences
   tarifs/                Page publique des formules et des prix
   espace-locataire/      Portail du locataire : quittances et déclarations
   mot-de-passe-oublie/   Demande de réinitialisation
@@ -141,6 +143,7 @@ src/app/               Les pages du site
   dashboard/             Espace agence (toutes les pages de gestion)
   factures/[id]/imprimer Quittance au format A4
   api/photos/[fichier]   Sert les photos rangées dans data/televersements/
+  api/assistant/         Réponses de l'assistant, transmises au fil de l'eau
 src/lib/               Le « moteur » : base de données, calculs, actions
   db.ts                  Connexion à la base
   requetes.ts            Lectures : listes, statistiques, génération des factures
@@ -153,6 +156,8 @@ src/lib/               Le « moteur » : base de données, calculs, actions
   tarifs.ts              Formules d'abonnement, prix et limites
   email.ts               Envoi des e-mails de service (SMTP, ou disque si absent)
   editeur.ts             Identité de l'éditeur, reprise sur les pages légales
+  google.ts              Connexion des agences avec un compte Google (OAuth 2.0)
+  assistant.ts           Savoir et consignes de l'assistant automatique
 src/components/        Les éléments visuels réutilisés (boutons, cartes, formulaires)
 ```
 
@@ -294,6 +299,46 @@ de l'hébergeur, jamais dans un message, un e-mail ou une conversation.
 Un compte créé par Google n'a pas de mot de passe. Pour en ajouter un (utile
 si Google devient indisponible), passez par « Mot de passe oublié » depuis la
 page de connexion.
+
+### 6. (Facultatif) Activer l'assistant automatique
+
+Une bulle de discussion en bas à droite du site répond aux questions des
+visiteurs : ce que fait le logiciel, combien coûtent les formules, comment
+relancer un impayé. Elle travaille la nuit et le week-end, quand vous ne
+pouvez pas répondre.
+
+1. Créez un compte sur [console.anthropic.com](https://console.anthropic.com),
+   puis une clé dans **API keys**.
+2. Ajoutez-la aux variables d'environnement :
+
+   ```
+   ANTHROPIC_API_KEY=sk-ant-...
+   ```
+
+Sans cette variable, la bulle n'apparaît pas et le reste du site est
+identique.
+
+**Ce que l'assistant sait et ne sait pas.** Il connaît les fonctionnalités et
+les tarifs — ceux-ci sont lus directement dans le code, ils ne peuvent donc
+pas se contredire. En revanche :
+
+- il **n'a accès à aucun dossier** : ni compte d'agence, ni solde de
+  locataire. Il explique où cliquer, il ne consulte rien ;
+- il refuse mot de passe, code SMS et code Orange Money / Wave ;
+- il ne donne pas de conseil juridique ou fiscal ferme ;
+- ce qu'il ignore, il le dit au lieu de l'inventer.
+
+**Le coût.** Chaque réponse est facturée à l'usage par Anthropic. Deux
+garde-fous sont en place : 30 questions par machine et par heure au maximum,
+et des réponses courtes. Surveillez tout de même la consommation les premiers
+jours. Pour la réduire, une variable permet de choisir un modèle plus léger :
+
+```
+ASSISTANT_MODELE=claude-sonnet-5
+```
+
+⚠️ La clé est un mot de passe : elle se colle uniquement dans le panneau de
+l'hébergeur, jamais dans un message ou une conversation.
 
 ---
 
