@@ -176,7 +176,7 @@ export default async function PageImpressionFacture({ params }: { params: Promis
           <div className="text-xs text-slate-500">
             <p>Fait à {agence.ville ?? "Dakar"}, le {dateLongue(new Date().toISOString().slice(0, 10))}.</p>
             <p className="mt-4 max-w-xs">
-              Document généré par Keur Gestion. Montants exprimés en francs CFA (XOF).
+              Document généré par Sen Gestion. Montants exprimés en francs CFA (XOF).
             </p>
           </div>
           <div className="w-56 text-center">

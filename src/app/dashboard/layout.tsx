@@ -3,7 +3,7 @@ import { exigerSession } from "@/lib/auth";
 import { compterARelancer, compterDemandesNouvelles } from "@/lib/requetes";
 import { actionDeconnexion } from "@/lib/actions";
 import { NavLaterale } from "@/components/nav-laterale";
-import { LogoKeur } from "@/components/entete-public";
+import { LogoSen } from "@/components/entete-public";
 import { IconeSortie } from "@/components/icones";
 
 export default async function DashboardLayout({ children }: { children: React.ReactNode }) {
@@ -16,7 +16,7 @@ export default async function DashboardLayout({ children }: { children: React.Re
       {/* ------------------------------ Barre laterale ------------------------------ */}
       <aside className="border-b border-slate-200 bg-white lg:sticky lg:top-0 lg:flex lg:h-screen lg:w-64 lg:shrink-0 lg:flex-col lg:border-b-0 lg:border-r">
         <div className="flex items-center justify-between px-4 py-4 lg:block">
-          <Link href="/dashboard"><LogoKeur /></Link>
+          <Link href="/dashboard"><LogoSen /></Link>
           <Link
             href="/"
             target="_blank"

@@ -10,7 +10,7 @@ import path from "node:path";
 
 const racine = process.cwd();
 const dossierData = path.join(racine, "data");
-const cheminBase = process.env.DATABASE_FILE ?? path.join(dossierData, "keur-gestion.db");
+const cheminBase = process.env.DATABASE_FILE ?? path.join(dossierData, "sen-gestion.db");
 
 function ouvrirBase(): Database.Database {
   fs.mkdirSync(path.dirname(cheminBase), { recursive: true });
@@ -30,6 +30,7 @@ function ouvrirBase(): Database.Database {
  */
 function migrer(base: Database.Database) {
   const colonnes = [
+    ["agences", "plan", "TEXT NOT NULL DEFAULT 'decouverte'"],
     ["agences", "modele_rappel", "TEXT"],
     ["agences", "modele_relance", "TEXT"],
     ["agences", "modele_mise_en_demeure", "TEXT"],
@@ -45,9 +46,9 @@ function migrer(base: Database.Database) {
 
 // En developpement, Next.js recharge les modules a chaque modification :
 // on garde la connexion dans globalThis pour ne pas en ouvrir des dizaines.
-const cache = globalThis as unknown as { __keurDb?: Database.Database };
-export const db: Database.Database = cache.__keurDb ?? ouvrirBase();
-if (process.env.NODE_ENV !== "production") cache.__keurDb = db;
+const cache = globalThis as unknown as { __senDb?: Database.Database };
+export const db: Database.Database = cache.__senDb ?? ouvrirBase();
+if (process.env.NODE_ENV !== "production") cache.__senDb = db;
 
 /** Raccourci : renvoie toutes les lignes d'une requete. */
 export function tous<T = Record<string, unknown>>(sql: string, ...params: unknown[]): T[] {

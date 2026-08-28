@@ -3,7 +3,7 @@ import { redirect } from "next/navigation";
 import { actionInscription } from "@/lib/actions";
 import { utilisateurCourant } from "@/lib/auth";
 import { Alerte } from "@/components/ui";
-import { LogoKeur } from "@/components/entete-public";
+import { LogoSen } from "@/components/entete-public";
 
 export const metadata = { title: "Créer mon agence" };
 
@@ -19,7 +19,7 @@ export default async function PageInscription({ searchParams }: { searchParams: 
     <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-brand-800 via-brand-700 to-brand-600 px-4 py-12">
       <div className="w-full max-w-lg">
         <div className="mb-6 flex justify-center">
-          <Link href="/" className="rounded-lg bg-white px-4 py-2.5 shadow-sm"><LogoKeur /></Link>
+          <Link href="/" className="rounded-lg bg-white px-4 py-2.5 shadow-sm"><LogoSen /></Link>
         </div>
 
         <div className="carte p-7">

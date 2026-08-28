@@ -11,7 +11,7 @@ import fs from "node:fs";
 import path from "node:path";
 
 const racine = process.cwd();
-const cheminBase = process.env.DATABASE_FILE ?? path.join(racine, "data", "keur-gestion.db");
+const cheminBase = process.env.DATABASE_FILE ?? path.join(racine, "data", "sen-gestion.db");
 fs.mkdirSync(path.dirname(cheminBase), { recursive: true });
 
 const db = new Database(cheminBase);
@@ -48,8 +48,8 @@ db.exec(`
 
 // ----------------------------------------------------------------- agence
 const agenceId = db.prepare(`
-  INSERT INTO agences (nom, slug, ninea, rccm, telephone, email, adresse, ville, commission_pct)
-  VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+  INSERT INTO agences (nom, slug, ninea, rccm, telephone, email, adresse, ville, commission_pct, plan)
+  VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 'agence')
 `).run(
   "Teranga Immobilier", "teranga-immobilier", "005812345 2V2", "SN DKR 2021 B 18342",
   "771234567", "contact@teranga-immo.sn",
@@ -59,7 +59,7 @@ const agenceId = db.prepare(`
 db.prepare(`
   INSERT INTO utilisateurs (agence_id, nom, email, telephone, mot_de_passe_hash, role)
   VALUES (?, ?, ?, ?, ?, 'proprietaire')
-`).run(agenceId, "Awa Diop", "demo@keurgestion.sn", "771234567", hacher("demo1234"));
+`).run(agenceId, "Isidore Mendy", "demo@sengestion.sn", "771234567", hacher("demo1234"));
 
 // ------------------------------------------------------------------ biens
 const BIENS = [
@@ -427,7 +427,7 @@ const compter = (t) => db.prepare(`SELECT COUNT(*) AS n FROM ${t}`).get().n;
 console.log(`
 Base de demonstration creee : ${cheminBase}
 
-  Agence      : Teranga Immobilier (Dakar)
+  Agence      : Teranga Immobilier (Dakar) — formule Agence\n  Titulaire   : Isidore Mendy
   Biens       : ${compter("biens")}
   Locataires  : ${compter("locataires")}
   Baux        : ${compter("contrats")}
@@ -436,7 +436,7 @@ Base de demonstration creee : ${cheminBase}
   Demandes    : ${compter("demandes")}
   Relances    : ${compter("relances")}
 
-Connexion :  demo@keurgestion.sn  /  demo1234
+Connexion :  demo@sengestion.sn  /  demo1234
 `);
 
 db.close();

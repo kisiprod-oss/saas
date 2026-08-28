@@ -160,11 +160,17 @@ export default async function PageVitrine({ searchParams }: { searchParams: Prom
             ))}
           </div>
 
-          <div className="mt-10 text-center">
+          <div className="mt-10 flex flex-wrap items-center justify-center gap-3">
             <Link href="/inscription" className="btn-primaire px-6 py-3 text-base">
               Créer mon espace agence
             </Link>
+            <Link href="/tarifs" className="btn-secondaire px-6 py-3 text-base">
+              Voir les tarifs
+            </Link>
           </div>
+          <p className="mt-4 text-center text-sm text-slate-500">
+            Gratuit jusqu&apos;à 3 biens. Ensuite à partir de 5 000 FCFA par mois.
+          </p>
         </div>
       </section>
 

@@ -4,7 +4,7 @@ import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { db, un, ecrire } from "./db";
 
-const COOKIE = "keur_session";
+const COOKIE = "sen_session";
 const DUREE_JOURS = 30;
 
 export type Utilisateur = {
@@ -28,6 +28,7 @@ export type Agence = {
   ville: string | null;
   logo_url: string | null;
   commission_pct: number;
+  plan: string;
   modele_rappel: string | null;
   modele_relance: string | null;
   modele_mise_en_demeure: string | null;

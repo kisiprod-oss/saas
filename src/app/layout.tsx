@@ -3,8 +3,8 @@ import "./globals.css";
 
 export const metadata: Metadata = {
   title: {
-    default: "Keur Gestion — Gestion locative au Sénégal",
-    template: "%s · Keur Gestion",
+    default: "Sen Gestion — Gestion locative au Sénégal",
+    template: "%s · Sen Gestion",
   },
   description:
     "Logiciel de gestion locative pour les agences immobilières au Sénégal : biens, locataires, baux, quittances de loyer et suivi des paiements en FCFA.",

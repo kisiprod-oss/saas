@@ -9,6 +9,7 @@ import {
 import { genererFacturesDuMois, numeroFactureSuivant, referenceSuivante } from "./requetes";
 import { aujourdhui } from "./format";
 import { enregistrerPhotos, supprimerPhoto } from "./photos";
+import { peutAjouterBien, plan, planSuivant, PLANS } from "./tarifs";
 
 // ------------------------------------------------------------- utilitaires
 
@@ -105,6 +106,24 @@ export async function actionEnregistrerBien(fd: FormData) {
   const titre = txt(fd, "titre");
   const retour = id ? `/dashboard/biens/${id}` : "/dashboard/biens/nouveau";
   if (!titre) erreur(retour, "Le titre est obligatoire.");
+
+  // La formule d'abonnement limite le nombre de biens.
+  if (!id) {
+    const compte = un<{ n: number }>(
+      "SELECT COUNT(*) AS n FROM biens WHERE agence_id = ?", agence.id,
+    );
+    if (!peutAjouterBien(agence.plan, compte?.n ?? 0)) {
+      const actuelle = plan(agence.plan);
+      const suivante = planSuivant(agence.plan);
+      erreur(
+        "/dashboard/biens",
+        `Votre formule ${actuelle.nom} est limitée à ${actuelle.maxBiens} biens.`
+        + (suivante ? ` Passez à la formule ${suivante.nom} pour en gérer ${
+            suivante.maxBiens === null ? "un nombre illimité" : `jusqu'à ${suivante.maxBiens}`
+          }.` : ""),
+      );
+    }
+  }
 
   const { photos, avertissements } = await rassemblerPhotos(fd);
   const equipements = fd.getAll("equipements").map(String).join(", ");
@@ -540,4 +559,37 @@ export async function actionEnregistrerModeles(fd: FormData) {
   );
   revalidatePath("/dashboard/relances");
   redirect("/dashboard/relances/modeles?ok=1");
+}
+
+// ----------------------------------------------------------------- formule
+
+/**
+ * Change la formule d'abonnement de l'agence.
+ * La facturation n'est pas encore branchee : le changement est immediat.
+ */
+export async function actionChangerPlan(fd: FormData) {
+  const { agence } = await exigerSession();
+  const code = txt(fd, "plan");
+
+  if (!PLANS.some((p) => p.code === code)) {
+    erreur("/dashboard/agence", "Formule inconnue.");
+  }
+
+  const nouvelle = plan(code);
+  if (nouvelle.maxBiens !== null) {
+    const compte = un<{ n: number }>(
+      "SELECT COUNT(*) AS n FROM biens WHERE agence_id = ?", agence.id,
+    );
+    if ((compte?.n ?? 0) > nouvelle.maxBiens) {
+      erreur(
+        "/dashboard/agence",
+        `Vous gérez ${compte?.n} biens : la formule ${nouvelle.nom} n'en accepte que ${nouvelle.maxBiens}.`
+        + " Retirez des biens avant de redescendre de formule.",
+      );
+    }
+  }
+
+  ecrire("UPDATE agences SET plan = ? WHERE id = ?", code, agence.id);
+  revalidatePath("/dashboard/agence");
+  redirect("/dashboard/agence?ok=1");
 }

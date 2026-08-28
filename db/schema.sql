@@ -1,5 +1,5 @@
 -- ============================================================
---  Keur Gestion - Schema de la base de donnees
+--  Sen Gestion - Schema de la base de donnees
 --  SaaS de gestion locative immobiliere (Senegal)
 --  Montants stockes en entiers, en francs CFA (XOF), sans decimales.
 -- ============================================================
@@ -20,6 +20,8 @@ CREATE TABLE IF NOT EXISTS agences (
   ville         TEXT DEFAULT 'Dakar',
   logo_url      TEXT,
   commission_pct REAL NOT NULL DEFAULT 10,
+  -- Formule d'abonnement : decouverte | bailleur | agence | pro
+  plan          TEXT NOT NULL DEFAULT 'decouverte',
   -- Modeles de messages de relance (vides = modeles par defaut du logiciel)
   modele_rappel           TEXT,
   modele_relance          TEXT,

@@ -1,10 +1,10 @@
-# Keur Gestion
+# Sen Gestion
 
 **Logiciel de gestion locative pour le Sénégal** — vitrine d'annonces, tableau de bord,
 locataires, contrats de bail, factures et quittances de loyer, suivi des paiements.
 Tous les montants sont en francs CFA (XOF).
 
-> *Keur* signifie « la maison » en wolof.
+> *Sen* comme Sénégal — et « sen » veut dire « votre » en wolof.
 
 ---
 
@@ -22,8 +22,42 @@ Tous les montants sont en francs CFA (XOF).
 | **Paiements** | Orange Money, Wave, Free Money, espèces, virement, chèque — avec la référence de transaction. |
 | **Relances** | Le logiciel repère les loyers en retard, choisit le ton du message selon l'ancienneté de la dette et l'envoie sur WhatsApp ou par SMS en un clic. |
 | **Demandes** | Les demandes de visite reçues depuis la vitrine, avec appel direct et WhatsApp. |
+| **Formules** | Page tarifs publique, limites appliquées automatiquement selon l'abonnement. |
 
 Chaque agence a son espace : **une agence ne voit jamais les données d'une autre.**
+
+---
+
+## Tarifs
+
+| Formule | Prix / mois | Biens | Utilisateurs | Pour qui |
+|---|---|---|---|---|
+| **Découverte** | Gratuit | 3 | 1 | Essayer sans risque |
+| **Bailleur** | 5 000 FCFA | 10 | 2 | Propriétaires particuliers et diaspora |
+| **Agence** | 20 000 FCFA | 50 | 5 | Le cœur de métier d'une agence |
+| **Agence Pro** | 45 000 FCFA | illimité | illimité | Réseaux, syndics, gros portefeuilles |
+
+Paiement à l'année : **deux mois offerts**. Sans engagement. Premier mois offert
+sur les formules payantes.
+
+**Le raisonnement.** Plusieurs concurrents ouest-africains (Logestimmo, GERILL,
+SenRent) sont gratuits : la formule Découverte doit donc être plus généreuse que
+la leur. Le vrai budget est ailleurs — au Sénégal, une agence prélève 7 à 9 % du
+loyer, soit 20 000 à 40 000 FCFA par mois sur un loyer de 400 000 FCFA. Une
+agence de 50 lots à 300 000 FCFA de loyer moyen encaisse environ 1 200 000 FCFA
+de commission par mois : la formule Agence lui coûte **1,7 % de ce montant**.
+
+La formule Bailleur vise la **diaspora sénégalaise** — des milliers de
+propriétaires d'un à trois biens qui gèrent à distance, mal servis par les
+solutions existantes.
+
+Les formules sont définies dans `src/lib/tarifs.ts` : prix, limites et arguments
+se modifient à un seul endroit, et la page publique comme les contrôles internes
+suivent automatiquement.
+
+> ⚠️ Le paiement en ligne n'est pas branché. Le changement de formule est
+> immédiat depuis « Mon agence ». Pour encaisser réellement, il faudra
+> connecter Orange Money / Wave ou un prestataire de paiement.
 
 ---
 
@@ -51,7 +85,7 @@ Ouvrez ensuite <http://localhost:3000> dans votre navigateur.
 
 | | |
 |---|---|
-| Adresse e-mail | `demo@keurgestion.sn` |
+| Adresse e-mail | `demo@sengestion.sn` |
 | Mot de passe | `demo1234` |
 
 Vous pouvez aussi créer votre propre agence depuis **« Créer mon agence »**.
@@ -76,7 +110,7 @@ Dans un seul dossier : **`data/`**
 
 | | |
 |---|---|
-| `data/keur-gestion.db` | La base : agences, biens, locataires, baux, factures, paiements. |
+| `data/sen-gestion.db` | La base : agences, biens, locataires, baux, factures, paiements. |
 | `data/televersements/` | Les photos envoyées depuis vos téléphones. |
 
 - Pour **sauvegarder**, copiez le dossier `data/` sur une clé USB ou dans un cloud.
@@ -94,6 +128,7 @@ src/app/               Les pages du site
   page.tsx               Vitrine publique (accueil)
   biens/[id]/            Fiche publique d'une annonce
   connexion/             Connexion et inscription
+  tarifs/                Page publique des formules et des prix
   dashboard/             Espace agence (toutes les pages de gestion)
   factures/[id]/imprimer Quittance au format A4
   api/photos/[fichier]   Sert les photos rangées dans data/televersements/
@@ -105,6 +140,7 @@ src/lib/               Le « moteur » : base de données, calculs, actions
   constantes.ts          Villes, quartiers, types de biens, modes de paiement
   photos.ts              Réception, compression et stockage des photos
   relances.ts            Niveaux de relance et modèles de messages
+  tarifs.ts              Formules d'abonnement, prix et limites
 src/components/        Les éléments visuels réutilisés (boutons, cartes, formulaires)
 ```
 

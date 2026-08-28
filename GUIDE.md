@@ -1,4 +1,4 @@
-# Guide d'utilisation — Keur Gestion
+# Guide d'utilisation — Sen Gestion
 
 Ce guide explique comment utiliser l'application au quotidien.
 Aucune connaissance technique n'est nécessaire.
@@ -10,7 +10,7 @@ Aucune connaissance technique n'est nécessaire.
 Ouvrez <http://localhost:3000>, cliquez sur **« Espace agence »** en haut à droite,
 puis saisissez votre e-mail et votre mot de passe.
 
-Pour tester : `demo@keurgestion.sn` / `demo1234`
+Pour tester : `demo@sengestion.sn` / `demo1234`
 
 ---
 
@@ -255,6 +255,16 @@ galerie du téléphone.
 **J'ai relancé un locataire qui avait déjà payé.**
 Enregistrez son paiement : la facture sort immédiatement de la liste des
 relances.
+
+**Quelle formule me faut-il ?**
+Regardez le nombre de biens que vous gérez : 3 en gratuit, 10 en Bailleur,
+50 en Agence, illimité en Agence Pro. Le compteur se trouve dans
+**« Mon agence »**, à droite, avec une barre de progression. Vous changez de
+formule depuis le même encadré.
+
+**Que se passe-t-il si j'atteins la limite ?**
+Le logiciel vous prévient au moment d'ajouter un bien de trop et vous indique la
+formule adaptée. Rien n'est perdu ni bloqué par ailleurs.
 
 **Comment repartir de zéro ?**
 Lancez `npm run reset` puis `npm run seed`.
