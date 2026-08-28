@@ -2,6 +2,7 @@ import "server-only";
 import fs from "node:fs";
 import path from "node:path";
 import nodemailer from "nodemailer";
+import { headers } from "next/headers";
 import { dossierData } from "./db";
 
 /**
@@ -70,7 +71,37 @@ export async function envoyerEmail(message: Message): Promise<{ envoye: boolean;
   return { envoye: false, chemin };
 }
 
-/** Adresse publique du site, utilisee dans les liens des e-mails. */
-export function adresseDuSite(): string {
-  return (process.env.ADRESSE_SITE ?? "http://localhost:3000").replace(/\/$/, "");
+/**
+ * Adresse publique du site, utilisee dans les liens des e-mails.
+ *
+ * ADRESSE_SITE fait autorite quand elle est definie : c'est le reglage sur
+ * lequel il faut compter, et le seul qui protege d'un en-tete « Host »
+ * falsifie par un attaquant pour detourner un lien de reinitialisation.
+ *
+ * A defaut, l'adresse est deduite de la requete en cours. Cela evite les
+ * liens casses le temps d'un essai sur un domaine provisoire, mais la page
+ * « Mon agence » signale alors que le reglage manque.
+ */
+export async function adresseDuSite(): Promise<string> {
+  const declaree = process.env.ADRESSE_SITE?.trim();
+  if (declaree) return declaree.replace(/\/$/, "");
+
+  try {
+    const entetes = await headers();
+    const hote = entetes.get("x-forwarded-host") ?? entetes.get("host");
+    if (hote) {
+      const protocole = entetes.get("x-forwarded-proto")
+        ?? (hote.startsWith("localhost") || hote.startsWith("127.") ? "http" : "https");
+      return `${protocole}://${hote}`;
+    }
+  } catch {
+    // Hors d'une requete (script en ligne de commande) : on retombe plus bas.
+  }
+
+  return "http://localhost:3000";
+}
+
+/** Vrai si ADRESSE_SITE n'est pas renseignee : reglage a completer. */
+export function adresseSiteDeclaree(): boolean {
+  return Boolean(process.env.ADRESSE_SITE?.trim());
 }

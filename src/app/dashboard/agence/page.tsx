@@ -3,7 +3,7 @@ import { actionChangerPlan, actionEnregistrerAgence } from "@/lib/actions";
 import { un } from "@/lib/db";
 import { fcfa } from "@/lib/format";
 import { plan, PLANS } from "@/lib/tarifs";
-import { smtpConfigure } from "@/lib/email";
+import { adresseDuSite, adresseSiteDeclaree, smtpConfigure } from "@/lib/email";
 import Link from "next/link";
 import { VILLES } from "@/lib/constantes";
 import { Carte, Champ, EnTetePage, MessagesUrl, Section } from "@/components/ui";
@@ -25,6 +25,8 @@ export default async function PageAgence({ searchParams }: { searchParams: Promi
   const remplissage = quota === null ? 0 : Math.min(100, Math.round((biens / quota) * 100));
   const satureBientot = quota !== null && biens >= quota * 0.8;
   const emailsActifs = smtpConfigure();
+  const adresse = await adresseDuSite();
+  const adresseDeclaree = adresseSiteDeclaree();
 
   return (
     <>
@@ -162,11 +164,25 @@ export default async function PageAgence({ searchParams }: { searchParams: Promi
             </div>
 
             {emailsActifs ? (
-              <p className="mt-2 text-sm text-slate-500">
-                Les liens de réinitialisation de mot de passe partent bien par e-mail.
-                Pour vérifier l&apos;acheminement :{" "}
-                <code className="rounded bg-slate-100 px-1">npm run tester-email</code>.
-              </p>
+              <>
+                <p className="mt-2 text-sm text-slate-500">
+                  Les liens de réinitialisation de mot de passe partent bien par e-mail.
+                  Pour vérifier l&apos;acheminement :{" "}
+                  <code className="rounded bg-slate-100 px-1">npm run tester-email</code>.
+                </p>
+                <p className="mt-2 text-sm text-slate-500">
+                  Les liens envoyés pointent vers{" "}
+                  <code className="rounded bg-slate-100 px-1">{adresse}</code>.
+                </p>
+                {!adresseDeclaree && (
+                  <p className="mt-2 rounded-lg bg-amber-50 px-3 py-2 text-xs text-amber-900">
+                    Cette adresse est déduite de votre navigation. Renseignez{" "}
+                    <code className="rounded bg-amber-100 px-1">ADRESSE_SITE</code> pour
+                    la fixer une bonne fois : c&apos;est plus sûr, et les liens resteront
+                    corrects quel que soit le chemin d&apos;accès au site.
+                  </p>
+                )}
+              </>
             ) : (
               <>
                 <p className="mt-2 text-sm text-rose-800">

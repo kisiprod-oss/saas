@@ -641,7 +641,7 @@ export async function actionDemanderReinitialisation(fd: FormData) {
   const demande = creerDemandeReinitialisation(email);
 
   if (demande) {
-    const lien = `${adresseDuSite()}/reinitialiser/${demande.token}`;
+    const lien = `${await adresseDuSite()}/reinitialiser/${demande.token}`;
     await envoyerEmail({
       destinataire: email,
       sujet: "Réinitialisation de votre mot de passe Sen Gestion",

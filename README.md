@@ -217,6 +217,12 @@ semaine. **Le plan gratuit de Brevo suffit largement pour démarrer.**
   cela, vos messages partent dans les indésirables — et un lien de
   réinitialisation qu'on ne voit pas ne sert à rien.
 
+**Adresse du site.** Renseignez `ADRESSE_SITE` avec l'adresse réelle : le
+domaine temporaire de l'hébergeur au début
+(`https://xxx.hostingersite.com`), puis votre vrai domaine. Si la variable
+manque, l'adresse est déduite de la requête en cours — les liens
+fonctionnent, mais la fixer protège d'un en-tête `Host` falsifié.
+
 ### 3. Ne jamais lancer `npm run seed` en production
 
 Cette commande **efface tout** pour installer le jeu de démonstration. Avec
