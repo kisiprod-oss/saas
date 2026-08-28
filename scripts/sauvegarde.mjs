@@ -17,7 +17,9 @@ import fs from "node:fs";
 import path from "node:path";
 
 const racine = process.cwd();
-const dossierData = path.join(racine, "data");
+const dossierData = process.env.DOSSIER_DONNEES
+  ? path.resolve(process.env.DOSSIER_DONNEES)
+  : path.join(racine, "data");
 const base = process.env.DATABASE_FILE ?? path.join(dossierData, "sen-gestion.db");
 const dossier = path.join(dossierData, "sauvegardes");
 const aConserver = Number(process.env.SAUVEGARDES_A_CONSERVER ?? 14);

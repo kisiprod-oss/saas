@@ -4,6 +4,7 @@ import os from "node:os";
 import path from "node:path";
 import Database from "better-sqlite3";
 import { utilisateurCourant } from "@/lib/auth";
+import { dossierData } from "@/lib/db";
 
 /**
  * Telechargement d'une copie de la base par le titulaire du compte.
@@ -23,8 +24,7 @@ export async function GET() {
     return new Response("Seul le titulaire du compte peut télécharger la sauvegarde", { status: 403 });
   }
 
-  const source = process.env.DATABASE_FILE
-    ?? path.join(process.cwd(), "data", "sen-gestion.db");
+  const source = process.env.DATABASE_FILE ?? path.join(dossierData, "sen-gestion.db");
 
   if (!fs.existsSync(source)) {
     return new Response("Base introuvable", { status: 404 });

@@ -210,7 +210,14 @@ semaine. **Le plan gratuit de Brevo suffit largement pour démarrer.**
   cela, vos messages partent dans les indésirables — et un lien de
   réinitialisation qu'on ne voit pas ne sert à rien.
 
-### 3. Programmer la sauvegarde
+### 3. Ne jamais lancer `npm run seed` en production
+
+Cette commande **efface tout** pour installer le jeu de démonstration. Avec
+`NODE_ENV=production`, elle refuse désormais de s'exécuter. Pour démarrer une
+vraie agence, ouvrez simplement le site et créez le compte depuis
+« Créer mon agence ».
+
+### 4. Programmer la sauvegarde
 
 Sur le serveur, ajoutez cette ligne à `crontab -e` :
 
@@ -233,10 +240,19 @@ Une sauvegarde qui disparaît avec le serveur ne sert à rien.
 L'application fonctionne sur n'importe quel serveur qui accepte Node.js
 (VPS, Render, Railway, un serveur au Sénégal…). Deux points d'attention :
 
-1. **Le dossier `data/` doit être conservé** entre deux mises à jour, sinon vous
-   perdez vos données **et vos photos**. Sur les hébergeurs « sans disque », il
-   faut brancher un disque persistant, ou passer sur une base PostgreSQL avec
-   un stockage de fichiers séparé.
+1. **Placez le dossier de données HORS du dossier de l'application.** La plupart
+   des hébergeurs (Hostinger, Render, Railway…) remplacent le dossier de
+   l'application à chaque déploiement : des données rangées dedans seraient
+   effacées à chaque mise à jour. Renseignez donc :
+
+   ```
+   DOSSIER_DONNEES=/home/u123456789/donnees-sen-gestion
+   ```
+
+   Base, photos et sauvegardes suivent automatiquement cet emplacement.
+
+   **Vérifiez-le avant toute vraie donnée** : créez un compte d'essai,
+   relancez un déploiement, et regardez si le compte existe encore.
 2. Lancez `npm run build` puis `npm start`.
 
 ---

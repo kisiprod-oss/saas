@@ -9,7 +9,19 @@ import path from "node:path";
  */
 
 const racine = process.cwd();
-const dossierData = path.join(racine, "data");
+
+/**
+ * Dossier qui contient TOUTES les donnees : base et photos.
+ *
+ * Sur un hebergement qui remplace le dossier de l'application a chaque
+ * deploiement, il faut le placer ailleurs, par exemple :
+ *   DOSSIER_DONNEES=/home/utilisateur/donnees-sen-gestion
+ * Sans quoi la mise a jour du logiciel effacerait les donnees.
+ */
+export const dossierData = process.env.DOSSIER_DONNEES
+  ? path.resolve(process.env.DOSSIER_DONNEES)
+  : path.join(racine, "data");
+
 const cheminBase = process.env.DATABASE_FILE ?? path.join(dossierData, "sen-gestion.db");
 
 function ouvrirBase(): Database.Database {

@@ -2,7 +2,10 @@
 import fs from "node:fs";
 import path from "node:path";
 
-const base = process.env.DATABASE_FILE ?? path.join(process.cwd(), "data", "sen-gestion.db");
+const dossierData = process.env.DOSSIER_DONNEES
+  ? path.resolve(process.env.DOSSIER_DONNEES)
+  : path.join(process.cwd(), "data");
+const base = process.env.DATABASE_FILE ?? path.join(dossierData, "sen-gestion.db");
 let supprimes = 0;
 
 for (const suffixe of ["", "-wal", "-shm"]) {

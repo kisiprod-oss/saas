@@ -11,7 +11,10 @@ import fs from "node:fs";
 import path from "node:path";
 
 const racine = process.cwd();
-const cheminBase = process.env.DATABASE_FILE ?? path.join(racine, "data", "sen-gestion.db");
+const dossierData = process.env.DOSSIER_DONNEES
+  ? path.resolve(process.env.DOSSIER_DONNEES)
+  : path.join(racine, "data");
+const cheminBase = process.env.DATABASE_FILE ?? path.join(dossierData, "sen-gestion.db");
 fs.mkdirSync(path.dirname(cheminBase), { recursive: true });
 
 const db = new Database(cheminBase);
@@ -36,6 +39,27 @@ const jourDu = (periode, jour) => {
   const dernier = new Date(Date.UTC(a, m, 0)).getUTCDate();
   return `${periode}-${String(Math.min(jour, dernier)).padStart(2, "0")}`;
 };
+
+// ------------------------------------------------------------- securite
+// Cette commande EFFACE toutes les donnees existantes. En production, une
+// erreur de manipulation couterait les baux et les quittances d'une agence.
+if (process.env.NODE_ENV === "production" && process.env.JE_CONFIRME_EFFACER !== "oui") {
+  console.error(`
+⛔ REFUS D'EXECUTION
+
+Cette commande efface TOUTES les donnees pour installer un jeu de
+demonstration. Vous etes en environnement de production.
+
+Base visee : ${cheminBase}
+
+Si vous voulez vraiment tout effacer, relancez avec :
+  JE_CONFIRME_EFFACER=oui npm run seed
+
+Pour demarrer une vraie agence, ne lancez pas cette commande :
+ouvrez simplement le site et creez votre compte depuis « Creer mon agence ».
+`);
+  process.exit(1);
+}
 
 // --------------------------------------------------------------- nettoyage
 db.exec(`

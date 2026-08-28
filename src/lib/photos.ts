@@ -4,20 +4,21 @@ import fs from "node:fs";
 import fsp from "node:fs/promises";
 import path from "node:path";
 import sharp from "sharp";
+import { dossierData } from "./db";
 
 /**
  * Stockage des photos envoyees depuis le telephone ou l'ordinateur.
  *
- * Les fichiers sont ranges dans `data/televersements/` : le dossier `data/`
- * contient donc TOUT (base + photos), et une sauvegarde se resume a copier
- * ce dossier.
+ * Les fichiers sont ranges dans `televersements/`, a cote de la base, dans le
+ * dossier de donnees (voir DOSSIER_DONNEES) : celui-ci contient donc TOUT,
+ * et une sauvegarde se resume a le copier.
  *
  * Chaque image est recompressee en WebP, largeur maximale 1600 px : une photo
  * de telephone de 5 Mo tombe autour de 150 a 300 Ko. C'est important quand la
  * connexion se fait en donnees mobiles.
  */
 
-const DOSSIER = path.join(process.cwd(), "data", "televersements");
+const DOSSIER = path.join(dossierData, "televersements");
 const PREFIXE_URL = "/api/photos/";
 
 const LARGEUR_MAX = 1600;

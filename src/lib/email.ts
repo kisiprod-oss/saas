@@ -2,6 +2,7 @@ import "server-only";
 import fs from "node:fs";
 import path from "node:path";
 import nodemailer from "nodemailer";
+import { dossierData } from "./db";
 
 /**
  * Envoi des e-mails de service (reinitialisation de mot de passe, bienvenue).
@@ -18,7 +19,7 @@ import nodemailer from "nodemailer";
  *   EMAIL_EXPEDITEUR="Sen Gestion <contact@votre-domaine.sn>"
  */
 
-const DOSSIER_SECOURS = path.join(process.cwd(), "data", "emails");
+const DOSSIER_SECOURS = path.join(dossierData, "emails");
 
 export function smtpConfigure(): boolean {
   return Boolean(process.env.SMTP_HOST && process.env.SMTP_USER && process.env.SMTP_PASS);
