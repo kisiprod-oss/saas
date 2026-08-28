@@ -3,6 +3,7 @@ import { actionChangerPlan, actionEnregistrerAgence } from "@/lib/actions";
 import { un } from "@/lib/db";
 import { fcfa } from "@/lib/format";
 import { plan, PLANS } from "@/lib/tarifs";
+import { smtpConfigure } from "@/lib/email";
 import Link from "next/link";
 import { VILLES } from "@/lib/constantes";
 import { Carte, Champ, EnTetePage, MessagesUrl, Section } from "@/components/ui";
@@ -23,6 +24,7 @@ export default async function PageAgence({ searchParams }: { searchParams: Promi
   const quota = formule.maxBiens;
   const remplissage = quota === null ? 0 : Math.min(100, Math.round((biens / quota) * 100));
   const satureBientot = quota !== null && biens >= quota * 0.8;
+  const emailsActifs = smtpConfigure();
 
   return (
     <>
@@ -147,6 +149,39 @@ export default async function PageAgence({ searchParams }: { searchParams: Promi
               immédiatement. <Link href="/tarifs" target="_blank" className="font-medium text-brand-700 hover:underline">
               Voir le détail des formules ↗</Link>
             </p>
+          </Carte>
+
+          <Carte className="p-5">
+            <div className="flex items-start justify-between gap-3">
+              <h2 className="font-semibold text-slate-900">Envoi des e-mails</h2>
+              <span className={`badge ${emailsActifs
+                ? "bg-emerald-100 text-emerald-800 ring-emerald-600/20"
+                : "bg-rose-100 text-rose-800 ring-rose-600/20"}`}>
+                {emailsActifs ? "Actif" : "Inactif"}
+              </span>
+            </div>
+
+            {emailsActifs ? (
+              <p className="mt-2 text-sm text-slate-500">
+                Les liens de réinitialisation de mot de passe partent bien par e-mail.
+                Pour vérifier l&apos;acheminement :{" "}
+                <code className="rounded bg-slate-100 px-1">npm run tester-email</code>.
+              </p>
+            ) : (
+              <>
+                <p className="mt-2 text-sm text-rose-800">
+                  Aucun serveur d&apos;e-mail n&apos;est configuré :{" "}
+                  <strong>personne ne peut récupérer un mot de passe oublié.</strong>
+                </p>
+                <p className="mt-2 text-sm text-slate-500">
+                  Les messages sont écrits dans{" "}
+                  <code className="rounded bg-slate-100 px-1">data/emails/</code> au lieu
+                  d&apos;être envoyés. Renseignez le fichier{" "}
+                  <code className="rounded bg-slate-100 px-1">.env.local</code>, puis lancez{" "}
+                  <code className="rounded bg-slate-100 px-1">npm run tester-email</code>.
+                </p>
+              </>
+            )}
           </Carte>
 
           <Carte className="p-5">

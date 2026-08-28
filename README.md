@@ -100,6 +100,7 @@ Vous pouvez aussi créer votre propre agence depuis **« Créer mon agence »**.
 |---|---|
 | `npm run dev` | Démarre l'application en mode développement (<http://localhost:3000>) |
 | `npm run seed` | Remet les données de démonstration (⚠️ **efface tout le contenu existant**) |
+| `npm run tester-email` | Vérifie la configuration d'envoi et expédie un message d'essai |
 | `npm run sauvegarde` | Crée une sauvegarde datée dans `data/sauvegardes/` |
 | `npm run reset` | Supprime complètement la base de données |
 | `npm run build` | Prépare la version optimisée pour la mise en ligne |
@@ -173,12 +174,41 @@ rédigées, mais doivent être relues par un juriste.
 
 ### 2. Configurer l'envoi d'e-mails
 
-Copiez `.env.example` en `.env.local` et renseignez votre serveur SMTP.
+**C'est le seul point qui bloque vraiment un lancement.** Sans serveur d'envoi,
+l'application fonctionne, mais les e-mails sont écrits dans `data/emails/` au
+lieu d'être envoyés : *personne ne peut récupérer un mot de passe oublié.*
 
-Sans cette configuration, l'application fonctionne quand même : les e-mails
-sont écrits dans `data/emails/` au lieu d'être envoyés. Pratique pour tester,
-inacceptable en production — **sans SMTP, personne ne peut récupérer un mot de
-passe oublié.**
+Copiez `.env.example` en `.env.local`, remplissez les quatre variables, puis
+vérifiez :
+
+```bash
+npm run tester-email                       # envoie à l'adresse SMTP_USER
+npm run tester-email -- vous@exemple.sn    # envoie à l'adresse indiquée
+```
+
+La commande affiche la configuration lue, teste la connexion, envoie un message
+d'essai, et **explique en français** la cause probable en cas d'échec.
+L'état apparaît aussi dans l'application, page « Mon agence ».
+
+#### Quel fournisseur choisir
+
+| Fournisseur | Serveur | Identifiants | Remarque |
+|---|---|---|---|
+| **Brevo** *(recommandé)* | `smtp-relay.brevo.com` port 587 | Adresse de connexion + **clé SMTP** | 300 e-mails/jour gratuits, transactionnel inclus, interface en français |
+| **Gmail / Workspace** | `smtp.gmail.com` port 587 | Adresse + **mot de passe d'application** | Validation en deux étapes obligatoire ; convient à un faible volume |
+| **Votre hébergeur** | `mail.votre-domaine.sn` port 587 | Adresse complète + mot de passe de la boîte | Souvent inclus avec un nom de domaine `.sn` |
+
+Pour les mots de passe oubliés, le volume est faible : quelques messages par
+semaine. **Le plan gratuit de Brevo suffit largement pour démarrer.**
+
+⚠️ Deux pièges classiques :
+
+- **Ce n'est pas le mot de passe de votre compte.** Brevo demande une « clé
+  SMTP », Gmail un « mot de passe d'application ». Le mot de passe habituel est
+  systématiquement refusé.
+- **Configurez SPF et DKIM** sur votre domaine, chez votre fournisseur. Sans
+  cela, vos messages partent dans les indésirables — et un lien de
+  réinitialisation qu'on ne voit pas ne sert à rien.
 
 ### 3. Programmer la sauvegarde
 
