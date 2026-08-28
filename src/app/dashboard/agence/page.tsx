@@ -150,6 +150,21 @@ export default async function PageAgence({ searchParams }: { searchParams: Promi
           </Carte>
 
           <Carte className="p-5">
+            <h2 className="font-semibold text-slate-900">Sauvegarde</h2>
+            <p className="mt-1 text-sm text-slate-500">
+              Téléchargez une copie complète de vos données : agences, biens,
+              locataires, baux, factures et paiements.
+            </p>
+            <a href="/api/sauvegarde" className="btn-secondaire mt-3 w-full">
+              ⬇ Télécharger mes données
+            </a>
+            <p className="mt-2 text-xs text-slate-500">
+              Sur le serveur, <code className="rounded bg-slate-100 px-1">npm run sauvegarde</code> crée
+              une archive avec les photos. À programmer chaque nuit.
+            </p>
+          </Carte>
+
+          <Carte className="p-5">
             <h2 className="font-semibold text-slate-900">Bon à savoir</h2>
             <ul className="mt-3 space-y-2.5 text-sm text-slate-600">
               <li>💡 Le NINEA et le RCCM renseignés ici s&apos;impriment sur chaque quittance.</li>

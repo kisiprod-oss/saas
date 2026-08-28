@@ -154,3 +154,111 @@ export function inscrireAgence(params: {
 
   return { ok: true, utilisateurId: creation() };
 }
+
+/* ==================================================================
+   Protection contre les essais de mots de passe en rafale
+   ================================================================== */
+
+const MAX_TENTATIVES = 8;
+const FENETRE_MINUTES = 15;
+
+/** Note une tentative de connexion, reussie ou non. */
+export function noterTentative(cle: string, reussie: boolean) {
+  ecrire(
+    "INSERT INTO tentatives_connexion (cle, reussie) VALUES (?, ?)",
+    cle.toLowerCase(), reussie ? 1 : 0,
+  );
+  // Purge des traces anciennes, pour que la table ne gonfle pas.
+  ecrire("DELETE FROM tentatives_connexion WHERE le < datetime('now', '-1 day')");
+}
+
+/** Vrai si trop d'echecs recents : la connexion doit etre refusee. */
+export function tropDeTentatives(cle: string): boolean {
+  const r = un<{ n: number }>(
+    `SELECT COUNT(*) AS n FROM tentatives_connexion
+      WHERE cle = ? AND reussie = 0 AND le > datetime('now', ?)`,
+    cle.toLowerCase(), `-${FENETRE_MINUTES} minutes`,
+  );
+  return (r?.n ?? 0) >= MAX_TENTATIVES;
+}
+
+/** Efface les echecs apres une connexion reussie. */
+export function reinitialiserTentatives(cle: string) {
+  ecrire("DELETE FROM tentatives_connexion WHERE cle = ?", cle.toLowerCase());
+}
+
+export const MINUTES_BLOCAGE = FENETRE_MINUTES;
+
+/* ==================================================================
+   Reinitialisation du mot de passe
+   ================================================================== */
+
+const DUREE_LIEN_MINUTES = 60;
+
+/**
+ * Cree un lien de reinitialisation pour cette adresse.
+ * Renvoie null si l'adresse est inconnue : l'appelant doit tout de meme
+ * afficher le meme message, pour ne pas reveler qui possede un compte.
+ */
+export function creerDemandeReinitialisation(email: string): { token: string; nom: string } | null {
+  const utilisateur = un<{ id: number; nom: string }>(
+    "SELECT id, nom FROM utilisateurs WHERE email = ? AND actif = 1",
+    email.trim().toLowerCase(),
+  );
+  if (!utilisateur) return null;
+
+  // Une seule demande valable a la fois.
+  ecrire(
+    "DELETE FROM reinitialisations WHERE utilisateur_id = ? AND utilise_le IS NULL",
+    utilisateur.id,
+  );
+
+  const token = crypto.randomBytes(32).toString("hex");
+  ecrire(
+    "INSERT INTO reinitialisations (token, utilisateur_id, expire_le) VALUES (?, ?, ?)",
+    token, utilisateur.id, new Date(Date.now() + DUREE_LIEN_MINUTES * 60_000).toISOString(),
+  );
+
+  return { token, nom: utilisateur.nom };
+}
+
+export type DemandeReinitialisation = { token: string; utilisateur_id: number; email: string; nom: string };
+
+/** Renvoie la demande si le lien est encore valable, sinon null. */
+export function lireDemandeReinitialisation(token: string): DemandeReinitialisation | null {
+  const ligne = un<DemandeReinitialisation & { expire_le: string; utilise_le: string | null }>(
+    `SELECT r.token, r.utilisateur_id, r.expire_le, r.utilise_le, u.email, u.nom
+       FROM reinitialisations r
+       JOIN utilisateurs u ON u.id = r.utilisateur_id
+      WHERE r.token = ? AND u.actif = 1`,
+    token,
+  );
+
+  if (!ligne) return null;
+  if (ligne.utilise_le) return null;
+  if (new Date(ligne.expire_le).getTime() < Date.now()) return null;
+
+  return { token: ligne.token, utilisateur_id: ligne.utilisateur_id, email: ligne.email, nom: ligne.nom };
+}
+
+/**
+ * Applique le nouveau mot de passe, consomme le lien et ferme toutes les
+ * sessions ouvertes : si quelqu'un s'etait introduit dans le compte,
+ * il en est ejecte.
+ */
+export function appliquerNouveauMotDePasse(token: string, motDePasse: string): boolean {
+  const demande = lireDemandeReinitialisation(token);
+  if (!demande) return false;
+
+  db.transaction(() => {
+    ecrire(
+      "UPDATE utilisateurs SET mot_de_passe_hash = ? WHERE id = ?",
+      hacherMotDePasse(motDePasse), demande.utilisateur_id,
+    );
+    ecrire("UPDATE reinitialisations SET utilise_le = datetime('now') WHERE token = ?", token);
+    ecrire("DELETE FROM sessions WHERE utilisateur_id = ?", demande.utilisateur_id);
+    ecrire("DELETE FROM tentatives_connexion WHERE cle = ?", demande.email.toLowerCase());
+  })();
+
+  return true;
+}

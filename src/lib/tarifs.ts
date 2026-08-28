@@ -19,6 +19,8 @@ export type Plan = {
   maxBiens: number | null;
   maxUtilisateurs: number | null;
   atouts: string[];
+  /** Annonce honnete : promis, mais pas encore construit. */
+  bientot?: string[];
   populaire?: boolean;
 };
 
@@ -33,10 +35,10 @@ export const PLANS: Plan[] = [
     maxUtilisateurs: 1,
     atouts: [
       "3 biens",
-      "1 utilisateur",
       "Annonces sur la vitrine publique",
-      "Contrats de bail et locataires",
+      "Locataires et contrats de bail",
       "Factures et quittances imprimables",
+      "Demandes de visite reçues en ligne",
       "Gratuit pour toujours, sans carte bancaire",
     ],
   },
@@ -50,12 +52,13 @@ export const PLANS: Plan[] = [
     maxUtilisateurs: 2,
     atouts: [
       "10 biens",
-      "2 utilisateurs",
-      "Photos depuis le téléphone",
-      "Relances WhatsApp automatiques",
+      "Photos prises depuis le téléphone",
+      "Relances WhatsApp des impayés",
       "Suivi des paiements Orange Money et Wave",
+      "Téléchargement de vos données à tout moment",
       "Tout ce que contient la formule Découverte",
     ],
+    bientot: ["Plusieurs utilisateurs"],
   },
   {
     code: "agence",
@@ -68,12 +71,12 @@ export const PLANS: Plan[] = [
     populaire: true,
     atouts: [
       "50 biens",
-      "5 utilisateurs",
-      "Reversement aux propriétaires",
-      "Export comptable",
+      "Messages de relance à votre nom",
+      "Tableau de bord des impayés et du recouvrement",
       "Assistance prioritaire par WhatsApp",
       "Tout ce que contient la formule Bailleur",
     ],
+    bientot: ["Export comptable", "Reversement aux propriétaires"],
   },
   {
     code: "pro",
@@ -85,12 +88,11 @@ export const PLANS: Plan[] = [
     maxUtilisateurs: null,
     atouts: [
       "Biens illimités",
-      "Utilisateurs illimités",
-      "Plusieurs agences sur un même compte",
       "Accompagnement à la mise en route",
-      "Sauvegardes et accès aux données",
+      "Sauvegarde quotidienne de vos données",
       "Tout ce que contient la formule Agence",
     ],
+    bientot: ["Plusieurs agences sur un même compte", "Accès aux données par programme"],
   },
 ];
 

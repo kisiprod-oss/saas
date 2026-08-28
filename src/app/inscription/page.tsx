@@ -59,6 +59,18 @@ export default async function PageInscription({ searchParams }: { searchParams: 
             </div>
 
             <button type="submit" className="btn-primaire w-full py-3">Créer mon agence</button>
+
+            <p className="text-center text-xs leading-relaxed text-slate-500">
+              En créant un compte, vous acceptez les{" "}
+              <Link href="/cgu" className="font-medium text-brand-700 hover:underline">
+                conditions d&apos;utilisation
+              </Link>{" "}
+              et la{" "}
+              <Link href="/confidentialite" className="font-medium text-brand-700 hover:underline">
+                politique de confidentialité
+              </Link>. Vous restez responsable des données de locataires que vous
+              enregistrez.
+            </p>
           </form>
 
           <p className="mt-6 text-center text-sm text-slate-500">

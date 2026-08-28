@@ -14,6 +14,21 @@ Pour tester : `demo@sengestion.sn` / `demo1234`
 
 ---
 
+## 1 bis. Mot de passe oublié
+
+Sur la page de connexion, cliquez sur **« Oublié ? »** à côté du champ mot de
+passe. Indiquez votre adresse e-mail : vous recevez un lien valable **une
+heure**, utilisable **une seule fois**.
+
+Par sécurité, changer le mot de passe ferme toutes les sessions ouvertes sur le
+compte.
+
+Après **8 essais infructueux**, la connexion à ce compte est bloquée pendant
+15 minutes. C'est ce qui empêche quelqu'un d'essayer des milliers de mots de
+passe. Si cela vous arrive, utilisez « Oublié ? » plutôt que d'attendre.
+
+---
+
 ## 2. Renseigner votre agence (à faire en premier)
 
 Menu **« Mon agence »**.
@@ -245,7 +260,11 @@ Oui. Dakar, Thiès, Mbour, Saint-Louis… sont proposées, et vous pouvez saisir
 n'importe quelle autre ville ou quartier à la main.
 
 **Comment sauvegarder mes données ?**
-Copiez le dossier `data/` en entier : il contient la base *et* les photos.
+Deux façons. Depuis l'application : **« Mon agence »** → **« Télécharger mes
+données »** vous donne un fichier contenant tout (biens, locataires, baux,
+factures, paiements). Sur le serveur : la commande `npm run sauvegarde` crée une
+archive datée avec en plus les photos, et devrait tourner chaque nuit
+automatiquement.
 
 **Une photo est à l'envers.**
 Le logiciel redresse automatiquement les photos prises au téléphone. Si l'une

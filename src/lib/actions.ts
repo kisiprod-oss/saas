@@ -3,9 +3,13 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { db, ecrire, un } from "./db";
+import { headers } from "next/headers";
 import {
-  exigerSession, fermerSession, inscrireAgence, ouvrirSession, verifierMotDePasse,
+  appliquerNouveauMotDePasse, creerDemandeReinitialisation, exigerSession, fermerSession,
+  inscrireAgence, lireDemandeReinitialisation, MINUTES_BLOCAGE, noterTentative, ouvrirSession,
+  reinitialiserTentatives, tropDeTentatives, verifierMotDePasse,
 } from "./auth";
+import { adresseDuSite, envoyerEmail } from "./email";
 import { genererFacturesDuMois, numeroFactureSuivant, referenceSuivante } from "./requetes";
 import { aujourdhui } from "./format";
 import { enregistrerPhotos, supprimerPhoto } from "./photos";
@@ -42,6 +46,16 @@ function erreur(url: string, message: string): never {
 export async function actionConnexion(fd: FormData) {
   const email = txt(fd, "email").toLowerCase();
   const motDePasse = String(fd.get("motDePasse") ?? "");
+  const origine = await adresseIp();
+
+  // Deux verrous : sur l'adresse e-mail visee, et sur la machine qui essaie.
+  if (tropDeTentatives(email) || (origine !== null && tropDeTentatives(origine))) {
+    erreur(
+      "/connexion",
+      `Trop de tentatives de connexion. Réessayez dans ${MINUTES_BLOCAGE} minutes,`
+      + " ou utilisez « Mot de passe oublié ».",
+    );
+  }
 
   const utilisateur = un<{ id: number; mot_de_passe_hash: string; actif: number }>(
     "SELECT id, mot_de_passe_hash, actif FROM utilisateurs WHERE email = ?",
@@ -49,11 +63,30 @@ export async function actionConnexion(fd: FormData) {
   );
 
   if (!utilisateur || !utilisateur.actif || !verifierMotDePasse(motDePasse, utilisateur.mot_de_passe_hash)) {
+    noterTentative(email, false);
+    if (origine !== null) noterTentative(origine, false);
     erreur("/connexion", "E-mail ou mot de passe incorrect.");
   }
 
+  reinitialiserTentatives(email);
+  if (origine !== null) reinitialiserTentatives(origine);
   await ouvrirSession(utilisateur.id);
   redirect("/dashboard");
+}
+
+/**
+ * Adresse IP de l'appelant, telle que transmise par le serveur de façade.
+ *
+ * Renvoie null quand aucune adresse n'est transmise. C'est important :
+ * regrouper tous les visiteurs sous une meme cle « inconnue » permettrait
+ * a une seule personne de bloquer la connexion de tout le monde.
+ * Dans ce cas, seul le verrou par adresse e-mail s'applique.
+ */
+async function adresseIp(): Promise<string | null> {
+  const entetes = await headers();
+  const transmise = entetes.get("x-forwarded-for")?.split(",")[0]?.trim()
+    || entetes.get("x-real-ip")?.trim();
+  return transmise ? `ip:${transmise}` : null;
 }
 
 export async function actionInscription(fd: FormData) {
@@ -592,4 +625,58 @@ export async function actionChangerPlan(fd: FormData) {
   ecrire("UPDATE agences SET plan = ? WHERE id = ?", code, agence.id);
   revalidatePath("/dashboard/agence");
   redirect("/dashboard/agence?ok=1");
+}
+
+// ------------------------------------------------- mot de passe oublie
+
+/**
+ * Envoie le lien de reinitialisation.
+ * Le message affiche est le meme que l'adresse existe ou non : cela evite
+ * de reveler quelles adresses possedent un compte.
+ */
+export async function actionDemanderReinitialisation(fd: FormData) {
+  const email = txt(fd, "email").toLowerCase();
+  if (!email) erreur("/mot-de-passe-oublie", "Indiquez votre adresse e-mail.");
+
+  const demande = creerDemandeReinitialisation(email);
+
+  if (demande) {
+    const lien = `${adresseDuSite()}/reinitialiser/${demande.token}`;
+    await envoyerEmail({
+      destinataire: email,
+      sujet: "Réinitialisation de votre mot de passe Sen Gestion",
+      texte:
+`Bonjour ${demande.nom},
+
+Vous avez demandé à changer le mot de passe de votre compte Sen Gestion.
+
+Cliquez sur ce lien pour choisir un nouveau mot de passe :
+${lien}
+
+Ce lien est valable une heure et ne peut servir qu'une seule fois.
+
+Si vous n'êtes pas à l'origine de cette demande, ignorez ce message :
+votre mot de passe actuel reste valable.
+
+L'équipe Sen Gestion`,
+    });
+  }
+
+  redirect("/mot-de-passe-oublie?envoye=1");
+}
+
+export async function actionReinitialiser(fd: FormData) {
+  const token = txt(fd, "token");
+  const motDePasse = String(fd.get("motDePasse") ?? "");
+  const confirmation = String(fd.get("confirmation") ?? "");
+  const retour = `/reinitialiser/${token}`;
+
+  if (motDePasse.length < 6) erreur(retour, "Le mot de passe doit contenir au moins 6 caractères.");
+  if (motDePasse !== confirmation) erreur(retour, "Les deux mots de passe ne sont pas identiques.");
+  if (!lireDemandeReinitialisation(token)) {
+    erreur("/mot-de-passe-oublie", "Ce lien a expiré ou a déjà été utilisé. Demandez-en un nouveau.");
+  }
+
+  appliquerNouveauMotDePasse(token, motDePasse);
+  redirect("/connexion?reinitialise=1");
 }

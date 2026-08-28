@@ -54,9 +54,16 @@ export function PiedPublic() {
             </ul>
           </div>
         </div>
-        <p className="mt-8 border-t border-slate-100 pt-6 text-xs text-slate-400">
-          © {new Date().getFullYear()} Sen Gestion — Dakar, Sénégal. Montants en francs CFA (XOF).
-        </p>
+        <div className="mt-8 flex flex-wrap items-center justify-between gap-4 border-t border-slate-100 pt-6">
+          <p className="text-xs text-slate-400">
+            © {new Date().getFullYear()} Sen Gestion — Dakar, Sénégal. Montants en francs CFA (XOF).
+          </p>
+          <nav className="flex flex-wrap gap-4 text-xs text-slate-500">
+            <Link href="/mentions-legales" className="hover:text-brand-700">Mentions légales</Link>
+            <Link href="/confidentialite" className="hover:text-brand-700">Confidentialité</Link>
+            <Link href="/cgu" className="hover:text-brand-700">Conditions d&apos;utilisation</Link>
+          </nav>
+        </div>
       </div>
     </footer>
   );

@@ -23,6 +23,8 @@ Tous les montants sont en francs CFA (XOF).
 | **Relances** | Le logiciel repère les loyers en retard, choisit le ton du message selon l'ancienneté de la dette et l'envoie sur WhatsApp ou par SMS en un clic. |
 | **Demandes** | Les demandes de visite reçues depuis la vitrine, avec appel direct et WhatsApp. |
 | **Formules** | Page tarifs publique, limites appliquées automatiquement selon l'abonnement. |
+| **Compte** | Récupération du mot de passe par e-mail, blocage après 8 essais infructueux. |
+| **Sauvegarde** | Script quotidien et téléchargement de ses données depuis l'espace agence. |
 
 Chaque agence a son espace : **une agence ne voit jamais les données d'une autre.**
 
@@ -98,6 +100,7 @@ Vous pouvez aussi créer votre propre agence depuis **« Créer mon agence »**.
 |---|---|
 | `npm run dev` | Démarre l'application en mode développement (<http://localhost:3000>) |
 | `npm run seed` | Remet les données de démonstration (⚠️ **efface tout le contenu existant**) |
+| `npm run sauvegarde` | Crée une sauvegarde datée dans `data/sauvegardes/` |
 | `npm run reset` | Supprime complètement la base de données |
 | `npm run build` | Prépare la version optimisée pour la mise en ligne |
 | `npm start` | Démarre la version optimisée (après `npm run build`) |
@@ -129,6 +132,9 @@ src/app/               Les pages du site
   biens/[id]/            Fiche publique d'une annonce
   connexion/             Connexion et inscription
   tarifs/                Page publique des formules et des prix
+  mot-de-passe-oublie/   Demande de réinitialisation
+  reinitialiser/[token]/ Choix d'un nouveau mot de passe
+  cgu/ confidentialite/ mentions-legales/   Pages légales
   dashboard/             Espace agence (toutes les pages de gestion)
   factures/[id]/imprimer Quittance au format A4
   api/photos/[fichier]   Sert les photos rangées dans data/televersements/
@@ -141,8 +147,54 @@ src/lib/               Le « moteur » : base de données, calculs, actions
   photos.ts              Réception, compression et stockage des photos
   relances.ts            Niveaux de relance et modèles de messages
   tarifs.ts              Formules d'abonnement, prix et limites
+  email.ts               Envoi des e-mails de service (SMTP, ou disque si absent)
+  editeur.ts             Identité de l'éditeur, reprise sur les pages légales
 src/components/        Les éléments visuels réutilisés (boutons, cartes, formulaires)
 ```
+
+---
+
+## Avant de mettre en ligne
+
+Trois choses à faire, dans cet ordre.
+
+### 1. Compléter l'identité de l'éditeur
+
+Ouvrez `src/lib/editeur.ts` et remplacez toutes les valeurs commençant par
+`À COMPLÉTER` : raison sociale, NINEA, RCCM, adresse, contact, hébergeur.
+Tant qu'il en reste une, un bandeau d'avertissement s'affiche en haut des
+pages légales — impossible de l'oublier.
+
+**Déclaration CDP.** Vous stockez des numéros de pièce d'identité de
+locataires. L'article 18 de la loi n° 2008-12 impose de déclarer le traitement
+à la Commission de protection des données personnelles **avant** sa mise en
+œuvre. Les pages `/cgu`, `/confidentialite` et `/mentions-legales` sont
+rédigées, mais doivent être relues par un juriste.
+
+### 2. Configurer l'envoi d'e-mails
+
+Copiez `.env.example` en `.env.local` et renseignez votre serveur SMTP.
+
+Sans cette configuration, l'application fonctionne quand même : les e-mails
+sont écrits dans `data/emails/` au lieu d'être envoyés. Pratique pour tester,
+inacceptable en production — **sans SMTP, personne ne peut récupérer un mot de
+passe oublié.**
+
+### 3. Programmer la sauvegarde
+
+Sur le serveur, ajoutez cette ligne à `crontab -e` :
+
+```
+0 2 * * * cd /chemin/vers/sen-gestion && /usr/bin/npm run sauvegarde >> data/sauvegardes.log 2>&1
+```
+
+Chaque nuit à 2 h, une archive datée est créée dans `data/sauvegardes/` avec la
+base **et** les photos. Les 14 dernières sont conservées.
+`SAUVEGARDES_A_CONSERVER` change ce nombre.
+
+⚠️ Ces sauvegardes sont sur le **même disque** que les données. Copiez-les
+régulièrement ailleurs — un autre serveur, un espace de stockage, une clé USB.
+Une sauvegarde qui disparaît avec le serveur ne sert à rien.
 
 ---
 
@@ -180,12 +232,15 @@ plus cher que le temps gagné.
 
 Pistes naturelles pour la suite, par ordre d'utilité :
 
-1. **Reversement aux propriétaires** : relevé mensuel loyer − honoraires.
-2. **Paiement en ligne** (Orange Money / Wave) directement par le locataire.
-3. **Envoi automatique** des relances via un opérateur (voir ci-dessus).
-4. **Espace locataire** : consulter ses quittances et son solde.
-5. **Plusieurs utilisateurs par agence**, avec des droits différents (agent / comptable).
-6. **États des lieux** avec photos, à l'entrée et à la sortie.
-7. **Export comptable** (Excel/CSV) et déclarations fiscales.
+Les trois premiers points sont annoncés « Bientôt » sur la page des tarifs :
+ils doivent être livrés avant l'ouverture publique.
+
+1. **Plusieurs utilisateurs par agence**, avec des droits différents (agent / comptable).
+2. **Export comptable** (Excel/CSV).
+3. **Reversement aux propriétaires** : relevé mensuel loyer − honoraires.
+4. **Encaissement des abonnements** par Orange Money / Wave (PayDunya, CinetPay…).
+5. **Envoi automatique** des relances via un opérateur (voir ci-dessus).
+6. **Espace locataire** : consulter ses quittances et son solde.
+7. **États des lieux** avec photos, à l'entrée et à la sortie.
 
 Voir **[GUIDE.md](GUIDE.md)** pour le mode d'emploi au quotidien.

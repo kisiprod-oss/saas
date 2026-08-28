@@ -194,3 +194,22 @@ CREATE TABLE IF NOT EXISTS relances (
 );
 CREATE INDEX IF NOT EXISTS idx_relances_agence  ON relances(agence_id);
 CREATE INDEX IF NOT EXISTS idx_relances_facture ON relances(facture_id, niveau);
+
+-- ---------- Reinitialisation de mot de passe ----------
+CREATE TABLE IF NOT EXISTS reinitialisations (
+  token          TEXT PRIMARY KEY,
+  utilisateur_id INTEGER NOT NULL REFERENCES utilisateurs(id) ON DELETE CASCADE,
+  expire_le      TEXT NOT NULL,
+  utilise_le     TEXT,
+  cree_le        TEXT NOT NULL DEFAULT (datetime('now'))
+);
+CREATE INDEX IF NOT EXISTS idx_reinit_user ON reinitialisations(utilisateur_id);
+
+-- ---------- Tentatives de connexion (anti force brute) ----------
+CREATE TABLE IF NOT EXISTS tentatives_connexion (
+  id      INTEGER PRIMARY KEY AUTOINCREMENT,
+  cle     TEXT NOT NULL,   -- adresse e-mail visee, ou adresse IP d'origine
+  reussie INTEGER NOT NULL DEFAULT 0,
+  le      TEXT NOT NULL DEFAULT (datetime('now'))
+);
+CREATE INDEX IF NOT EXISTS idx_tentatives ON tentatives_connexion(cle, le);

@@ -26,6 +26,10 @@ const QUESTIONS = [
     r: "Rien ne se perd. Le logiciel vous prévient au moment d'ajouter un bien de trop et vous propose la formule adaptée. Vos données restent accessibles.",
   },
   {
+    q: "Que veut dire la mention « Bientôt » ?",
+    r: "Que la fonction est prévue mais pas encore livrée. Nous l'affichons pour que vous sachiez où va le produit, sans jamais vous facturer quelque chose qui n'existe pas. Les fonctions sans cette mention sont disponibles aujourd'hui.",
+  },
+  {
     q: "Mes données m'appartiennent-elles ?",
     r: "Entièrement. Vous pouvez récupérer à tout moment l'ensemble de vos biens, locataires, baux et quittances. Aucune autre agence n'a accès à vos informations.",
   },
@@ -132,6 +136,14 @@ export default async function PageTarifs({ searchParams }: { searchParams: Promi
                       {a}
                     </li>
                   ))}
+                  {p.bientot?.map((a) => (
+                    <li key={a} className="flex items-start gap-2 text-sm text-slate-400">
+                      <span className="mt-0.5 shrink-0 rounded bg-slate-100 px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wide text-slate-500">
+                        Bientôt
+                      </span>
+                      {a}
+                    </li>
+                  ))}
                 </ul>
 
                 <Link
@@ -148,6 +160,11 @@ export default async function PageTarifs({ searchParams }: { searchParams: Promi
         <p className="mt-6 text-center text-sm text-slate-500">
           Tous les prix sont en francs CFA, sans engagement de durée.
           Paiement par Orange Money, Wave, virement ou chèque.
+        </p>
+        <p className="mx-auto mt-2 max-w-2xl text-center text-sm text-slate-500">
+          Les fonctions marquées <strong className="text-slate-600">Bientôt</strong> sont en
+          cours de développement et ne sont pas encore disponibles. Nous préférons vous le
+          dire avant que vous payiez.
         </p>
       </section>
 

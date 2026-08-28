@@ -14,6 +14,7 @@ export default async function PageConnexion({ searchParams }: { searchParams: Pr
 
   const params = await searchParams;
   const erreur = Array.isArray(params.erreur) ? params.erreur[0] : params.erreur;
+  const reinitialise = (Array.isArray(params.reinitialise) ? params.reinitialise[0] : params.reinitialise) === "1";
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-brand-800 via-brand-700 to-brand-600 px-4 py-12">
@@ -27,6 +28,13 @@ export default async function PageConnexion({ searchParams }: { searchParams: Pr
           <p className="mt-1 text-sm text-slate-500">Connectez-vous pour gérer vos biens et vos loyers.</p>
 
           {erreur && <div className="mt-5"><Alerte type="erreur">{erreur}</Alerte></div>}
+          {reinitialise && (
+            <div className="mt-5">
+              <Alerte type="succes">
+                Votre mot de passe a été changé. Connectez-vous avec le nouveau.
+              </Alerte>
+            </div>
+          )}
 
           <form action={actionConnexion} className="mt-6 space-y-4">
             <div>
@@ -35,7 +43,12 @@ export default async function PageConnexion({ searchParams }: { searchParams: Pr
                      placeholder="vous@agence.sn" className="champ" />
             </div>
             <div>
-              <label className="etiquette" htmlFor="motDePasse">Mot de passe</label>
+              <div className="flex items-baseline justify-between">
+                <label className="etiquette" htmlFor="motDePasse">Mot de passe</label>
+                <Link href="/mot-de-passe-oublie" className="mb-1.5 text-sm font-medium text-brand-700 hover:underline">
+                  Oublié ?
+                </Link>
+              </div>
               <input id="motDePasse" name="motDePasse" type="password" required
                      autoComplete="current-password" placeholder="••••••••" className="champ" />
             </div>

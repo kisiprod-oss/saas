@@ -42,7 +42,9 @@ db.exec(`
   DELETE FROM relances;
   DELETE FROM paiements; DELETE FROM factures; DELETE FROM contrats;
   DELETE FROM demandes;  DELETE FROM locataires; DELETE FROM biens;
-  DELETE FROM sessions;  DELETE FROM utilisateurs; DELETE FROM agences;
+  DELETE FROM sessions;  DELETE FROM reinitialisations;
+  DELETE FROM tentatives_connexion;
+  DELETE FROM utilisateurs; DELETE FROM agences;
   DELETE FROM sqlite_sequence;
 `);
 
