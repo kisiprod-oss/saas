@@ -22,14 +22,20 @@
   --color-brand-900: #0a451b;
   --color-brand-950: #06280f;
 
-  --color-sable-50:  #fbf8f1;
-  --color-sable-100: #f4ecdb;
-  --color-sable-200: #e8d8b7;
-  --color-sable-300: #d9bd89;
-  --color-sable-400: #cb9f5d;
-  --color-sable-500: #c1873f;
-  --color-sable-600: #a96e34;
-  --color-sable-700: #8c542d;
+  /* Sable : la couleur de l'espace locataire, ce qui le distingue au premier
+     coup d'oeil de celui de l'agence. Meme regle que pour le vert — l'ocre
+     d'origine ne donnait que 3,1:1 sous du texte blanc, et le bouton
+     « Se connecter » du locataire etait penible a lire au soleil. Les tons
+     500 a 700 sont assombris jusqu'a repasser 4,5:1 ; les tons clairs, qui
+     ne servent que de fond, sont restes tels quels. */
+  --color-sable-50:  #fbf5ef;
+  --color-sable-100: #f4e7d7;
+  --color-sable-200: #ead1b3;
+  --color-sable-300: #ddb788;
+  --color-sable-400: #d09853;
+  --color-sable-500: #9d692a;
+  --color-sable-600: #835621;
+  --color-sable-700: #6b4619;
 
   /* Encres relevees au pixel sur le fichier du logo. Le vert est aussi
      brand-500 : la gamme de l'application est batie sur lui. */
