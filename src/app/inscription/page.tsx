@@ -4,6 +4,7 @@ import { actionInscription } from "@/lib/actions";
 import { utilisateurCourant } from "@/lib/auth";
 import { Alerte } from "@/components/ui";
 import { LogoSenComplet } from "@/components/entete-public";
+import { ChampMotDePasse } from "@/components/champ-mot-de-passe";
 import { BoutonGoogle } from "@/components/bouton-google";
 
 export const metadata = { title: "Créer mon agence" };
@@ -55,11 +56,7 @@ export default async function PageInscription({ searchParams }: { searchParams: 
               <input id="email" name="email" type="email" required placeholder="vous@agence.sn" className="champ" />
             </div>
 
-            <div>
-              <label className="etiquette" htmlFor="motDePasse">Mot de passe <span className="text-rose-500">*</span></label>
-              <input id="motDePasse" name="motDePasse" type="password" required minLength={6}
-                     autoComplete="new-password" placeholder="6 caractères minimum" className="champ" />
-            </div>
+            <ChampMotDePasse />
 
             <button type="submit" className="btn-primaire w-full py-3">Créer mon agence</button>
 

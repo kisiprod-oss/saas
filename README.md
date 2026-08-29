@@ -42,6 +42,7 @@ Tous les montants sont en francs CFA (XOF).
 | **Test de compétence** | Un candidat validé passe un test de 10 questions tirées au hasard sur son métier, en 10 minutes. À partir de 7 bonnes réponses, le badge « Compétence vérifiée » s'affiche sur sa fiche. |
 | **Avis clients** | Une agence déclare une intervention et reçoit un lien à usage unique pour la noter. Pas d'intervention, pas d'avis : c'est ce qui interdit les faux avis. Les étoiles viennent uniquement de là. |
 | **Compte** | Connexion par mot de passe **ou avec un compte Google**. Récupération du mot de passe par e-mail, blocage après 8 essais infructueux. |
+| **Mots de passe** | Huit caractères au minimum, une majuscule, un chiffre et un caractère spécial. Les règles se cochent sous le champ à mesure de la saisie, et le refus dit lequel manque. Les comptes existants ne sont pas verrouillés : la règle s'applique aux mots de passe créés ou changés. |
 | **Sauvegarde** | Script quotidien et téléchargement de ses données depuis l'espace agence. |
 
 Chaque agence a son espace : **une agence ne voit jamais les données d'une autre.**

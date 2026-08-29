@@ -113,15 +113,47 @@ export function verifierIdentifiantsLocataire(
   return { ok: true, id: seul.id };
 }
 
-const CARACTERES_LISIBLES = "23456789ABCDEFGHJKLMNPQRSTUVWXYZ"; // sans 0/O/1/I/l, pour la dictée orale
+// Sans 0/O/1/I/l : ces caracteres se confondent a l'oral comme a l'ecrit.
+const LETTRES_LISIBLES = "ABCDEFGHJKLMNPQRSTUVWXYZ";
+const CHIFFRES_LISIBLES = "23456789";
 
-/** Mot de passe lisible et facile à communiquer par WhatsApp ou par téléphone. */
+/**
+ * Caracteres speciaux volontairement restreints a ceux qui se dictent au
+ * telephone sans ambiguite : « point d'exclamation », « dièse »… Un mot de
+ * passe locataire se communique de vive voix ou par WhatsApp ; y glisser une
+ * tilde ou un accent circonflexe le rendrait impossible a transmettre.
+ */
+const SPECIAUX_DICTABLES = "!?@#$%&*+=";
+
+/**
+ * Mot de passe lisible et facile à communiquer par WhatsApp ou par téléphone.
+ *
+ * Il respecte les mêmes règles que celles imposées aux mots de passe choisis
+ * (voir src/lib/mot-de-passe.ts) : l'application ne doit pas distribuer un
+ * mot de passe qu'elle refuserait si on le lui soumettait. Le caractère
+ * spécial est placé à un rang tiré au sort, sinon sa position serait connue
+ * de tous.
+ */
 export function genererMotDePasseLisible(): string {
-  let mot = "";
-  for (let i = 0; i < 8; i++) {
-    mot += CARACTERES_LISIBLES[crypto.randomInt(CARACTERES_LISIBLES.length)];
+  const piocher = (source: string) => source[crypto.randomInt(source.length)];
+
+  // Une de chaque categorie d'abord : tirer huit caracteres au hasard dans
+  // un alphabet melange laisse environ un mot sur sept sans aucun chiffre.
+  const caracteres = [
+    piocher(LETTRES_LISIBLES),
+    piocher(CHIFFRES_LISIBLES),
+    piocher(SPECIAUX_DICTABLES),
+  ];
+  const reste = LETTRES_LISIBLES + CHIFFRES_LISIBLES;
+  while (caracteres.length < 8) caracteres.push(piocher(reste));
+
+  // Melange de Fisher-Yates : sans lui, les trois premieres positions
+  // trahiraient la categorie de chaque caractere.
+  for (let i = caracteres.length - 1; i > 0; i--) {
+    const j = crypto.randomInt(i + 1);
+    [caracteres[i], caracteres[j]] = [caracteres[j], caracteres[i]];
   }
-  return mot;
+  return caracteres.join("");
 }
 
 /** Active (ou réinitialise) l'accès à l'espace locataire. Renvoie le mot de passe en clair, à communiquer une seule fois. */

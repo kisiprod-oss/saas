@@ -28,6 +28,7 @@ import {
 } from "./photos";
 import { peutAjouterBien, plan, planSuivant, PLANS } from "./tarifs";
 import { etatQuota } from "./quota";
+import { refusMotDePasse } from "./mot-de-passe";
 import { accuserReception, envoiDuDocument, messageWhatsApp, noterEnvoi } from "./envois";
 import { codeVerification } from "./verification";
 import { METIERS } from "./constantes";
@@ -133,7 +134,8 @@ export async function actionInscription(fd: FormData) {
   const motDePasse = String(fd.get("motDePasse") ?? "");
 
   if (!nomAgence || !nom || !email) erreur("/inscription", "Merci de remplir tous les champs obligatoires.");
-  if (motDePasse.length < 6) erreur("/inscription", "Le mot de passe doit contenir au moins 6 caractères.");
+  const refus = refusMotDePasse(motDePasse);
+  if (refus) erreur("/inscription", refus);
 
   const res = inscrireAgence({ nomAgence, nom, email, telephone, motDePasse });
   if (!res.ok) erreur("/inscription", res.erreur);
@@ -754,7 +756,8 @@ export async function actionReinitialiser(fd: FormData) {
   const confirmation = String(fd.get("confirmation") ?? "");
   const retour = `/reinitialiser/${token}`;
 
-  if (motDePasse.length < 6) erreur(retour, "Le mot de passe doit contenir au moins 6 caractères.");
+  const refus = refusMotDePasse(motDePasse);
+  if (refus) erreur(retour, refus);
   if (motDePasse !== confirmation) erreur(retour, "Les deux mots de passe ne sont pas identiques.");
   if (!lireDemandeReinitialisation(token)) {
     erreur("/mot-de-passe-oublie", "Ce lien a expiré ou a déjà été utilisé. Demandez-en un nouveau.");
@@ -1313,7 +1316,8 @@ export async function actionCandidature(fd: FormData) {
 
   if (!nom || !email || !telephone) erreur(retour, "Nom, e-mail et téléphone sont obligatoires.");
   if (!METIERS.some((m) => m.valeur === metier)) erreur(retour, "Choisissez votre corps de métier.");
-  if (motDePasse.length < 6) erreur(retour, "Le mot de passe doit contenir au moins 6 caractères.");
+  const refus = refusMotDePasse(motDePasse);
+  if (refus) erreur(retour, refus);
 
   const existe = un<{ id: number }>("SELECT id FROM artisans WHERE email = ?", email);
   if (existe) erreur(retour, "Une candidature existe déjà avec cette adresse e-mail.");

@@ -3,6 +3,7 @@ import { actionReinitialiser } from "@/lib/actions";
 import { lireDemandeReinitialisation } from "@/lib/auth";
 import { Alerte } from "@/components/ui";
 import { LogoSenComplet } from "@/components/entete-public";
+import { ChampMotDePasse } from "@/components/champ-mot-de-passe";
 
 export const metadata = { title: "Nouveau mot de passe" };
 export const dynamic = "force-dynamic";
@@ -49,14 +50,10 @@ export default async function PageReinitialiser({
 
               <form action={actionReinitialiser} className="mt-6 space-y-4">
                 <input type="hidden" name="token" value={token} />
-                <div>
-                  <label className="etiquette" htmlFor="motDePasse">Nouveau mot de passe</label>
-                  <input id="motDePasse" name="motDePasse" type="password" required minLength={6}
-                         autoComplete="new-password" placeholder="6 caractères minimum" className="champ" />
-                </div>
+                <ChampMotDePasse label="Nouveau mot de passe" />
                 <div>
                   <label className="etiquette" htmlFor="confirmation">Confirmez le mot de passe</label>
-                  <input id="confirmation" name="confirmation" type="password" required minLength={6}
+                  <input id="confirmation" name="confirmation" type="password" required
                          autoComplete="new-password" placeholder="Saisissez-le une seconde fois" className="champ" />
                 </div>
                 <button type="submit" className="btn-primaire w-full py-3">

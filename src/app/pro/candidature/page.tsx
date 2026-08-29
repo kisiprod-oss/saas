@@ -8,6 +8,7 @@ import { NB_QUESTIONS, DUREE_MINUTES, SEUIL_REUSSITE } from "@/lib/quiz";
 import { Alerte } from "@/components/ui";
 import { ChampPhotoProfil } from "@/components/champ-photo-profil";
 import { LogoSen } from "@/components/entete-public";
+import { ChampMotDePasse } from "@/components/champ-mot-de-passe";
 
 export const metadata = { title: "Devenir professionnel référencé" };
 export const dynamic = "force-dynamic";
@@ -163,11 +164,7 @@ export default async function PageCandidature({ searchParams }: { searchParams: 
                 <label className="etiquette" htmlFor="email">Adresse e-mail <span className="text-rose-500">*</span></label>
                 <input id="email" name="email" type="email" required placeholder="vous@exemple.sn" className="champ" />
               </div>
-              <div>
-                <label className="etiquette" htmlFor="motDePasse">Mot de passe <span className="text-rose-500">*</span></label>
-                <input id="motDePasse" name="motDePasse" type="password" required minLength={6}
-                       autoComplete="new-password" placeholder="6 caractères minimum" className="champ" />
-              </div>
+              <ChampMotDePasse />
             </div>
           </fieldset>
 
