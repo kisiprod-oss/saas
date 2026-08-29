@@ -21,6 +21,8 @@ export type Plan = {
   atouts: string[];
   /** Annonce honnete : promis, mais pas encore construit. */
   bientot?: string[];
+  /** Mois d'essai gratuit avant le premier paiement. */
+  essaiMois?: number;
   populaire?: boolean;
 };
 
@@ -28,9 +30,10 @@ export const PLANS: Plan[] = [
   {
     code: "decouverte",
     nom: "Découverte",
-    prixMois: 0,
-    prixAn: 0,
-    pour: "Pour essayer sans risque",
+    prixMois: 4_000,
+    prixAn: 40_000,
+    essaiMois: 6,
+    pour: "Six mois offerts pour essayer",
     maxBiens: 3,
     maxUtilisateurs: 1,
     atouts: [
@@ -39,7 +42,7 @@ export const PLANS: Plan[] = [
       "Locataires et contrats de bail",
       "Factures et quittances imprimables",
       "Demandes de visite reçues en ligne",
-      "Gratuit pour toujours, sans carte bancaire",
+      "Six mois gratuits, sans carte bancaire",
     ],
   },
   {
@@ -98,6 +101,18 @@ export const PLANS: Plan[] = [
 ];
 
 export const PLAN_PAR_DEFAUT = "decouverte";
+
+/**
+ * Prix affiche d'une formule, en tenant compte de l'essai.
+ * Rendu separement du nombre pour que la page tarifs et le tableau de bord
+ * disent exactement la meme chose.
+ */
+export function prixLisible(p: Plan): { montant: string; complement: string | null } {
+  return {
+    montant: `${p.prixMois.toLocaleString("fr-FR").replace(/\u202f|\u00a0/g, " ")} FCFA / mois`,
+    complement: p.essaiMois ? `après ${p.essaiMois} mois gratuits` : null,
+  };
+}
 
 export function plan(code: string | null | undefined): Plan {
   return PLANS.find((p) => p.code === code) ?? PLANS[0];

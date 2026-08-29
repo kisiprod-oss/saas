@@ -3,6 +3,7 @@ import crypto from "node:crypto";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { db, un, ecrire } from "./db";
+import { finEssai, normaliserEmail } from "./essai";
 
 const COOKIE = "sen_session";
 const DUREE_JOURS = 30;
@@ -29,6 +30,8 @@ export type Agence = {
   logo_url: string | null;
   commission_pct: number;
   plan: string;
+  /** Fin de l'essai gratuit. Voir src/lib/essai.ts. */
+  essai_expire_le: string | null;
   modele_rappel: string | null;
   modele_relance: string | null;
   modele_mise_en_demeure: string | null;
@@ -112,6 +115,11 @@ export async function exigerSession(): Promise<{ utilisateur: Utilisateur; agenc
   return { utilisateur, agence };
 }
 
+/** Horodatage au format des dates SQLite (« 2026-08-29 14:05:00 »). */
+function maintenant(): string {
+  return new Date().toISOString().slice(0, 19).replace("T", " ");
+}
+
 /** Cree une agence et son premier utilisateur (inscription). */
 export function inscrireAgence(params: {
   nomAgence: string;
@@ -136,14 +144,34 @@ export function inscrireAgence(params: {
   let n = 2;
   while (un("SELECT id FROM agences WHERE slug = ?", slug)) slug = `${base}-${n++}`;
 
+  // L'essai se compte par boite aux lettres : « moi+2@gmail.com » et
+  // « m.o.i@gmail.com » sont la meme, et n'ouvrent donc qu'un seul essai.
+  const boite = normaliserEmail(email);
+  const dejaVue = un<{ email_saisi: string }>(
+    "SELECT email_saisi FROM essais_consommes WHERE email_normalise = ?", boite,
+  );
+  // Refuser l'inscription serait excessif — on refuse seulement le SECOND
+  // essai gratuit : le compte est cree, mais il demande un abonnement tout
+  // de suite. La date du jour vaut « deja expire » ; on ne laisse jamais
+  // NULL, qui signifie « ancienne base a migrer ».
+  const expireLe = dejaVue ? maintenant() : finEssai();
+
   const creation = db.transaction(() => {
     const agence = ecrire(
-      "INSERT INTO agences (nom, slug, telephone, email) VALUES (?, ?, ?, ?)",
+      "INSERT INTO agences (nom, slug, telephone, email, essai_expire_le) VALUES (?, ?, ?, ?, ?)",
       params.nomAgence.trim(),
       slug,
       params.telephone.trim(),
       email,
+      expireLe,
     );
+    if (!dejaVue) {
+      ecrire(
+        `INSERT INTO essais_consommes (email_normalise, email_saisi, agence_id)
+         VALUES (?, ?, ?)`,
+        boite, email, agence.lastInsertRowid,
+      );
+    }
     const utilisateur = ecrire(
       `INSERT INTO utilisateurs (agence_id, nom, email, telephone, mot_de_passe_hash, role)
        VALUES (?, ?, ?, ?, ?, 'proprietaire')`,

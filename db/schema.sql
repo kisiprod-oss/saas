@@ -8,6 +8,19 @@ PRAGMA journal_mode = WAL;
 PRAGMA foreign_keys = ON;
 
 -- ---------- Agences (les clients du SaaS) ----------
+-- Adresses ayant deja beneficie d'un essai gratuit.
+-- Table volontairement separee des comptes : elle survit a la suppression
+-- d'une agence, sinon il suffirait de supprimer son compte pour repartir
+-- pour six mois. La cle est l'adresse NORMALISEE (voir src/lib/essai.ts) :
+-- « moi+2@gmail.com » et « m.oi@gmail.com » sont la meme boite, donc le
+-- meme essai.
+CREATE TABLE IF NOT EXISTS essais_consommes (
+  email_normalise TEXT PRIMARY KEY,
+  email_saisi     TEXT NOT NULL,
+  agence_id       INTEGER,
+  cree_le         TEXT NOT NULL DEFAULT (datetime('now'))
+);
+
 CREATE TABLE IF NOT EXISTS agences (
   id            INTEGER PRIMARY KEY AUTOINCREMENT,
   nom           TEXT NOT NULL,
@@ -37,6 +50,13 @@ CREATE TABLE IF NOT EXISTS agences (
   encaissement_jeton      TEXT,
   -- Formule d'abonnement : decouverte | bailleur | agence | pro
   plan          TEXT NOT NULL DEFAULT 'decouverte',
+  -- Fin de la periode d'essai gratuite. Toujours renseignee a l'inscription :
+  -- six mois pour une adresse nouvelle, la date du jour (donc deja expire)
+  -- pour une adresse ayant deja consomme son essai. NULL ne se rencontre que
+  -- sur une base anterieure a cette colonne, et la migration la comble.
+  -- Passee cette date, l'agence lit et exporte toujours ses donnees ; elle ne
+  -- peut plus en creer de nouvelles sans abonnement.
+  essai_expire_le TEXT,
   -- Modeles de messages de relance (vides = modeles par defaut du logiciel)
   modele_rappel           TEXT,
   modele_relance          TEXT,

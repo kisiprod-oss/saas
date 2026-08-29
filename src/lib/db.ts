@@ -80,6 +80,7 @@ function migrer(base: Database.Database) {
     ["artisans", "quiz_total", "INTEGER"],
     ["artisans", "quiz_reussi", "INTEGER NOT NULL DEFAULT 0"],
     ["artisans", "quiz_passe_le", "TEXT"],
+    ["agences", "essai_expire_le", "TEXT"],
   ] as const;
 
   for (const [table, colonne, type] of colonnes) {
@@ -98,6 +99,7 @@ function migrer(base: Database.Database) {
   }
 
   ouvrirArtisansAuxCandidatures(base);
+  ouvrirEssaiAuxAgencesExistantes(base);
 
   // Index — et non contrainte inline : ALTER TABLE ne sait pas ajouter de
   // contrainte UNIQUE a une table existante. Il se cree ici, apres les
@@ -112,6 +114,26 @@ function migrer(base: Database.Database) {
   );
   base.exec(
     "CREATE INDEX IF NOT EXISTS idx_artisans_statut ON artisans(statut_candidature)",
+  );
+}
+
+/**
+ * Donne un essai aux agences creees avant l'existence de la colonne.
+ *
+ * Sans cela, `ALTER TABLE` les laisse a NULL et elles se retrouveraient du
+ * jour au lendemain sans droit d'ecriture, pour une regle qui n'existait pas
+ * quand elles se sont inscrites. Six mois leur sont comptes depuis leur
+ * propre inscription.
+ *
+ * Idempotent : a l'inscription la colonne est toujours renseignee (la date
+ * du jour quand l'essai est refuse), donc plus aucune ligne n'est NULL
+ * ensuite et cette requete ne rend jamais un essai deja consomme.
+ */
+function ouvrirEssaiAuxAgencesExistantes(base: Database.Database) {
+  base.exec(
+    `UPDATE agences
+        SET essai_expire_le = datetime(cree_le, '+6 months')
+      WHERE essai_expire_le IS NULL`,
   );
 }
 

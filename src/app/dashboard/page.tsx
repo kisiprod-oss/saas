@@ -3,6 +3,7 @@ import { exigerSession } from "@/lib/auth";
 import { statistiques } from "@/lib/requetes";
 import { actionGenererFactures } from "@/lib/actions";
 import { fcfa, moisCourant, moisCourt, periodeLisible } from "@/lib/format";
+import { etatEssai } from "@/lib/essai";
 import { Carte, EnTetePage, MessagesUrl } from "@/components/ui";
 import { IconeAlerte, IconeFacture, IconeMaison, IconeUtilisateurs } from "@/components/icones";
 
@@ -40,6 +41,7 @@ export default async function PageTableauBord({ searchParams }: { searchParams: 
   const { agence, utilisateur } = await exigerSession();
   const params = await searchParams;
   const s = statistiques(agence.id);
+  const essai = etatEssai(agence);
   const periode = moisCourant();
   const maximum = Math.max(1, ...s.historique.flatMap((h) => [h.attendu, h.encaisse]));
   const tauxRecouvrement = s.loyersAttendusMois > 0
@@ -61,6 +63,37 @@ export default async function PageTableauBord({ searchParams }: { searchParams: 
       </EnTetePage>
 
       <MessagesUrl params={params} />
+
+      {/* Fin d'essai : prevenue tot, une agence a le temps de decider. Le
+          compte a rebours n'apparait que dans le dernier mois, sinon il
+          devient un meuble qu'on ne voit plus. */}
+      {essai.expire && (
+        <div className="mb-5 rounded-xl border border-rose-200 bg-rose-50 px-4 py-3">
+          <p className="font-semibold text-rose-900">Vos six mois d&apos;essai sont terminés</p>
+          <p className="mt-0.5 text-sm text-rose-800">
+            Vous consultez toujours vos biens, vos locataires et vos quittances,
+            et vous pouvez exporter vos données. Pour enregistrer un nouveau bien,
+            un nouveau bail ou de nouvelles factures, choisissez une formule.
+          </p>
+          <Link href="/dashboard/agence" className="btn-primaire mt-3">
+            Voir les formules
+          </Link>
+        </div>
+      )}
+
+      {essai.enCours && essai.joursRestants <= 30 && (
+        <div className="mb-5 flex flex-wrap items-center justify-between gap-3 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3">
+          <p className="text-sm text-amber-900">
+            <strong>
+              {essai.joursRestants <= 1
+                ? "Votre essai se termine aujourd'hui."
+                : `Il vous reste ${essai.joursRestants} jours d'essai.`}
+            </strong>{" "}
+            Ensuite, la formule Découverte est à {fcfa(4000)} par mois.
+          </p>
+          <Link href="/dashboard/agence" className="btn-sable shrink-0">Choisir ma formule</Link>
+        </div>
+      )}
 
       {/* Le logo figure en tete de chaque quittance : son absence se voit
           par tous les locataires, pas seulement par l'agence. */}

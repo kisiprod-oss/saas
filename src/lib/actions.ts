@@ -27,6 +27,7 @@ import {
   enregistrerLogo, enregistrerPhotoProfil, enregistrerPhotos, supprimerPhoto,
 } from "./photos";
 import { peutAjouterBien, plan, planSuivant, PLANS } from "./tarifs";
+import { peutEcrire } from "./essai";
 import { METIERS } from "./constantes";
 import { hacherMotDePasse } from "./auth";
 import { exigerAdmin } from "./admin";
@@ -65,6 +66,23 @@ const vide = (v: string) => (v === "" ? null : v);
 function erreur(url: string, message: string): never {
   const separateur = url.includes("?") ? "&" : "?";
   redirect(`${url}${separateur}erreur=${encodeURIComponent(message)}`);
+}
+
+/**
+ * Verrou pose a la fin de l'essai gratuit.
+ *
+ * Volontairement limite a la CREATION. Une agence dont l'essai est termine
+ * continue de consulter ses baux, de corriger une fiche, d'enregistrer un
+ * loyer deja encaisse et d'exporter son fichier : ce sont ses donnees, les
+ * lui fermer serait une prise d'otage. Ce qui s'arrete, c'est d'en ajouter
+ * de nouvelles — nouveau bien, nouveau locataire, nouveau bail, nouvelle
+ * facture.
+ */
+function exigerEssaiOuAbonnement(
+  agence: { plan: string | null; essai_expire_le: string | null }, retour: string,
+) {
+  if (peutEcrire(agence)) return;
+  erreur(retour, "Vos six mois d'essai sont terminés. Choisissez une formule pour enregistrer de nouveau — vos données restent accessibles.");
 }
 
 // ------------------------------------------------------------------ compte
@@ -189,6 +207,7 @@ export async function actionEnregistrerBien(fd: FormData) {
   const id = entier(fd, "id");
   const titre = txt(fd, "titre");
   const retour = id ? `/dashboard/biens/${id}` : "/dashboard/biens/nouveau";
+  if (!id) exigerEssaiOuAbonnement(agence, "/dashboard/biens");
   if (!titre) erreur(retour, "Le titre est obligatoire.");
 
   // La formule d'abonnement limite le nombre de biens.
@@ -325,6 +344,7 @@ export async function actionEnregistrerLocataire(fd: FormData) {
   const nom = txt(fd, "nom");
   const telephone = txt(fd, "telephone");
   const retour = id ? `/dashboard/locataires/${id}` : "/dashboard/locataires/nouveau";
+  if (!id) exigerEssaiOuAbonnement(agence, "/dashboard/locataires");
 
   if (!prenom || !nom) erreur(retour, "Le prénom et le nom sont obligatoires.");
   if (!telephone) erreur(retour, "Le numéro de téléphone est obligatoire.");
@@ -381,6 +401,7 @@ export async function actionEnregistrerContrat(fd: FormData) {
   const locataireId = entier(fd, "locataire_id");
   const dateDebut = txt(fd, "date_debut") || aujourdhui();
   const retour = id ? `/dashboard/contrats/${id}` : "/dashboard/contrats/nouveau";
+  if (!id) exigerEssaiOuAbonnement(agence, "/dashboard/contrats");
 
   if (!bienId || !locataireId) erreur(retour, "Choisissez un bien et un locataire.");
 
@@ -479,6 +500,7 @@ export async function actionSupprimerContrat(fd: FormData) {
 
 export async function actionGenererFactures(fd: FormData) {
   const { agence } = await exigerSession();
+  exigerEssaiOuAbonnement(agence, "/dashboard/factures");
   const periode = txt(fd, "periode") || aujourdhui().slice(0, 7);
   const n = genererFacturesDuMois(agence.id, periode);
 
@@ -488,6 +510,7 @@ export async function actionGenererFactures(fd: FormData) {
 
 export async function actionCreerFacture(fd: FormData) {
   const { agence } = await exigerSession();
+  exigerEssaiOuAbonnement(agence, "/dashboard/factures");
   const contratId = entier(fd, "contrat_id");
   const periode = txt(fd, "periode") || aujourdhui().slice(0, 7);
 

@@ -127,6 +127,11 @@ export default async function PageTarifs({ searchParams }: { searchParams: Promi
                       )}
                     </>
                   )}
+                  {p.essaiMois && (
+                    <p className="mt-2 inline-flex rounded-full bg-brand-50 px-2.5 py-1 text-xs font-semibold text-brand-700">
+                      {p.essaiMois} mois gratuits pour commencer
+                    </p>
+                  )}
                 </div>
 
                 <ul className="mt-5 flex-1 space-y-2.5">

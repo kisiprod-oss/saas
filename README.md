@@ -28,7 +28,8 @@ Tous les montants sont en francs CFA (XOF).
 | **Encaissement en ligne** | Chaque agence branche **son propre** compte marchand : le locataire paie dans l'application et sa quittance se solde toute seule. L'argent va directement à l'agence — Sen Gestion ne le détient jamais. |
 | **Courte durée** | Un bien peut se louer à la nuitée : prix par nuit, séjour minimum, capacité. Les visiteurs réservent en ligne avec dates et calcul du total ; les dates déjà prises sont bloquées. |
 | **Demandes** | Les demandes de visite reçues depuis la vitrine, avec appel direct et WhatsApp. |
-| **Formules** | Page tarifs publique, limites appliquées automatiquement selon l'abonnement. |
+| **Formules** | Six mois d'essai gratuit, puis 4 000 FCFA par mois. Page tarifs publique, limites appliquées automatiquement selon l'abonnement. |
+| **Fin d'essai** | À l'échéance, l'agence consulte et exporte toujours ses données ; seule la création (bien, locataire, bail, facture) demande un abonnement. Un essai se compte par boîte aux lettres : les alias `+` et les points Gmail ne rouvrent pas six mois. |
 | **Assistant** | Une bulle de discussion répond aux visiteurs sur le logiciel et les formules, jour et nuit. Elle ne lit aucun dossier et n'invente rien : ce qu'elle ignore, elle le dit. |
 | **Professionnels** | Annuaire public des artisans (plombiers, électriciens, maçons…). Deux origines : les contacts qu'une agence ajoute elle-même, et les professionnels qui **postulent librement**, dossier vérifié par la plateforme. |
 | **Photo du professionnel** | Obligatoire à la candidature, modifiable ensuite depuis son espace. Un visage est ce qui rassure le plus au moment de laisser entrer quelqu'un chez soi — les fiches sans photo sont beaucoup moins contactées. |
