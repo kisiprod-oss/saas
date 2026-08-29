@@ -9,6 +9,9 @@ import {
 import { aujourdhui, dateFr, fcfa, periodeLisible, telephoneFr } from "@/lib/format";
 import { libelle, MODES_PAIEMENT } from "@/lib/constantes";
 import { Carte, EnTetePage, MessagesUrl } from "@/components/ui";
+import { RemiseDocument } from "@/components/remise-document";
+import { envoiDuDocumentSiExiste } from "@/lib/envois";
+import { un } from "@/lib/db";
 import { IconeCorbeille, IconeImprimer, IconeRetour } from "@/components/icones";
 
 type Params = { [cle: string]: string | string[] | undefined };
@@ -24,6 +27,12 @@ export default async function PageFacture({
 
   const paiements = listerPaiementsFacture(facture.id);
   const soldee = facture.reste <= 0;
+  const envoi = envoiDuDocumentSiExiste("quittance", facture.id);
+  const locataire = un<{ email: string | null; telephone: string }>(
+    `SELECT l.email, l.telephone FROM contrats c
+       JOIN locataires l ON l.id = c.locataire_id WHERE c.id = ?`,
+    facture.contrat_id,
+  );
 
   return (
     <>
@@ -181,9 +190,16 @@ export default async function PageFacture({
           </Carte>
         </div>
 
-        {/* --------------------------- Enregistrer un paiement --------------------------- */}
-        <aside>
-          <Carte className="sticky top-6 p-5">
+        {/* ------------------------ Paiement, puis remise du document ------------------------ */}
+        <aside className="space-y-6">
+          <RemiseDocument
+            factureId={facture.id}
+            envoi={envoi}
+            emailLocataire={locataire?.email ?? null}
+            telephoneLocataire={locataire?.telephone ?? null}
+          />
+
+          <Carte className="p-5">
             <h2 className="font-semibold text-slate-900">Enregistrer un paiement</h2>
             <p className="mt-1 text-sm text-slate-500">
               {soldee

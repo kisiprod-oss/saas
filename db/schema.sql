@@ -8,6 +8,40 @@ PRAGMA journal_mode = WAL;
 PRAGMA foreign_keys = ON;
 
 -- ---------- Agences (les clients du SaaS) ----------
+-- Remise d'un document a son locataire, et accuse de reception.
+--
+-- Le document part par un lien (e-mail), le code de reception part par un
+-- AUTRE canal (WhatsApp). Cette separation est le coeur du dispositif :
+-- confirmer la reception demande d'avoir recu les deux, ce qu'un tiers ne
+-- peut pas faire en interceptant un seul canal.
+--
+-- Une ligne par document : les dates d'envoi par canal disent ce qui est
+-- parti et quand, l'accuse dit s'il est arrive.
+CREATE TABLE IF NOT EXISTS envois_documents (
+  id                  INTEGER PRIMARY KEY AUTOINCREMENT,
+  agence_id           INTEGER NOT NULL REFERENCES agences(id) ON DELETE CASCADE,
+  type                TEXT NOT NULL,          -- quittance | bail
+  document_id         INTEGER NOT NULL,
+  locataire_id        INTEGER REFERENCES locataires(id) ON DELETE SET NULL,
+  -- Secret de l'adresse qui ouvre le document en entier. Distinct du code de
+  -- verification, qui est public et n'affiche qu'une fiche resumee.
+  jeton               TEXT NOT NULL UNIQUE,
+  -- Court, tape a la main : il transite par WhatsApp et se recopie.
+  code_reception      TEXT NOT NULL,
+  destinataire_email  TEXT,
+  destinataire_tel    TEXT,
+  envoye_email_le     TEXT,
+  envoye_whatsapp_le  TEXT,
+  remis_main_propre_le TEXT,
+  accuse_le           TEXT,
+  -- « code » : quelqu'un detenant le code l'a saisi.
+  -- « espace_locataire » : le locataire l'a confirme depuis son compte,
+  -- apres s'etre authentifie — preuve nettement plus forte.
+  accuse_voie         TEXT,
+  cree_le             TEXT NOT NULL DEFAULT (datetime('now')),
+  UNIQUE (type, document_id)
+);
+
 -- Registre des documents officiels edites : qui a sorti quoi, et quand.
 --
 -- Une ligne par document, pas par impression : le compteur et la date de

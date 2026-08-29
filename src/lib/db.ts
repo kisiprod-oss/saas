@@ -131,6 +131,9 @@ function migrer(base: Database.Database) {
     `CREATE INDEX IF NOT EXISTS idx_documents_agence
        ON documents_emis(agence_id, derniere_edition DESC)`,
   );
+  base.exec(
+    "CREATE INDEX IF NOT EXISTS idx_envois_agence ON envois_documents(agence_id)",
+  );
 }
 
 /**

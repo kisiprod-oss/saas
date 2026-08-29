@@ -15,10 +15,10 @@ import {
   fermerSessionLocataire, ouvrirSessionLocataire, verifierIdentifiantsLocataire,
 } from "./auth-locataire";
 import {
-  bienDisponible, facturesEmisesCeMois, genererFacturesDuMois, numeroFactureSuivant,
-  referenceReservation, referenceSuivante,
+  bienDisponible, facturesEmisesCeMois, genererFacturesDuMois, lireFacture,
+  numeroFactureSuivant, referenceReservation, referenceSuivante,
 } from "./requetes";
-import { aujourdhui, dateValide, nuitsEntre, periodeLisible } from "./format";
+import { aujourdhui, dateValide, nuitsEntre, periodeLisible, telephoneBrut } from "./format";
 import { chiffrementConfigure, chiffrer } from "./chiffrement";
 import {
   clesAgence, creerPaiement, FOURNISSEURS, testerCles,
@@ -28,6 +28,8 @@ import {
 } from "./photos";
 import { peutAjouterBien, plan, planSuivant, PLANS } from "./tarifs";
 import { etatQuota } from "./quota";
+import { accuserReception, envoiDuDocument, messageWhatsApp, noterEnvoi } from "./envois";
+import { codeVerification } from "./verification";
 import { METIERS } from "./constantes";
 import { hacherMotDePasse } from "./auth";
 import { exigerAdmin } from "./admin";
@@ -1550,4 +1552,103 @@ export async function actionDonnerAvis(fd: FormData) {
 
   revalidatePath("/professionnels");
   redirect(`${retour}?merci=1`);
+}
+
+
+// ------------------------------------------- remise des documents au locataire
+
+/** Le document, son destinataire et son envoi — commun aux trois canaux. */
+async function preparerEnvoi(fd: FormData) {
+  const { agence } = await exigerSession();
+  const factureId = entier(fd, "facture_id");
+  const retour = `/dashboard/factures/${factureId}`;
+
+  const facture = lireFacture(agence.id, factureId);
+  if (!facture) erreur("/dashboard/factures", "Cette facture est introuvable.");
+
+  const locataire = un<{ id: number; prenom: string; email: string | null; telephone: string }>(
+    `SELECT l.id, l.prenom, l.email, l.telephone
+       FROM contrats c JOIN locataires l ON l.id = c.locataire_id
+      WHERE c.id = ?`,
+    facture.contrat_id,
+  );
+
+  // Le code de verification doit exister avant l'envoi : le locataire ouvre
+  // le document sans passer par la page d'impression de l'agence.
+  codeVerification("quittance", facture.id);
+  const envoi = envoiDuDocument({
+    agenceId: agence.id, type: "quittance", documentId: facture.id,
+    locataireId: locataire?.id ?? null,
+  });
+
+  return { agence, facture, locataire, envoi, retour };
+}
+
+export async function actionEnvoyerDocumentEmail(fd: FormData) {
+  const { agence, facture, locataire, envoi, retour } = await preparerEnvoi(fd);
+
+  if (!locataire?.email) {
+    erreur(retour, "Ce locataire n'a pas d'adresse e-mail. Ajoutez-la sur sa fiche, ou remettez-lui le document en main propre.");
+  }
+
+  const lien = `${await adresseDuSite()}/document/${envoi.jeton}`;
+  const { envoye } = await envoyerEmail({
+    destinataire: locataire.email,
+    sujet: `Votre quittance ${facture.numero} — ${agence.nom}`,
+    texte:
+      `Bonjour ${locataire.prenom},\n\n` +
+      `${agence.nom} met à votre disposition votre quittance de loyer ${facture.numero} ` +
+      `(période ${facture.periode}).\n\n` +
+      `Consultez-la et imprimez-la ici :\n${lien}\n\n` +
+      `Un code de réception vous est envoyé séparément sur WhatsApp. ` +
+      `Saisissez-le sur cette page pour confirmer que vous avez bien reçu le document.\n\n` +
+      `${agence.nom}`,
+  });
+
+  noterEnvoi(envoi.id, "email", locataire.email);
+  revalidatePath(retour);
+
+  // Sans serveur SMTP configure, le message part sur le disque : on le dit
+  // plutot que d'afficher un succes trompeur.
+  redirect(envoye
+    ? `${retour}?ok=1`
+    : `${retour}?avertissement=${encodeURIComponent("aucun serveur d'e-mail n'est configuré, le message a été écrit dans data/emails/ au lieu d'être envoyé.")}`);
+}
+
+/**
+ * Ouvre WhatsApp avec le code de reception pre-rempli.
+ *
+ * Le code part par WhatsApp et le document par e-mail : c'est la separation
+ * des deux canaux qui donne sa valeur a l'accuse. On n'envoie donc JAMAIS le
+ * lien du document dans ce message.
+ */
+export async function actionEnvoyerCodeWhatsApp(fd: FormData) {
+  const { agence, facture, locataire, envoi } = await preparerEnvoi(fd);
+  if (!locataire) erreur("/dashboard/factures", "Locataire introuvable.");
+
+  noterEnvoi(envoi.id, "whatsapp", locataire.telephone);
+
+  const texte = messageWhatsApp({
+    agence: agence.nom,
+    prenom: locataire.prenom,
+    quoi: `quittance ${facture.numero}`,
+    code: envoi.code_reception,
+  });
+  redirect(`https://wa.me/${telephoneBrut(locataire.telephone)}?text=${encodeURIComponent(texte)}`);
+}
+
+export async function actionRemiseMainPropre(fd: FormData) {
+  const { envoi, retour } = await preparerEnvoi(fd);
+  noterEnvoi(envoi.id, "main_propre", null);
+  revalidatePath(retour);
+  redirect(`${retour}?ok=1`);
+}
+
+/** Accuse de reception saisi par le locataire depuis la page du document. */
+export async function actionAccuserReception(fd: FormData) {
+  const jeton = txt(fd, "jeton");
+  const res = accuserReception(jeton, "code", txt(fd, "code"));
+  if (!res.ok) erreur(`/document/${jeton}`, res.erreur);
+  revalidatePath(`/document/${jeton}`);
+  redirect(`/document/${jeton}?recu=1`);
 }
