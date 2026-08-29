@@ -28,6 +28,7 @@ Tous les montants sont en francs CFA (XOF).
 | **Demandes** | Les demandes de visite reçues depuis la vitrine, avec appel direct et WhatsApp. |
 | **Formules** | Page tarifs publique, limites appliquées automatiquement selon l'abonnement. |
 | **Assistant** | Une bulle de discussion répond aux visiteurs sur le logiciel et les formules, jour et nuit. Elle ne lit aucun dossier et n'invente rien : ce qu'elle ignore, elle le dit. |
+| **Professionnels** | Annuaire public des artisans (plombiers, électriciens, maçons…) recommandés par les agences. Chaque agence gère sa propre liste, visible sur la vitrine. |
 | **Compte** | Connexion par mot de passe **ou avec un compte Google**. Récupération du mot de passe par e-mail, blocage après 8 essais infructueux. |
 | **Sauvegarde** | Script quotidien et téléchargement de ses données depuis l'espace agence. |
 
@@ -349,7 +350,20 @@ ASSISTANT_MODELE=claude-sonnet-5
 ⚠️ La clé est un mot de passe : elle se colle uniquement dans le panneau de
 l'hébergeur, jamais dans un message ou une conversation.
 
-### 7. (Facultatif) Activer l'encaissement en ligne
+### 7. (Facultatif) Mettre votre photo en page d'accueil
+
+La page d'accueil peut afficher une photo de vous ou de votre équipe, à côté
+du texte de présentation. Sans réglage, un visuel neutre la remplace —
+aucune photo n'est jamais inventée ou empruntée à votre place.
+
+Hébergez votre photo où vous le souhaitez (votre site, un espace de stockage
+en ligne qui fournit un lien direct vers l'image), puis ajoutez :
+
+```
+PHOTO_AGENT_URL=https://adresse-de-votre-photo.jpg
+```
+
+### 8. (Facultatif) Activer l'encaissement en ligne
 
 Vos agences clientes peuvent encaisser les loyers **directement dans
 l'application** : le locataire paie, sa quittance se solde toute seule.

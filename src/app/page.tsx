@@ -3,7 +3,10 @@ import { listerVitrine } from "@/lib/requetes";
 import { TYPES_BIEN, VILLES } from "@/lib/constantes";
 import { CarteBien } from "@/components/carte-bien";
 import { EntetePublic, PiedPublic } from "@/components/entete-public";
-import { IconeArgent, IconeFacture, IconeRecherche, IconeTableauBord } from "@/components/icones";
+import {
+  IconeArgent, IconeCheck, IconeFacture, IconeOutils, IconeRecherche, IconeRelance,
+  IconeTableauBord,
+} from "@/components/icones";
 
 type Params = { [cle: string]: string | string[] | undefined };
 
@@ -20,6 +23,20 @@ const BUDGETS = [
   { valeur: "1000000", libelle: "Jusqu'à 1 000 000 FCFA" },
   { valeur: "3000000", libelle: "Plus de 1 000 000 FCFA" },
 ];
+
+const ATOUTS = [
+  "Gratuit jusqu'à 3 biens",
+  "Orange Money & Wave",
+  "Relances sur WhatsApp",
+  "Assistant disponible 24h/24",
+];
+
+/**
+ * Photo d'un agent pour l'accueil, hebergee ailleurs et renseignee par
+ * l'agence elle-meme (aucune photo n'est fabriquee ou empruntee ici).
+ * Variable facultative : sans elle, un visuel illustratif la remplace.
+ */
+const photoAgent = process.env.PHOTO_AGENT_URL;
 
 export default async function PageVitrine({ searchParams }: { searchParams: Promise<Params> }) {
   const params = await searchParams;
@@ -39,22 +56,68 @@ export default async function PageVitrine({ searchParams }: { searchParams: Prom
     <div className="min-h-screen">
       <EntetePublic />
 
-      {/* ---------------------------- Bandeau d'accueil ---------------------------- */}
+      {/* ---------------------------------- Hero ---------------------------------- */}
       <section className="border-b border-slate-200 bg-gradient-to-br from-brand-800 via-brand-700 to-brand-600">
-        <div className="mx-auto max-w-6xl px-4 py-14 sm:py-20">
-          <p className="mb-3 inline-flex rounded-full bg-white/15 px-3 py-1 text-xs font-semibold text-brand-50 ring-1 ring-white/20">
-            🇸🇳 Location au Sénégal
-          </p>
-          <h1 className="max-w-2xl text-3xl font-extrabold leading-tight tracking-tight text-white sm:text-5xl">
-            Trouvez votre prochain logement, en toute confiance.
-          </h1>
-          <p className="mt-4 max-w-xl text-base text-brand-50/90 sm:text-lg">
-            Appartements, villas, studios et locaux commerciaux proposés par des agences
-            vérifiées à Dakar, Thiès, Saly et partout au Sénégal.
-          </p>
+        <div className="mx-auto max-w-6xl px-4 pt-14 sm:pt-20">
+          <div className="grid items-center gap-10 lg:grid-cols-2">
+            <div>
+              <p className="mb-3 inline-flex rounded-full bg-white/15 px-3 py-1 text-xs font-semibold text-brand-50 ring-1 ring-white/20">
+                🇸🇳 Gestion locative au Sénégal
+              </p>
+              <h1 className="max-w-xl text-3xl font-extrabold leading-tight tracking-tight text-white sm:text-5xl">
+                La location, sans tableur ni paperasse.
+              </h1>
+              <p className="mt-4 max-w-lg text-base text-brand-50/90 sm:text-lg">
+                Biens, locataires, quittances et relances de loyer dans un seul outil.
+                Trouvez un logement ou un artisan, ou gérez votre agence — tout est ici.
+              </p>
+
+              <div className="mt-7 flex flex-wrap gap-3">
+                <Link href="/inscription" className="btn-secondaire px-6 py-3 text-base">
+                  Créer mon espace agence
+                </Link>
+                <Link href="#annonces" className="rounded-lg bg-white/12 px-6 py-3 text-base font-semibold text-white ring-1 ring-white/25 hover:bg-white/20">
+                  Voir les annonces
+                </Link>
+              </div>
+
+              <ul className="mt-7 grid grid-cols-2 gap-x-4 gap-y-2 sm:flex sm:flex-wrap sm:gap-5">
+                {ATOUTS.map((a) => (
+                  <li key={a} className="flex items-center gap-1.5 text-sm text-brand-50/90">
+                    <IconeCheck className="h-4 w-4 shrink-0 text-brand-200" /> {a}
+                  </li>
+                ))}
+              </ul>
+            </div>
+
+            {/* Photo d'un agent, renseignee par vous (voir PHOTO_AGENT_URL) */}
+            <div className="hidden justify-self-center lg:block">
+              {photoAgent ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img
+                  src={photoAgent}
+                  alt="Agent immobilier utilisant Sen Gestion"
+                  className="aspect-[4/5] w-80 rounded-2xl border-4 border-white/20 object-cover shadow-2xl"
+                />
+              ) : (
+                <div className="flex aspect-[4/5] w-80 flex-col items-center justify-center gap-3 rounded-2xl border-2 border-dashed border-white/25 bg-white/10 p-6 text-center">
+                  <span className="flex h-14 w-14 items-center justify-center rounded-full bg-white/15">
+                    <svg viewBox="0 0 24 24" className="h-7 w-7 text-white/70" fill="none" stroke="currentColor"
+                         strokeWidth={1.5} strokeLinecap="round" aria-hidden="true">
+                      <circle cx="12" cy="8.5" r="3.8" />
+                      <path d="M4.5 20.5a7.5 7.5 0 0 1 15 0" />
+                    </svg>
+                  </span>
+                  <p className="text-sm text-white/70">
+                    Votre photo ou celle de votre agence peut apparaître ici.
+                  </p>
+                </div>
+              )}
+            </div>
+          </div>
 
           {/* Formulaire de recherche */}
-          <form action="/" method="get" className="mt-8 rounded-2xl bg-white p-4 shadow-lg">
+          <form action="/" method="get" className="mt-9 rounded-2xl bg-white p-4 shadow-lg">
             <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
               <div className="lg:col-span-2">
                 <label className="etiquette" htmlFor="q">Que cherchez-vous ?</label>
@@ -97,11 +160,11 @@ export default async function PageVitrine({ searchParams }: { searchParams: Prom
                   </select>
                 </div>
                 <div className="flex items-center gap-2">
-                <label className="text-sm text-slate-600" htmlFor="chambres">Chambres min.</label>
-                <select id="chambres" name="chambres" defaultValue={filtres.chambres} className="champ w-24 py-2">
-                  <option value="">—</option>
-                  {[1, 2, 3, 4, 5].map((n) => <option key={n} value={n}>{n}+</option>)}
-                </select>
+                  <label className="text-sm text-slate-600" htmlFor="chambres">Chambres min.</label>
+                  <select id="chambres" name="chambres" defaultValue={filtres.chambres} className="champ w-24 py-2">
+                    <option value="">—</option>
+                    {[1, 2, 3, 4, 5].map((n) => <option key={n} value={n}>{n}+</option>)}
+                  </select>
                 </div>
               </div>
               <div className="flex items-center gap-2">
@@ -114,6 +177,8 @@ export default async function PageVitrine({ searchParams }: { searchParams: Prom
               </div>
             </div>
           </form>
+
+          <div className="h-14" />
         </div>
       </section>
 
@@ -132,7 +197,7 @@ export default async function PageVitrine({ searchParams }: { searchParams: Prom
 
         {biens.length === 0 ? (
           <div className="carte flex flex-col items-center px-6 py-16 text-center">
-            <div className="mb-3 text-4xl">🔍</div>
+            <IconeRecherche className="mb-3 h-10 w-10 text-slate-300" />
             <h3 className="font-semibold text-slate-900">Aucun bien ne correspond à votre recherche</h3>
             <p className="mt-1 max-w-md text-sm text-slate-500">
               Essayez d&apos;élargir votre budget ou de retirer un filtre.
@@ -146,8 +211,26 @@ export default async function PageVitrine({ searchParams }: { searchParams: Prom
         )}
       </section>
 
+      {/* ------------------------------ Professionnels ----------------------------- */}
+      <section className="border-y border-slate-200 bg-sable-50">
+        <div className="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-5 px-4 py-8">
+          <div className="flex items-center gap-4">
+            <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-sable-500 text-white">
+              <IconeOutils className="h-6 w-6" />
+            </span>
+            <div>
+              <h2 className="font-bold text-slate-900">Besoin d&apos;un artisan ?</h2>
+              <p className="text-sm text-slate-600">
+                Plombiers, électriciens, maçons… recommandés par des agences du Sénégal.
+              </p>
+            </div>
+          </div>
+          <Link href="/professionnels" className="btn-sable shrink-0">Voir les professionnels</Link>
+        </div>
+      </section>
+
       {/* ----------------------- Argumentaire pour les agences --------------------- */}
-      <section className="border-y border-slate-200 bg-white">
+      <section className="bg-white">
         <div className="mx-auto max-w-6xl px-4 py-14">
           <div className="mx-auto max-w-2xl text-center">
             <h2 className="text-2xl font-bold text-slate-900">Vous gérez des biens en location ?</h2>
@@ -157,11 +240,12 @@ export default async function PageVitrine({ searchParams }: { searchParams: Prom
             </p>
           </div>
 
-          <div className="mt-10 grid gap-6 sm:grid-cols-3">
+          <div className="mt-10 grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
             {[
               { Icone: IconeTableauBord, titre: "Tableau de bord", texte: "Loyers encaissés, impayés et taux d'occupation en un coup d'œil." },
               { Icone: IconeFacture, titre: "Factures automatiques", texte: "Générez toutes les quittances du mois en un clic, prêtes à imprimer." },
               { Icone: IconeArgent, titre: "Orange Money & Wave", texte: "Enregistrez chaque paiement avec sa référence de transaction." },
+              { Icone: IconeRelance, titre: "Relances WhatsApp", texte: "Le ton du message s'adapte au retard ; il ne reste qu'à l'envoyer." },
             ].map((c) => (
               <div key={c.titre} className="carte p-6">
                 <div className="mb-3 flex h-11 w-11 items-center justify-center rounded-lg bg-brand-50 text-brand-700">

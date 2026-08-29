@@ -1165,3 +1165,53 @@ export async function actionPayerEnLigne(fd: FormData) {
 
   redirect(creation.url);
 }
+
+// ---------------------------------------------------------------- artisans
+
+export async function actionEnregistrerArtisan(fd: FormData) {
+  const { agence } = await exigerSession();
+  const id = entier(fd, "id");
+  const nom = txt(fd, "nom");
+  const telephone = txt(fd, "telephone");
+  const retour = id ? `/dashboard/artisans/${id}` : "/dashboard/artisans/nouveau";
+
+  if (!nom) erreur(retour, "Le nom est obligatoire.");
+  if (!telephone) erreur(retour, "Le téléphone est obligatoire.");
+
+  const champs = [
+    nom, txt(fd, "metier") || "autre", telephone,
+    vide(txt(fd, "telephone2")), txt(fd, "ville") || "Dakar", vide(txt(fd, "quartier")),
+    vide(txt(fd, "description")), vide(txt(fd, "tarif_indicatif")),
+    vide(txt(fd, "photo_url")), coche(fd, "publie"),
+  ];
+
+  let artisanId = id;
+  if (id) {
+    ecrire(
+      `UPDATE artisans SET nom=?, metier=?, telephone=?, telephone2=?, ville=?, quartier=?,
+              description=?, tarif_indicatif=?, photo_url=?, publie=?
+        WHERE id=? AND agence_id=?`,
+      ...champs, id, agence.id,
+    );
+  } else {
+    const res = ecrire(
+      `INSERT INTO artisans (agence_id, nom, metier, telephone, telephone2, ville, quartier,
+                             description, tarif_indicatif, photo_url, publie)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      agence.id, ...champs,
+    );
+    artisanId = Number(res.lastInsertRowid);
+  }
+
+  revalidatePath("/dashboard/artisans");
+  revalidatePath("/professionnels");
+  redirect(`/dashboard/artisans/${artisanId}?ok=1`);
+}
+
+export async function actionSupprimerArtisan(fd: FormData) {
+  const { agence } = await exigerSession();
+  ecrire("DELETE FROM artisans WHERE id = ? AND agence_id = ?", entier(fd, "id"), agence.id);
+  revalidatePath("/dashboard/artisans");
+  revalidatePath("/professionnels");
+  redirect("/dashboard/artisans?supprime=1");
+}

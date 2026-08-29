@@ -94,3 +94,6 @@ export const IconeCalendrier = (p: Props) => (
 export const IconeCarte = (p: Props) => (
   <Svg {...p}><rect x="2.5" y="5" width="19" height="14" rx="2.5" /><path d="M2.5 9.5h19" /><path d="M6 14.5h3.5" /></Svg>
 );
+export const IconeOutils = (p: Props) => (
+  <Svg {...p}><path d="M14.5 6.5a4 4 0 0 0-5.4 4.9L3.5 17l2 2 5.6-5.6a4 4 0 0 0 4.9-5.4l-2.6 2.6-2-2z" /></Svg>
+);

@@ -858,3 +858,59 @@ export function totalEncaisseEnLigne(agenceId: number): { nombre: number; total:
   );
   return { nombre: l?.nombre ?? 0, total: l?.total ?? 0 };
 }
+
+// -------------------------------------------------------------- Artisans
+
+export type Artisan = {
+  id: number;
+  agence_id: number;
+  nom: string;
+  metier: string;
+  telephone: string;
+  telephone2: string | null;
+  ville: string;
+  quartier: string | null;
+  description: string | null;
+  tarif_indicatif: string | null;
+  photo_url: string | null;
+  publie: number;
+  cree_le: string;
+};
+
+export function listerArtisans(agenceId: number, recherche?: string) {
+  const conditions = ["agence_id = ?"];
+  const params: unknown[] = [agenceId];
+  if (recherche) {
+    conditions.push("(nom LIKE ? OR metier LIKE ? OR ville LIKE ?)");
+    const q = `%${recherche}%`;
+    params.push(q, q, q);
+  }
+  return tous<Artisan>(
+    `SELECT * FROM artisans WHERE ${conditions.join(" AND ")} ORDER BY nom`,
+    ...params,
+  );
+}
+
+export function lireArtisan(agenceId: number, id: number) {
+  return un<Artisan>("SELECT * FROM artisans WHERE id = ? AND agence_id = ?", id, agenceId);
+}
+
+/** Annuaire public, toutes agences confondues : chacune reste identifiee. */
+export function listerArtisansVitrine(filtres: { metier?: string; ville?: string; recherche?: string } = {}) {
+  const conditions = ["a.publie = 1"];
+  const params: unknown[] = [];
+  if (filtres.metier) { conditions.push("a.metier = ?"); params.push(filtres.metier); }
+  if (filtres.ville) { conditions.push("a.ville = ?"); params.push(filtres.ville); }
+  if (filtres.recherche) {
+    conditions.push("(a.nom LIKE ? OR a.description LIKE ?)");
+    const q = `%${filtres.recherche}%`;
+    params.push(q, q);
+  }
+  return tous<Artisan & { agence_nom: string }>(
+    `SELECT a.*, ag.nom AS agence_nom
+       FROM artisans a JOIN agences ag ON ag.id = a.agence_id
+      WHERE ${conditions.join(" AND ")}
+      ORDER BY a.nom`,
+    ...params,
+  );
+}

@@ -20,6 +20,23 @@ export const STATUTS_BIEN = [
   { valeur: "travaux",    libelle: "En travaux", couleur: "bg-slate-200 text-slate-700 ring-slate-600/20" },
 ] as const;
 
+export const METIERS = [
+  { valeur: "architecte",    libelle: "Architecte" },
+  { valeur: "plombier",      libelle: "Plombier" },
+  { valeur: "electricien",   libelle: "Électricien" },
+  { valeur: "macon",         libelle: "Maçon" },
+  { valeur: "peintre",       libelle: "Peintre" },
+  { valeur: "menuisier",     libelle: "Menuisier" },
+  { valeur: "serrurier",     libelle: "Serrurier" },
+  { valeur: "carreleur",     libelle: "Carreleur" },
+  { valeur: "climatisation", libelle: "Climatisation" },
+  { valeur: "menage",        libelle: "Ménage" },
+  { valeur: "jardinier",     libelle: "Jardinier" },
+  { valeur: "demenagement",  libelle: "Déménagement" },
+  { valeur: "gardiennage",   libelle: "Gardiennage" },
+  { valeur: "autre",         libelle: "Autre" },
+] as const;
+
 export const STATUTS_CONTRAT = [
   { valeur: "actif",   libelle: "Actif",    couleur: "bg-emerald-100 text-emerald-800 ring-emerald-600/20" },
   { valeur: "termine", libelle: "Terminé",  couleur: "bg-slate-200 text-slate-700 ring-slate-600/20" },

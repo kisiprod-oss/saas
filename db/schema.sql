@@ -261,6 +261,28 @@ CREATE INDEX IF NOT EXISTS idx_reservations_agence ON reservations(agence_id, st
 CREATE INDEX IF NOT EXISTS idx_reservations_bien   ON reservations(bien_id, date_arrivee);
 CREATE UNIQUE INDEX IF NOT EXISTS idx_reservations_ref ON reservations(agence_id, reference);
 
+-- ---------- Artisans recommandes par l'agence ----------
+-- Annuaire des professionnels du batiment que l'agence connait et
+-- recommande : plombiers, electriciens, macons... Visible publiquement,
+-- comme les biens, pour que locataires et proprietaires les trouvent.
+CREATE TABLE IF NOT EXISTS artisans (
+  id            INTEGER PRIMARY KEY AUTOINCREMENT,
+  agence_id     INTEGER NOT NULL REFERENCES agences(id) ON DELETE CASCADE,
+  nom           TEXT NOT NULL,
+  metier        TEXT NOT NULL DEFAULT 'autre',
+  telephone     TEXT NOT NULL,
+  telephone2    TEXT,
+  ville         TEXT NOT NULL DEFAULT 'Dakar',
+  quartier      TEXT,
+  description   TEXT,
+  tarif_indicatif TEXT,        -- texte libre : "À partir de 5 000 FCFA"
+  photo_url     TEXT,
+  publie        INTEGER NOT NULL DEFAULT 1,  -- visible sur la vitrine publique
+  cree_le       TEXT NOT NULL DEFAULT (datetime('now'))
+);
+CREATE INDEX IF NOT EXISTS idx_artisans_agence  ON artisans(agence_id);
+CREATE INDEX IF NOT EXISTS idx_artisans_vitrine ON artisans(publie, metier);
+
 -- ---------- Demandes recues depuis la vitrine publique ----------
 CREATE TABLE IF NOT EXISTS demandes (
   id          INTEGER PRIMARY KEY AUTOINCREMENT,

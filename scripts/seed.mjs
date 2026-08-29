@@ -461,6 +461,30 @@ const insererDemande = db.prepare(`
 `);
 for (const d of DEMANDES) insererDemande.run(agenceId, ...d);
 
+// ------------------------------------------------------------------ artisans
+const ARTISANS = [
+  ["Moussa Diallo", "plombier", "775443322", "Sacré-Cœur", "Dakar",
+   "Plombier depuis 12 ans, interventions rapides sur fuites et sanitaires.", "À partir de 5 000 FCFA le déplacement"],
+  ["Ibrahima Sarr", "electricien", "776554433", "Ouakam", "Dakar",
+   "Installation et dépannage électrique, mise aux normes.", "À partir de 7 000 FCFA"],
+  ["Établissements Kâ", "macon", "774332211", "Parcelles Assainies", "Dakar",
+   "Gros œuvre, finitions, carrelage. Devis gratuit.", null],
+  ["Cheikh Menuiserie", "menuisier", "773221100", "Grand Yoff", "Dakar",
+   "Portes, placards et meubles sur mesure.", null],
+  ["Awa Services", "menage", "772110099", "Almadies", "Dakar",
+   "Ménage résidentiel et fin de bail, équipe formée.", "15 000 FCFA le grand ménage"],
+  ["Fatou Peinture", "peintre", "779887711", "Centre-ville", "Thiès",
+   "Peinture intérieure et extérieure, finitions soignées.", null],
+];
+
+const insererArtisan = db.prepare(`
+  INSERT INTO artisans (agence_id, nom, metier, telephone, ville, quartier, description, tarif_indicatif)
+  VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+`);
+for (const [nom, metier, telephone, quartier, ville, description, tarif] of ARTISANS) {
+  insererArtisan.run(agenceId, nom, metier, telephone, ville, quartier, description, tarif);
+}
+
 // ------------------------------------------------------------------ bilan
 const compter = (t) => db.prepare(`SELECT COUNT(*) AS n FROM ${t}`).get().n;
 
