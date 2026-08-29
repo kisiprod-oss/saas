@@ -3,7 +3,7 @@ import { listerVitrine } from "@/lib/requetes";
 import { TYPES_BIEN, VILLES } from "@/lib/constantes";
 import { CarteBien } from "@/components/carte-bien";
 import { EntetePublic, PiedPublic } from "@/components/entete-public";
-import { IconeRecherche } from "@/components/icones";
+import { IconeArgent, IconeFacture, IconeRecherche, IconeTableauBord } from "@/components/icones";
 
 type Params = { [cle: string]: string | string[] | undefined };
 
@@ -159,12 +159,14 @@ export default async function PageVitrine({ searchParams }: { searchParams: Prom
 
           <div className="mt-10 grid gap-6 sm:grid-cols-3">
             {[
-              { emoji: "📊", titre: "Tableau de bord", texte: "Loyers encaissés, impayés et taux d'occupation en un coup d'œil." },
-              { emoji: "🧾", titre: "Factures automatiques", texte: "Générez toutes les quittances du mois en un clic, prêtes à imprimer." },
-              { emoji: "💰", titre: "Orange Money & Wave", texte: "Enregistrez chaque paiement avec sa référence de transaction." },
+              { Icone: IconeTableauBord, titre: "Tableau de bord", texte: "Loyers encaissés, impayés et taux d'occupation en un coup d'œil." },
+              { Icone: IconeFacture, titre: "Factures automatiques", texte: "Générez toutes les quittances du mois en un clic, prêtes à imprimer." },
+              { Icone: IconeArgent, titre: "Orange Money & Wave", texte: "Enregistrez chaque paiement avec sa référence de transaction." },
             ].map((c) => (
               <div key={c.titre} className="carte p-6">
-                <div className="mb-3 text-3xl">{c.emoji}</div>
+                <div className="mb-3 flex h-11 w-11 items-center justify-center rounded-lg bg-brand-50 text-brand-700">
+                  <c.Icone className="h-6 w-6" />
+                </div>
                 <h3 className="font-semibold text-slate-900">{c.titre}</h3>
                 <p className="mt-1.5 text-sm text-slate-500">{c.texte}</p>
               </div>
