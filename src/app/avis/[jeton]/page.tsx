@@ -5,7 +5,7 @@ import { actionDonnerAvis } from "@/lib/actions";
 import { libelle, METIERS } from "@/lib/constantes";
 import { dateFr } from "@/lib/format";
 import { Alerte, Carte } from "@/components/ui";
-import { LogoSen } from "@/components/entete-public";
+import { LogoSenComplet } from "@/components/entete-public";
 import { ChoixEtoiles } from "@/components/choix-etoiles";
 
 export const metadata = { title: "Donner mon avis" };
@@ -34,7 +34,7 @@ export default async function PageAvis({
     <div className="flex min-h-screen items-center justify-center bg-slate-50 px-4 py-10">
       <div className="w-full max-w-md">
         <div className="mb-6 flex justify-center">
-          <Link href="/" className="rounded-lg bg-white px-4 py-2.5 shadow-sm"><LogoSen /></Link>
+          <Link href="/" className="rounded-xl bg-white px-6 py-4 shadow-sm"><LogoSenComplet /></Link>
         </div>
 
         <Carte className="p-7">

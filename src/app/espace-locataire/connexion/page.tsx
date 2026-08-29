@@ -3,7 +3,7 @@ import { redirect } from "next/navigation";
 import { actionConnexionLocataire } from "@/lib/actions";
 import { locataireCourant } from "@/lib/auth-locataire";
 import { Alerte } from "@/components/ui";
-import { LogoSen } from "@/components/entete-public";
+import { LogoSenComplet } from "@/components/entete-public";
 
 export const metadata = { title: "Espace locataire" };
 export const dynamic = "force-dynamic";
@@ -20,7 +20,7 @@ export default async function PageConnexionLocataire({ searchParams }: { searchP
     <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-sable-600 via-sable-500 to-brand-700 px-4 py-12">
       <div className="w-full max-w-md">
         <div className="mb-6 flex justify-center">
-          <Link href="/" className="rounded-lg bg-white px-4 py-2.5 shadow-sm"><LogoSen /></Link>
+          <Link href="/" className="rounded-xl bg-white px-6 py-4 shadow-sm"><LogoSenComplet /></Link>
         </div>
 
         <div className="carte p-7">

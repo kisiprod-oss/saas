@@ -1,15 +1,47 @@
 import Link from "next/link";
 
-export function LogoSen({ clair = false }: { clair?: boolean }) {
+/**
+ * La marque de l'application, sous deux formes tirees du meme fichier.
+ *
+ * `LogoSen` : l'embleme rond suivi du nom, pour les barres de navigation,
+ * ou la hauteur disponible est celle d'une ligne de texte. Le nom y est du
+ * vrai texte — net a toutes les tailles, et lisible par les lecteurs
+ * d'ecran ; l'embleme n'a donc pas de texte de remplacement, il ferait
+ * doublon.
+ *
+ * `LogoSenComplet` : le verrou entier, embleme + nom + slogan, pour les
+ * pages de connexion ou il y a la place de le montrer en grand. En dessous
+ * d'environ 180 px de large, son slogan devient illisible : c'est pourquoi
+ * il ne sert pas dans les en-tetes.
+ */
+export function LogoSen() {
   return (
     <span className="flex items-center gap-2.5">
-      <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-brand-600 text-lg font-bold text-white shadow-sm">
-        S
-      </span>
-      <span className={`text-lg font-extrabold tracking-tight ${clair ? "text-white" : "text-slate-900"}`}>
-        Sen<span className="text-brand-500">Gestion</span>
+      {/* eslint-disable-next-line @next/next/no-img-element */}
+      <img
+        src="/embleme-sen-gestion.webp"
+        alt=""
+        width={36}
+        height={36}
+        className="h-9 w-9 shrink-0 object-contain"
+      />
+      <span className="text-lg font-extrabold tracking-tight text-logo-marine">
+        Sen<span className="text-logo-vert">Gestion</span>
       </span>
     </span>
+  );
+}
+
+export function LogoSenComplet({ className = "max-w-[220px]" }: { className?: string }) {
+  return (
+    /* eslint-disable-next-line @next/next/no-img-element */
+    <img
+      src="/logo-sen-gestion.webp"
+      alt="Sen Gestion — gérer aujourd'hui, valoriser demain"
+      width={1156}
+      height={888}
+      className={`h-auto w-full ${className}`}
+    />
   );
 }
 

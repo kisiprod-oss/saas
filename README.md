@@ -127,6 +127,8 @@ Dans un seul dossier : **`data/`**
 |---|---|
 | `data/sen-gestion.db` | La base : agences, biens, locataires, baux, factures, paiements. |
 | `data/televersements/` | Les photos envoyées depuis vos téléphones. |
+| `public/logo-sen-gestion.webp` | Le logo complet de Sen Gestion (emblème, nom, slogan). |
+| `public/embleme-sen-gestion.webp` | L'emblème seul, utilisé dans les en-têtes et comme icône d'onglet. |
 
 - Pour **sauvegarder**, copiez le dossier `data/` sur une clé USB ou dans un cloud.
 - Pour **restaurer**, remettez le dossier à sa place.
