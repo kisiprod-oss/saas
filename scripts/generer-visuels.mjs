@@ -6,14 +6,14 @@ import fs from "node:fs";
 import path from "node:path";
 
 const PALETTES = [
-  { ciel: ["#0c6747", "#41bd87"], mur: "#f4ecdb", toit: "#0a4331", accent: "#cb9f5d" },
-  { ciel: ["#c1873f", "#e8d8b7"], mur: "#fbf8f1", toit: "#8c542d", accent: "#0f8156" },
-  { ciel: ["#0f8156", "#aeeaca"], mur: "#ffffff", toit: "#0c523a", accent: "#c1873f" },
-  { ciel: ["#8c542d", "#d9bd89"], mur: "#f7f8f7", toit: "#4a2f1a", accent: "#1ea16c" },
-  { ciel: ["#04261c", "#0f8156"], mur: "#e8d8b7", toit: "#02150f", accent: "#cb9f5d" },
-  { ciel: ["#a96e34", "#f4ecdb"], mur: "#ffffff", toit: "#6d4423", accent: "#0c6747" },
-  { ciel: ["#0c523a", "#78d8ab"], mur: "#fbf8f1", toit: "#04261c", accent: "#c1873f" },
-  { ciel: ["#cb9f5d", "#fbf8f1"], mur: "#ffffff", toit: "#8c542d", accent: "#0f8156" },
+  { ciel: ["#0c6e28", "#39d064"], mur: "#f4ecdb", toit: "#0a451b", accent: "#cb9f5d" },
+  { ciel: ["#c1873f", "#e8d8b7"], mur: "#fbf8f1", toit: "#8c542d", accent: "#108130" },
+  { ciel: ["#108130", "#acecbe"], mur: "#ffffff", toit: "#0b5921", accent: "#c1873f" },
+  { ciel: ["#8c542d", "#d9bd89"], mur: "#f7f8f7", toit: "#4a2f1a", accent: "#18a840" },
+  { ciel: ["#06280f", "#108130"], mur: "#e8d8b7", toit: "#04180a", accent: "#cb9f5d" },
+  { ciel: ["#a96e34", "#f4ecdb"], mur: "#ffffff", toit: "#6d4423", accent: "#0c6e28" },
+  { ciel: ["#0b5921", "#7cde98"], mur: "#fbf8f1", toit: "#06280f", accent: "#c1873f" },
+  { ciel: ["#cb9f5d", "#fbf8f1"], mur: "#ffffff", toit: "#8c542d", accent: "#108130" },
 ];
 
 /** Immeuble a n etages avec des fenetres. */

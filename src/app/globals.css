@@ -4,17 +4,23 @@
    Palette : vert "teranga" (drapeau senegalais) + sable et ocre.
    ================================================================ */
 @theme {
-  --color-brand-50:  #eefbf4;
-  --color-brand-100: #d5f5e3;
-  --color-brand-200: #aeeaca;
-  --color-brand-300: #78d8ab;
-  --color-brand-400: #41bd87;
-  --color-brand-500: #1ea16c;
-  --color-brand-600: #0f8156;
-  --color-brand-700: #0c6747;
-  --color-brand-800: #0c523a;
-  --color-brand-900: #0a4331;
-  --color-brand-950: #04261c;
+  /* Gamme construite sur la teinte exacte du vert du logo (137°).
+     brand-500 EST ce vert. Les tons 600 et au-dela sont volontairement plus
+     sombres : le vert du logo sous du texte blanc ne donne que 3,1:1 de
+     contraste, en dessous du minimum lisible ; assombri, le meme vert
+     remonte au-dessus de 4,5:1. D'ou la regle : 500 pour la marque et les
+     accents, 600 et 700 pour tout ce qui porte du texte blanc. */
+  --color-brand-50:  #effbf2;
+  --color-brand-100: #d6f5df;
+  --color-brand-200: #acecbe;
+  --color-brand-300: #7cde98;
+  --color-brand-400: #39d064;
+  --color-brand-500: #18a840;
+  --color-brand-600: #108130;
+  --color-brand-700: #0c6e28;
+  --color-brand-800: #0b5921;
+  --color-brand-900: #0a451b;
+  --color-brand-950: #06280f;
 
   --color-sable-50:  #fbf8f1;
   --color-sable-100: #f4ecdb;
@@ -25,8 +31,8 @@
   --color-sable-600: #a96e34;
   --color-sable-700: #8c542d;
 
-  /* Couleurs relevees directement sur le fichier du logo, pour que le nom
-     ecrit a cote de l'embleme soit exactement de la meme encre. */
+  /* Encres relevees au pixel sur le fichier du logo. Le vert est aussi
+     brand-500 : la gamme de l'application est batie sur lui. */
   --color-logo-marine: #002858;
   --color-logo-vert:   #18a840;
   --color-logo-or:     #f8b810;
