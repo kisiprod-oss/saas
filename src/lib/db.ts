@@ -127,6 +127,10 @@ function migrer(base: Database.Database) {
     `CREATE UNIQUE INDEX IF NOT EXISTS idx_contrats_verification
        ON contrats(code_verification) WHERE code_verification IS NOT NULL`,
   );
+  base.exec(
+    `CREATE INDEX IF NOT EXISTS idx_documents_agence
+       ON documents_emis(agence_id, derniere_edition DESC)`,
+  );
 }
 
 /**

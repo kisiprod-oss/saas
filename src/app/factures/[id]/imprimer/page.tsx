@@ -6,13 +6,23 @@ import { BoutonImprimer } from "@/components/bouton-imprimer";
 import { DocumentQuittance } from "@/components/document-quittance";
 import { IconeRetour } from "@/components/icones";
 import { adresseDuSite } from "@/lib/email";
-import { codeVerification, lienVerification, qrSvg } from "@/lib/verification";
+import { codeVerification, lienVerification, noterEdition, qrSvg } from "@/lib/verification";
 
-export const metadata = { title: "Quittance de loyer" };
+/**
+ * Le navigateur nomme le PDF enregistre d'apres le titre de la page : on y
+ * met donc le numero du document plutot qu'un libelle generique.
+ * `absolute` court-circuite le gabarit « … · Sen Gestion », qui donnerait un
+ * nom de fichier bavard.
+ */
+export async function generateMetadata({ params }: { params: Promise<{ id: string }> }) {
+  const { agence } = await exigerSession();
+  const facture = lireFacture(agence.id, Number((await params).id));
+  return { title: { absolute: facture ? `Quittance ${facture.numero}` : "Quittance de loyer" } };
+}
 export const dynamic = "force-dynamic";
 
 export default async function PageImpressionFacture({ params }: { params: Promise<{ id: string }> }) {
-  const { agence } = await exigerSession();
+  const { agence, utilisateur } = await exigerSession();
   const { id } = await params;
   const facture = lireFacture(agence.id, Number(id));
   if (!facture) notFound();
@@ -25,6 +35,13 @@ export default async function PageImpressionFacture({ params }: { params: Promis
   const code = codeVerification("quittance", facture.id);
   const lien = lienVerification(await adresseDuSite(), code);
   const verification = { code, lien, qr: await qrSvg(lien) };
+
+  // Trace au registre : l'agence doit pouvoir prouver quand une quittance a
+  // ete etablie, et par qui.
+  noterEdition({
+    agenceId: agence.id, type: "quittance", documentId: facture.id,
+    numero: facture.numero, code, utilisateurId: utilisateur.id,
+  });
 
   return (
     <div className="min-h-screen bg-slate-100 py-8 print:bg-white print:py-0">

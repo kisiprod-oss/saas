@@ -1,7 +1,7 @@
 import "server-only";
 import crypto from "node:crypto";
 import QRCode from "qrcode";
-import { un, ecrire } from "./db";
+import { un, tous, ecrire } from "./db";
 
 /**
  * Verification en ligne des documents officiels (quittances et baux).
@@ -185,4 +185,81 @@ export function verifierDocument(code: string): DocumentVerifie | null {
   }
 
   return null;
+}
+
+/**
+ * Note qu'un document vient d'etre edite.
+ *
+ * Une seule ligne par document : on incremente un compteur plutot que
+ * d'empiler une ligne a chaque impression. Une agence qui reimprime trois
+ * fois la meme quittance ne veut pas voir trois entrees identiques ; elle
+ * veut savoir que ce document existe, depuis quand, et qu'il est ressorti
+ * trois fois.
+ */
+export function noterEdition(params: {
+  agenceId: number;
+  type: TypeDocument;
+  documentId: number;
+  numero: string;
+  code: string;
+  utilisateurId: number | null;
+}): void {
+  ecrire(
+    `INSERT INTO documents_emis
+       (agence_id, type, document_id, numero, code_verification, cree_par)
+     VALUES (?, ?, ?, ?, ?, ?)
+     ON CONFLICT (type, document_id) DO UPDATE SET
+       derniere_edition = datetime('now'),
+       nombre_editions  = nombre_editions + 1,
+       numero           = excluded.numero`,
+    params.agenceId, params.type, params.documentId,
+    params.numero, params.code, params.utilisateurId,
+  );
+}
+
+export type LigneRegistre = {
+  id: number;
+  type: TypeDocument;
+  document_id: number;
+  numero: string;
+  code_verification: string;
+  cree_le: string;
+  derniere_edition: string;
+  nombre_editions: number;
+  auteur: string | null;
+  /** Null si le document a ete supprime depuis. */
+  destinataire: string | null;
+};
+
+/** Le registre d'une agence, du plus recemment edite au plus ancien. */
+export function listerRegistre(agenceId: number, type?: TypeDocument): LigneRegistre[] {
+  return tous<LigneRegistre>(
+    `SELECT d.id, d.type, d.document_id, d.numero, d.code_verification,
+            d.cree_le, d.derniere_edition, d.nombre_editions,
+            u.nom AS auteur,
+            COALESCE(lf.prenom || ' ' || lf.nom, lc.prenom || ' ' || lc.nom) AS destinataire
+       FROM documents_emis d
+       LEFT JOIN utilisateurs u ON u.id = d.cree_par
+       LEFT JOIN factures f  ON d.type = 'quittance' AND f.id = d.document_id
+       LEFT JOIN contrats cf ON cf.id = f.contrat_id
+       LEFT JOIN locataires lf ON lf.id = cf.locataire_id
+       LEFT JOIN contrats c  ON d.type = 'bail' AND c.id = d.document_id
+       LEFT JOIN locataires lc ON lc.id = c.locataire_id
+      WHERE d.agence_id = ?${type ? " AND d.type = ?" : ""}
+      ORDER BY d.derniere_edition DESC
+      LIMIT 300`,
+    ...(type ? [agenceId, type] : [agenceId]),
+  );
+}
+
+/** Combien de documents l'agence a edites, par type. */
+export function compterRegistre(agenceId: number): { quittances: number; baux: number } {
+  const l = tous<{ type: string; n: number }>(
+    "SELECT type, COUNT(*) AS n FROM documents_emis WHERE agence_id = ? GROUP BY type",
+    agenceId,
+  );
+  return {
+    quittances: l.find((x) => x.type === "quittance")?.n ?? 0,
+    baux: l.find((x) => x.type === "bail")?.n ?? 0,
+  };
 }

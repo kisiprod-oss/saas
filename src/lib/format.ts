@@ -19,6 +19,20 @@ export function dateFr(iso: string | null | undefined): string {
   return `${j}/${m}/${a}`;
 }
 
+/**
+ * "2026-08-28 14:05:00" -> "28/08/2026 à 14h05"
+ *
+ * Les dates SQLite sont en UTC ; on les affiche telles quelles plutot que
+ * converties. Le serveur et les agences sont au meme fuseau (GMT au
+ * Senegal), et une conversion approximative ferait plus de degats qu'elle
+ * n'en reglerait sur un registre qui sert de preuve.
+ */
+export function dateHeureFr(iso: string | null | undefined): string {
+  if (!iso) return "—";
+  const heure = iso.slice(11, 16).replace(":", "h");
+  return heure ? `${dateFr(iso)} à ${heure}` : dateFr(iso);
+}
+
 const MOIS = [
   "janvier", "fevrier", "mars", "avril", "mai", "juin",
   "juillet", "aout", "septembre", "octobre", "novembre", "decembre",

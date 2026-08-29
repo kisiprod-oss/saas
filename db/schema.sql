@@ -8,6 +8,30 @@ PRAGMA journal_mode = WAL;
 PRAGMA foreign_keys = ON;
 
 -- ---------- Agences (les clients du SaaS) ----------
+-- Registre des documents officiels edites : qui a sorti quoi, et quand.
+--
+-- Une ligne par document, pas par impression : le compteur et la date de
+-- derniere edition suffisent, et evitent une table qui gonfle a chaque
+-- rafraichissement de page. Le registre sert a deux choses : retrouver un
+-- document qu'un locataire conteste avoir recu, et prouver la date a
+-- laquelle une quittance a ete etablie.
+--
+-- Le code de verification y est recopie pour que le registre reste lisible
+-- meme si la facture est supprimee plus tard.
+CREATE TABLE IF NOT EXISTS documents_emis (
+  id                INTEGER PRIMARY KEY AUTOINCREMENT,
+  agence_id         INTEGER NOT NULL REFERENCES agences(id) ON DELETE CASCADE,
+  type              TEXT NOT NULL,          -- quittance | bail
+  document_id       INTEGER NOT NULL,       -- id de la facture ou du contrat
+  numero            TEXT NOT NULL,
+  code_verification TEXT NOT NULL,
+  cree_par          INTEGER REFERENCES utilisateurs(id) ON DELETE SET NULL,
+  cree_le           TEXT NOT NULL DEFAULT (datetime('now')),
+  derniere_edition  TEXT NOT NULL DEFAULT (datetime('now')),
+  nombre_editions   INTEGER NOT NULL DEFAULT 1,
+  UNIQUE (type, document_id)
+);
+
 -- Boites aux lettres ayant deja ouvert un compte gratuit.
 -- Table volontairement separee des comptes : elle survit a la suppression
 -- d'une agence, sinon il suffirait de supprimer son compte pour repartir

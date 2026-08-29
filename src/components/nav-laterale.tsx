@@ -15,6 +15,7 @@ const LIENS = [
   { href: "/dashboard/contrats",    libelle: "Contrats de bail",Icone: IconeContrat },
   { href: "/dashboard/factures",    libelle: "Factures",        Icone: IconeFacture },
   { href: "/dashboard/paiements",   libelle: "Paiements",       Icone: IconeArgent },
+  { href: "/dashboard/documents",   libelle: "Documents émis",  Icone: IconeContrat },
   { href: "/dashboard/encaissement", libelle: "Encaissement",   Icone: IconeCarte },
   { href: "/dashboard/relances",    libelle: "Relances",        Icone: IconeRelance },
   { href: "/dashboard/reservations", libelle: "Réservations",   Icone: IconeCalendrier },
