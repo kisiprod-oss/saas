@@ -52,6 +52,7 @@ export function MessagesUrl({ params }: { params: Record<string, string | string
   const avertissement = lire("avertissement");
   const relances = lire("relances");
   const rejete = lire("rejete");
+  const bloquees = lire("bloquees");
 
   return (
     <>
@@ -71,6 +72,16 @@ export function MessagesUrl({ params }: { params: Record<string, string | string
           {Number(genere) > 0
             ? `${genere} facture(s) générée(s) pour la période sélectionnée.`
             : "Aucune nouvelle facture à générer : toutes les factures de cette période existent déjà."}
+        </Alerte>
+      )}
+      {/* Lot arrete par le quota mensuel : dire exactement ce qui manque,
+          sinon l'agence croit que ses baux ont ete oublies. */}
+      {bloquees && Number(bloquees) > 0 && (
+        <Alerte type="info">
+          {Number(bloquees) === 1
+            ? "Une facture n'a pas pu être émise : vous avez atteint la limite du mois."
+            : `${bloquees} factures n'ont pas pu être émises : vous avez atteint la limite du mois.`}
+          {" "}Choisissez une formule pour les émettre toutes.
         </Alerte>
       )}
     </>

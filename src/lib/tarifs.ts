@@ -7,6 +7,15 @@
  * (7 a 9 % du loyer au Senegal), ce qui les rend indolores.
  */
 
+/**
+ * Factures mensuelles offertes par la formule gratuite.
+ *
+ * Declaree ici et non dans quota.ts parce que la page tarifs, cote client,
+ * doit l'afficher : quota.ts est « server-only ». C'est donc ce fichier qui
+ * fait foi, et quota.ts l'importe — la valeur n'existe qu'une fois.
+ */
+export const FACTURES_GRATUITES_PAR_MOIS = 5;
+
 export type Plan = {
   code: string;
   nom: string;
@@ -21,8 +30,8 @@ export type Plan = {
   atouts: string[];
   /** Annonce honnete : promis, mais pas encore construit. */
   bientot?: string[];
-  /** Mois d'essai gratuit avant le premier paiement. */
-  essaiMois?: number;
+  /** Factures emises par mois. null = sans limite. */
+  maxFacturesMois?: number | null;
   populaire?: boolean;
 };
 
@@ -30,19 +39,20 @@ export const PLANS: Plan[] = [
   {
     code: "decouverte",
     nom: "Découverte",
-    prixMois: 4_000,
-    prixAn: 40_000,
-    essaiMois: 6,
-    pour: "Six mois offerts pour essayer",
+    prixMois: 0,
+    prixAn: 0,
+    pour: "Pour essayer sans risque",
     maxBiens: 3,
     maxUtilisateurs: 1,
+    maxFacturesMois: FACTURES_GRATUITES_PAR_MOIS,
     atouts: [
       "3 biens",
       "Annonces sur la vitrine publique",
       "Locataires et contrats de bail",
       "Factures et quittances imprimables",
       "Demandes de visite reçues en ligne",
-      "Six mois gratuits, sans carte bancaire",
+      `${FACTURES_GRATUITES_PAR_MOIS} factures par mois`,
+      "Gratuit, sans carte bancaire et sans limite de durée",
     ],
   },
   {
@@ -107,12 +117,7 @@ export const PLAN_PAR_DEFAUT = "decouverte";
  * Rendu separement du nombre pour que la page tarifs et le tableau de bord
  * disent exactement la meme chose.
  */
-export function prixLisible(p: Plan): { montant: string; complement: string | null } {
-  return {
-    montant: `${p.prixMois.toLocaleString("fr-FR").replace(/\u202f|\u00a0/g, " ")} FCFA / mois`,
-    complement: p.essaiMois ? `après ${p.essaiMois} mois gratuits` : null,
-  };
-}
+
 
 export function plan(code: string | null | undefined): Plan {
   return PLANS.find((p) => p.code === code) ?? PLANS[0];

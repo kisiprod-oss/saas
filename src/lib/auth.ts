@@ -3,7 +3,7 @@ import crypto from "node:crypto";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { db, un, ecrire } from "./db";
-import { finEssai, normaliserEmail } from "./essai";
+import { normaliserEmail } from "./quota";
 
 const COOKIE = "sen_session";
 const DUREE_JOURS = 30;
@@ -30,8 +30,8 @@ export type Agence = {
   logo_url: string | null;
   commission_pct: number;
   plan: string;
-  /** Fin de l'essai gratuit. Voir src/lib/essai.ts. */
-  essai_expire_le: string | null;
+  /** 1 si cette boite avait deja un compte gratuit. Voir src/lib/quota.ts. */
+  compte_gratuit_reutilise: number;
   modele_rappel: string | null;
   modele_relance: string | null;
   modele_mise_en_demeure: string | null;
@@ -115,11 +115,6 @@ export async function exigerSession(): Promise<{ utilisateur: Utilisateur; agenc
   return { utilisateur, agence };
 }
 
-/** Horodatage au format des dates SQLite (« 2026-08-29 14:05:00 »). */
-function maintenant(): string {
-  return new Date().toISOString().slice(0, 19).replace("T", " ");
-}
-
 /** Cree une agence et son premier utilisateur (inscription). */
 export function inscrireAgence(params: {
   nomAgence: string;
@@ -144,30 +139,28 @@ export function inscrireAgence(params: {
   let n = 2;
   while (un("SELECT id FROM agences WHERE slug = ?", slug)) slug = `${base}-${n++}`;
 
-  // L'essai se compte par boite aux lettres : « moi+2@gmail.com » et
-  // « m.o.i@gmail.com » sont la meme, et n'ouvrent donc qu'un seul essai.
+  // Le quota gratuit se compte par boite aux lettres : « moi+2@gmail.com »
+  // et « m.o.i@gmail.com » sont la meme, et n'ouvrent qu'un compte gratuit.
   const boite = normaliserEmail(email);
-  const dejaVue = un<{ email_saisi: string }>(
-    "SELECT email_saisi FROM essais_consommes WHERE email_normalise = ?", boite,
-  );
-  // Refuser l'inscription serait excessif — on refuse seulement le SECOND
-  // essai gratuit : le compte est cree, mais il demande un abonnement tout
-  // de suite. La date du jour vaut « deja expire » ; on ne laisse jamais
-  // NULL, qui signifie « ancienne base a migrer ».
-  const expireLe = dejaVue ? maintenant() : finEssai();
+  const dejaVue = un("SELECT 1 FROM comptes_gratuits WHERE email_normalise = ?", boite);
+  // Refuser l'inscription serait excessif : le compte est cree, mais sans
+  // facture gratuite. Une agence qui veut un second compte prend une
+  // formule payante.
+  const reutilise = dejaVue ? 1 : 0;
 
   const creation = db.transaction(() => {
     const agence = ecrire(
-      "INSERT INTO agences (nom, slug, telephone, email, essai_expire_le) VALUES (?, ?, ?, ?, ?)",
+      `INSERT INTO agences (nom, slug, telephone, email, compte_gratuit_reutilise)
+       VALUES (?, ?, ?, ?, ?)`,
       params.nomAgence.trim(),
       slug,
       params.telephone.trim(),
       email,
-      expireLe,
+      reutilise,
     );
     if (!dejaVue) {
       ecrire(
-        `INSERT INTO essais_consommes (email_normalise, email_saisi, agence_id)
+        `INSERT INTO comptes_gratuits (email_normalise, email_saisi, agence_id)
          VALUES (?, ?, ?)`,
         boite, email, agence.lastInsertRowid,
       );

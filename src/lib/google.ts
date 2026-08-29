@@ -2,7 +2,7 @@ import "server-only";
 import crypto from "node:crypto";
 import { cookies } from "next/headers";
 import { db, un, ecrire } from "./db";
-import { finEssai, normaliserEmail } from "./essai";
+import { normaliserEmail } from "./quota";
 import { adresseDuSite } from "./email";
 
 /**
@@ -171,23 +171,21 @@ export function connecterOuCreerCompteGoogle(
   let n = 2;
   while (un("SELECT id FROM agences WHERE slug = ?", slug)) slug = `${base}-${n++}`;
 
-  // Meme regle d'essai qu'a l'inscription classique : sans cela, la
-  // connexion Google rouvrirait six mois a une boite qui a deja eu les
-  // siens, et la restriction se contournerait d'un clic.
+  // Meme regle qu'a l'inscription classique : sans cela, la connexion
+  // Google rouvrirait un quota neuf a une boite qui a deja son compte
+  // gratuit, et la limite se contournerait d'un clic.
   const boite = normaliserEmail(profil.email);
-  const dejaVue = un("SELECT 1 FROM essais_consommes WHERE email_normalise = ?", boite);
-  const expireLe = dejaVue
-    ? new Date().toISOString().slice(0, 19).replace("T", " ")
-    : finEssai();
+  const dejaVue = un("SELECT 1 FROM comptes_gratuits WHERE email_normalise = ?", boite);
 
   const creation = db.transaction(() => {
     const agence = ecrire(
-      "INSERT INTO agences (nom, slug, email, essai_expire_le) VALUES (?, ?, ?, ?)",
-      `Agence de ${profil.nom}`, slug, profil.email, expireLe,
+      `INSERT INTO agences (nom, slug, email, compte_gratuit_reutilise)
+       VALUES (?, ?, ?, ?)`,
+      `Agence de ${profil.nom}`, slug, profil.email, dejaVue ? 1 : 0,
     );
     if (!dejaVue) {
       ecrire(
-        `INSERT INTO essais_consommes (email_normalise, email_saisi, agence_id)
+        `INSERT INTO comptes_gratuits (email_normalise, email_saisi, agence_id)
          VALUES (?, ?, ?)`,
         boite, profil.email, agence.lastInsertRowid,
       );

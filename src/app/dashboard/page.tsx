@@ -3,7 +3,8 @@ import { exigerSession } from "@/lib/auth";
 import { statistiques } from "@/lib/requetes";
 import { actionGenererFactures } from "@/lib/actions";
 import { fcfa, moisCourant, moisCourt, periodeLisible } from "@/lib/format";
-import { etatEssai } from "@/lib/essai";
+import { etatQuota } from "@/lib/quota";
+import { facturesEmisesCeMois } from "@/lib/requetes";
 import { Carte, EnTetePage, MessagesUrl } from "@/components/ui";
 import { IconeAlerte, IconeFacture, IconeMaison, IconeUtilisateurs } from "@/components/icones";
 
@@ -41,7 +42,7 @@ export default async function PageTableauBord({ searchParams }: { searchParams: 
   const { agence, utilisateur } = await exigerSession();
   const params = await searchParams;
   const s = statistiques(agence.id);
-  const essai = etatEssai(agence);
+  const quota = etatQuota(agence, facturesEmisesCeMois(agence.id));
   const periode = moisCourant();
   const maximum = Math.max(1, ...s.historique.flatMap((h) => [h.attendu, h.encaisse]));
   const tauxRecouvrement = s.loyersAttendusMois > 0
@@ -64,16 +65,18 @@ export default async function PageTableauBord({ searchParams }: { searchParams: 
 
       <MessagesUrl params={params} />
 
-      {/* Fin d'essai : prevenue tot, une agence a le temps de decider. Le
-          compte a rebours n'apparait que dans le dernier mois, sinon il
-          devient un meuble qu'on ne voit plus. */}
-      {essai.expire && (
+      {/* Quota de factures : on ne previent qu'a l'approche de la limite.
+          Un compteur permanent transformerait chaque visite en rappel de
+          paiement. */}
+      {!quota.illimite && quota.atteint && (
         <div className="mb-5 rounded-xl border border-rose-200 bg-rose-50 px-4 py-3">
-          <p className="font-semibold text-rose-900">Vos six mois d&apos;essai sont terminés</p>
+          <p className="font-semibold text-rose-900">
+            Vos {quota.quota} factures de ce mois sont émises
+          </p>
           <p className="mt-0.5 text-sm text-rose-800">
-            Vous consultez toujours vos biens, vos locataires et vos quittances,
-            et vous pouvez exporter vos données. Pour enregistrer un nouveau bien,
-            un nouveau bail ou de nouvelles factures, choisissez une formule.
+            {quota.quota === 0
+              ? "Cette adresse e-mail a déjà un compte gratuit. Choisissez une formule pour émettre des factures depuis ce compte."
+              : "Vous continuez à gérer vos biens, vos locataires et vos loyers, et vos factures déjà émises restent imprimables. Pour en émettre d'autres ce mois-ci, choisissez une formule."}
           </p>
           <Link href="/dashboard/agence" className="btn-primaire mt-3">
             Voir les formules
@@ -81,17 +84,17 @@ export default async function PageTableauBord({ searchParams }: { searchParams: 
         </div>
       )}
 
-      {essai.enCours && essai.joursRestants <= 30 && (
+      {!quota.illimite && !quota.atteint && quota.restantes <= 2 && (
         <div className="mb-5 flex flex-wrap items-center justify-between gap-3 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3">
           <p className="text-sm text-amber-900">
             <strong>
-              {essai.joursRestants <= 1
-                ? "Votre essai se termine aujourd'hui."
-                : `Il vous reste ${essai.joursRestants} jours d'essai.`}
+              {quota.restantes === 1
+                ? "Il vous reste une facture ce mois-ci."
+                : `Il vous reste ${quota.restantes} factures ce mois-ci.`}
             </strong>{" "}
-            Ensuite, la formule Découverte est à {fcfa(4000)} par mois.
+            La formule gratuite en permet {quota.quota} par mois.
           </p>
-          <Link href="/dashboard/agence" className="btn-sable shrink-0">Choisir ma formule</Link>
+          <Link href="/dashboard/agence" className="btn-sable shrink-0">Voir les formules</Link>
         </div>
       )}
 

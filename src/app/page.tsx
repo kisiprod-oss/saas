@@ -25,7 +25,7 @@ const BUDGETS = [
 ];
 
 const ATOUTS = [
-  "6 mois gratuits, sans carte bancaire",
+  "Gratuit jusqu'à 3 biens",
   "Orange Money & Wave",
   "Relances sur WhatsApp",
   "Assistant disponible 24h/24",
@@ -266,7 +266,7 @@ export default async function PageVitrine({ searchParams }: { searchParams: Prom
             </Link>
           </div>
           <p className="mt-4 text-center text-sm text-slate-500">
-            Six mois gratuits, sans carte bancaire. Ensuite à partir de 4 000 FCFA par mois.
+            Gratuit jusqu&apos;à 3 biens et 5 factures par mois. Ensuite à partir de 5 000 FCFA par mois.
           </p>
         </div>
       </section>

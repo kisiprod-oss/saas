@@ -127,9 +127,9 @@ export default async function PageTarifs({ searchParams }: { searchParams: Promi
                       )}
                     </>
                   )}
-                  {p.essaiMois && (
+                  {p.maxFacturesMois != null && (
                     <p className="mt-2 inline-flex rounded-full bg-brand-50 px-2.5 py-1 text-xs font-semibold text-brand-700">
-                      {p.essaiMois} mois gratuits pour commencer
+                      {p.maxFacturesMois} factures par mois
                     </p>
                   )}
                 </div>

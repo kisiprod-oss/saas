@@ -594,7 +594,27 @@ export function historiqueRelances(agenceId: number, limite = 100) {
  * Cree les factures d'une periode (AAAA-MM) pour tous les contrats actifs
  * qui n'en ont pas encore. Renvoie le nombre de factures creees.
  */
-export function genererFacturesDuMois(agenceId: number, periode: string): number {
+/** Factures emises par une agence pendant le mois calendaire en cours. */
+export function facturesEmisesCeMois(agenceId: number): number {
+  // Comptees sur la date de CREATION, pas sur la periode facturee : sinon il
+  // suffirait de dater ses factures d'un mois passe pour retrouver un quota.
+  return un<{ n: number }>(
+    `SELECT COUNT(*) AS n FROM factures
+      WHERE agence_id = ? AND strftime('%Y-%m', cree_le) = strftime('%Y-%m', 'now')`,
+    agenceId,
+  )!.n;
+}
+
+/**
+ * Emet les factures du mois pour tous les baux actifs qui n'en ont pas.
+ *
+ * `maxACreer` borne le lot au quota restant de l'agence (null = illimite).
+ * On emet ce qui rentre plutot que de tout refuser : une agence a la limite
+ * recupere quand meme ses premieres quittances, et sait combien manquent.
+ */
+export function genererFacturesDuMois(
+  agenceId: number, periode: string, maxACreer: number | null = null,
+): { creees: number; bloquees: number } {
   const contrats = tous<{ id: number; loyer: number; charges: number; jour_echeance: number }>(
     `SELECT c.id, c.loyer, c.charges, c.jour_echeance
        FROM contrats c
@@ -604,7 +624,10 @@ export function genererFacturesDuMois(agenceId: number, periode: string): number
         AND NOT EXISTS (SELECT 1 FROM factures f WHERE f.contrat_id = c.id AND f.periode = ?)`,
     agenceId, periode, periode, periode,
   );
-  if (contrats.length === 0) return 0;
+  if (contrats.length === 0) return { creees: 0, bloquees: 0 };
+
+  const aEmettre = maxACreer === null ? contrats : contrats.slice(0, Math.max(0, maxACreer));
+  const bloquees = contrats.length - aEmettre.length;
 
   const [annee, mois] = periode.split("-").map(Number);
   const dernierJour = new Date(Date.UTC(annee, mois, 0)).getUTCDate();
@@ -619,7 +642,7 @@ export function genererFacturesDuMois(agenceId: number, periode: string): number
 
   const lot = db.transaction(() => {
     let n = 0;
-    for (const c of contrats) {
+    for (const c of aEmettre) {
       const jour = Math.min(Math.max(c.jour_echeance || 5, 1), dernierJour);
       const echeance = `${periode}-${String(jour).padStart(2, "0")}`;
       inserer.run(
@@ -631,7 +654,7 @@ export function genererFacturesDuMois(agenceId: number, periode: string): number
     return n;
   });
 
-  return lot();
+  return { creees: lot(), bloquees };
 }
 
 /** Genere un numero de facture sequentiel du type FAC-2026-0042. */
