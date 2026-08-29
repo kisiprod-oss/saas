@@ -21,8 +21,8 @@ export default async function PageEspacePro({ searchParams }: { searchParams: Pr
   const params = await searchParams;
   const envoye = (Array.isArray(params.envoye) ? params.envoye[0] : params.envoye) === "1";
 
-  const fiche = un<{ motif_refus: string | null; publie: number }>(
-    "SELECT motif_refus, publie FROM artisans WHERE id = ?", artisan.id,
+  const fiche = un<{ motif_refus: string | null; publie: number; photo_url: string | null }>(
+    "SELECT motif_refus, publie, photo_url FROM artisans WHERE id = ?", artisan.id,
   );
   const note = noteArtisan(artisan.id);
   const avis = listerAvis(artisan.id, 5);
@@ -45,6 +45,39 @@ export default async function PageEspacePro({ searchParams }: { searchParams: Pr
           </Alerte>
         )}
       </div>
+
+      {/* ------------------------------ Ma photo ------------------------------ */}
+      <Carte className="mt-5 p-5">
+        <div className="flex items-center gap-4">
+          {fiche?.photo_url ? (
+            /* eslint-disable-next-line @next/next/no-img-element */
+            <img
+              src={fiche.photo_url}
+              alt="Votre photo"
+              className="h-16 w-16 shrink-0 rounded-full border border-slate-200 object-cover"
+            />
+          ) : (
+            <span className="flex h-16 w-16 shrink-0 items-center justify-center rounded-full border-2 border-dashed border-amber-300 bg-amber-50 text-amber-500">
+              <svg viewBox="0 0 24 24" className="h-8 w-8" fill="none" stroke="currentColor"
+                   strokeWidth={1.5} strokeLinecap="round" aria-hidden="true">
+                <circle cx="12" cy="8.5" r="3.8" />
+                <path d="M4.5 20.5a7.5 7.5 0 0 1 15 0" />
+              </svg>
+            </span>
+          )}
+          <div className="min-w-0 flex-1">
+            <p className="font-semibold text-slate-900">Ma photo</p>
+            <p className="mt-0.5 text-sm text-slate-500">
+              {fiche?.photo_url
+                ? "Elle s'affiche sur votre fiche publique."
+                : "Sans photo, vous serez beaucoup moins contacté."}
+            </p>
+          </div>
+          <Link href="/pro/photo" className="btn-secondaire shrink-0">
+            {fiche?.photo_url ? "Changer" : "Ajouter"}
+          </Link>
+        </div>
+      </Carte>
 
       {/* ------------------------------ Où en est le dossier ------------------------------ */}
       <Carte className="mt-5 p-5">

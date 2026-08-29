@@ -99,10 +99,28 @@ export default async function PageProfessionnels({ searchParams }: { searchParam
               <div key={a.id} className="carte overflow-hidden p-5">
                 <div className="flex items-start gap-3">
                   {a.photo_url ? (
-                    // eslint-disable-next-line @next/next/no-img-element
-                    <img src={a.photo_url} alt={a.nom} className="h-14 w-14 shrink-0 rounded-full border border-slate-200 object-cover" />
+                    <span className="relative shrink-0">
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img
+                        src={a.photo_url}
+                        alt={a.nom}
+                        className="h-16 w-16 rounded-full border-2 border-white object-cover shadow-md ring-1 ring-slate-200"
+                      />
+                      {a.quiz_reussi === 1 && (
+                        <span
+                          title="Compétence vérifiée"
+                          className="absolute -bottom-0.5 -right-0.5 flex h-5 w-5 items-center justify-center rounded-full bg-emerald-500 ring-2 ring-white"
+                        >
+                          <svg viewBox="0 0 24 24" className="h-3 w-3 text-white" fill="none"
+                               stroke="currentColor" strokeWidth={3.5} strokeLinecap="round"
+                               strokeLinejoin="round" aria-hidden="true">
+                            <path d="M20 6 9 17l-5-5" />
+                          </svg>
+                        </span>
+                      )}
+                    </span>
                   ) : (
-                    <span className="flex h-14 w-14 shrink-0 items-center justify-center rounded-full bg-brand-50 text-brand-700">
+                    <span className="flex h-16 w-16 shrink-0 items-center justify-center rounded-full bg-brand-50 text-brand-700 ring-1 ring-slate-200">
                       <IconeOutils className="h-6 w-6" />
                     </span>
                   )}

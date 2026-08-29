@@ -6,6 +6,7 @@ import { METIERS, VILLES } from "@/lib/constantes";
 import { NOMBRE_MAX_DOCUMENTS } from "@/lib/documents";
 import { NB_QUESTIONS, DUREE_MINUTES, SEUIL_REUSSITE } from "@/lib/quiz";
 import { Alerte } from "@/components/ui";
+import { ChampPhotoProfil } from "@/components/champ-photo-profil";
 import { LogoSen } from "@/components/entete-public";
 
 export const metadata = { title: "Devenir professionnel référencé" };
@@ -87,6 +88,21 @@ export default async function PageCandidature({ searchParams }: { searchParams: 
                 <label className="etiquette" htmlFor="quartier">Quartier</label>
                 <input id="quartier" name="quartier" placeholder="Sacré-Cœur" className="champ" />
               </div>
+            </div>
+          </fieldset>
+
+          <fieldset className="carte p-5">
+            <legend className="px-2 text-sm font-semibold text-brand-800">Votre photo</legend>
+            <div className="mt-3">
+              <ChampPhotoProfil
+                obligatoire
+                aide="Une photo nette de votre visage, en pleine lumière. C'est ce que voient d'abord les agences et les locataires — et c'est ce qui les décide à vous appeler."
+              />
+              <p className="mt-4 rounded-lg bg-brand-50 p-3 text-xs leading-relaxed text-brand-900">
+                Confier ses clés ou laisser entrer quelqu&apos;un chez soi demande de la
+                confiance. Un visage change tout : les fiches avec photo sont contactées
+                bien plus souvent. Photo de vous, pas un logo.
+              </p>
             </div>
           </fieldset>
 

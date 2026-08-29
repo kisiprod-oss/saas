@@ -1,6 +1,7 @@
 import { actionEnregistrerArtisan } from "@/lib/actions";
 import { METIERS, VILLES } from "@/lib/constantes";
 import { Case, Champ, Section, Selection, ZoneTexte } from "@/components/ui";
+import { ChampPhotoProfil } from "@/components/champ-photo-profil";
 import type { Artisan } from "@/lib/requetes";
 
 export function FormulaireArtisan({ artisan }: { artisan?: Artisan }) {
@@ -36,8 +37,20 @@ export function FormulaireArtisan({ artisan }: { artisan?: Artisan }) {
         </div>
         <Champ label="Tarif indicatif (facultatif)" nom="tarif_indicatif" valeur={artisan?.tarif_indicatif}
                placeholder="Ex : À partir de 5 000 FCFA le déplacement" />
-        <Champ label="Photo (adresse web, facultatif)" nom="photo_url" valeur={artisan?.photo_url}
-               placeholder="https://…/photo.jpg" />
+        <div className="sm:col-span-2">
+          <p className="etiquette">Photo</p>
+          <ChampPhotoProfil
+            photoActuelle={artisan?.photo_url ?? null}
+            aide="Une photo du visage rassure vos locataires : c'est ce qu'ils regardent avant d'ouvrir leur porte."
+          />
+          <details className="mt-3">
+            <summary className="cursor-pointer text-sm font-medium text-slate-500 hover:text-brand-700">
+              Ou indiquer l&apos;adresse web d&apos;une photo
+            </summary>
+            <input name="photo_url" defaultValue={artisan?.photo_url ?? ""}
+                   placeholder="https://…/photo.jpg" className="champ mt-2" />
+          </details>
+        </div>
         <div className="sm:col-span-2">
           <Case label="Afficher sur la vitrine publique" nom="publie" coche={artisan ? artisan.publie === 1 : true} />
         </div>

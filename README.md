@@ -29,6 +29,7 @@ Tous les montants sont en francs CFA (XOF).
 | **Formules** | Page tarifs publique, limites appliquées automatiquement selon l'abonnement. |
 | **Assistant** | Une bulle de discussion répond aux visiteurs sur le logiciel et les formules, jour et nuit. Elle ne lit aucun dossier et n'invente rien : ce qu'elle ignore, elle le dit. |
 | **Professionnels** | Annuaire public des artisans (plombiers, électriciens, maçons…). Deux origines : les contacts qu'une agence ajoute elle-même, et les professionnels qui **postulent librement**, dossier vérifié par la plateforme. |
+| **Photo du professionnel** | Obligatoire à la candidature, modifiable ensuite depuis son espace. Un visage est ce qui rassure le plus au moment de laisser entrer quelqu'un chez soi — les fiches sans photo sont beaucoup moins contactées. |
 | **Test de compétence** | Un candidat validé passe un test de 10 questions tirées au hasard sur son métier, en 10 minutes. À partir de 7 bonnes réponses, le badge « Compétence vérifiée » s'affiche sur sa fiche. |
 | **Avis clients** | Une agence déclare une intervention et reçoit un lien à usage unique pour la noter. Pas d'intervention, pas d'avis : c'est ce qui interdit les faux avis. Les étoiles viennent uniquement de là. |
 | **Compte** | Connexion par mot de passe **ou avec un compte Google**. Récupération du mot de passe par e-mail, blocage après 8 essais infructueux. |

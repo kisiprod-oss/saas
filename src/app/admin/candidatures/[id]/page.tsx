@@ -35,9 +35,23 @@ export default async function PageCandidature({
         <IconeRetour className="h-4 w-4" /> Retour aux candidatures
       </Link>
 
-      <div className="flex flex-wrap items-center gap-3">
-        <h1 className="text-2xl font-bold tracking-tight text-slate-900">{c.nom}</h1>
-        <BadgeCandidature statut={c.statut_candidature} />
+      <div className="flex flex-wrap items-center gap-4">
+        {c.photo_url ? (
+          /* eslint-disable-next-line @next/next/no-img-element */
+          <img
+            src={c.photo_url}
+            alt={c.nom}
+            className="h-16 w-16 shrink-0 rounded-full border border-slate-200 object-cover"
+          />
+        ) : (
+          <span className="flex h-16 w-16 shrink-0 items-center justify-center rounded-full border-2 border-dashed border-amber-300 bg-amber-50 text-xs font-medium text-amber-700">
+            Sans<br />photo
+          </span>
+        )}
+        <div className="flex flex-wrap items-center gap-3">
+          <h1 className="text-2xl font-bold tracking-tight text-slate-900">{c.nom}</h1>
+          <BadgeCandidature statut={c.statut_candidature} />
+        </div>
       </div>
       <p className="mt-1 text-sm text-slate-500">
         {libelle(METIERS, c.metier)} · candidature reçue le {dateFr(c.cree_le)}

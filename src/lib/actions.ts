@@ -1191,11 +1191,21 @@ export async function actionEnregistrerArtisan(fd: FormData) {
   if (!nom) erreur(retour, "Le nom est obligatoire.");
   if (!telephone) erreur(retour, "Le téléphone est obligatoire.");
 
+  // Une photo televersee remplace l'adresse web ; sans nouvelle photo, on
+  // garde celle qui est deja enregistree.
+  const fichierPhoto = fd.get("photo");
+  let photoUrl = vide(txt(fd, "photo_url"));
+  if (fichierPhoto instanceof File && fichierPhoto.size > 0) {
+    const { url, erreur: probleme } = await enregistrerPhotoProfil(fichierPhoto);
+    if (probleme) erreur(retour, probleme);
+    photoUrl = url;
+  }
+
   const champs = [
     nom, txt(fd, "metier") || "autre", telephone,
     vide(txt(fd, "telephone2")), txt(fd, "ville") || "Dakar", vide(txt(fd, "quartier")),
     vide(txt(fd, "description")), vide(txt(fd, "tarif_indicatif")),
-    vide(txt(fd, "photo_url")), coche(fd, "publie"),
+    photoUrl, coche(fd, "publie"),
   ];
 
   let artisanId = id;
@@ -1256,15 +1266,24 @@ export async function actionCandidature(fd: FormData) {
   const pieces = fd.getAll("documents").filter((f): f is File => f instanceof File);
   const { urls: docUrls, erreurs: pbDocs } = await enregistrerDocuments(pieces);
 
+  // La photo est exigee : c'est ce qui rassure une agence ou un locataire
+  // au moment de laisser entrer quelqu'un chez soi.
+  const photo = fd.get("photo");
+  if (!(photo instanceof File) || photo.size === 0) {
+    erreur(retour, "Ajoutez une photo de vous : elle rassure vos futurs clients.");
+  }
+  const { url: photoUrl, erreur: pbPhoto } = await enregistrerPhotoProfil(photo);
+  if (pbPhoto) erreur(retour, pbPhoto);
+
   const res = ecrire(
     `INSERT INTO artisans
        (agence_id, origine, nom, metier, telephone, telephone2, ville, quartier,
-        description, tarif_indicatif, email, mot_de_passe_hash, experience_annees,
-        cv_url, documents, statut_candidature, publie)
-     VALUES (NULL, 'candidature', ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'en_attente', 1)`,
+        description, tarif_indicatif, photo_url, email, mot_de_passe_hash,
+        experience_annees, cv_url, documents, statut_candidature, publie)
+     VALUES (NULL, 'candidature', ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'en_attente', 1)`,
     nom, metier, telephone, vide(txt(fd, "telephone2")),
     txt(fd, "ville") || "Dakar", vide(txt(fd, "quartier")),
-    vide(txt(fd, "description")), vide(txt(fd, "tarif_indicatif")),
+    vide(txt(fd, "description")), vide(txt(fd, "tarif_indicatif")), photoUrl,
     email, hacherMotDePasse(motDePasse), Math.max(0, entier(fd, "experience_annees")),
     cvUrls[0] ?? null, vide(docUrls.join("\n")),
   );
@@ -1304,6 +1323,31 @@ export async function actionConnexionArtisan(fd: FormData) {
 export async function actionDeconnexionArtisan() {
   await fermerSessionArtisan();
   redirect("/pro/connexion");
+}
+
+/** Le professionnel remplace sa photo de profil depuis son espace. */
+export async function actionPhotoArtisan(fd: FormData) {
+  const artisan = await exigerSessionArtisan();
+  const retour = "/pro/photo";
+
+  const fichier = fd.get("photo");
+  if (!(fichier instanceof File) || fichier.size === 0) {
+    erreur(retour, "Choisissez une photo avant d'enregistrer.");
+  }
+
+  const { url, erreur: probleme } = await enregistrerPhotoProfil(fichier);
+  if (probleme) erreur(retour, probleme);
+  if (!url) erreur(retour, "La photo n'a pas pu être enregistrée.");
+
+  const ancienne = un<{ photo_url: string | null }>(
+    "SELECT photo_url FROM artisans WHERE id = ?", artisan.id,
+  );
+  ecrire("UPDATE artisans SET photo_url = ? WHERE id = ?", url, artisan.id);
+  if (ancienne?.photo_url) await supprimerPhoto(ancienne.photo_url);
+
+  revalidatePath("/pro");
+  revalidatePath("/professionnels");
+  redirect(`${retour}?ok=1`);
 }
 
 // ------------------------------------------------------ quiz metier
