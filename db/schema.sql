@@ -179,6 +179,8 @@ CREATE TABLE IF NOT EXISTS contrats (
   jour_echeance  INTEGER NOT NULL DEFAULT 5, -- jour du mois ou le loyer est du
   commission_pct REAL NOT NULL DEFAULT 10,   -- honoraires de l'agence en %
   statut         TEXT NOT NULL DEFAULT 'actif',  -- actif | termine | resilie
+  -- Meme role que sur les factures : verification publique du bail.
+  code_verification TEXT,
   notes          TEXT,
   cree_le        TEXT NOT NULL DEFAULT (datetime('now'))
 );
@@ -201,6 +203,10 @@ CREATE TABLE IF NOT EXISTS factures (
   libelle_autres  TEXT,
   montant_total   INTEGER NOT NULL DEFAULT 0,
   statut          TEXT NOT NULL DEFAULT 'emise',  -- emise | annulee
+  -- Code tire au hasard, imprime sur la quittance et derriere son QR code.
+  -- Permet a un tiers de verifier le document sur /verifier/<code>.
+  -- Voir src/lib/verification.ts. Index unique dans db.ts.
+  code_verification TEXT,
   cree_le         TEXT NOT NULL DEFAULT (datetime('now'))
 );
 CREATE INDEX IF NOT EXISTS idx_factures_agence  ON factures(agence_id);

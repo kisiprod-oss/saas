@@ -2,40 +2,33 @@ import { dateFr, dateLongue, enLettres, fcfa, periodeLisible, telephoneFr } from
 import { libelle, MODES_PAIEMENT } from "@/lib/constantes";
 import type { Agence } from "@/lib/auth";
 import type { ContratDetaille, FactureDetaillee, Paiement } from "@/lib/types";
+import {
+  BandeSecurite, BlocVerification, CachetAgence, EnTeteAgence, Filigrane,
+} from "@/components/papier-agence";
 
 /**
  * Le document A4 de facture / quittance, partagé entre la vue imprimable
  * de l'agence et l'espace locataire : une seule mise en page à maintenir.
  */
 export function DocumentQuittance({
-  agence, facture, contrat, paiements,
+  agence, facture, contrat, paiements, verification,
 }: {
   agence: Agence;
   facture: FactureDetaillee;
   contrat: ContratDetaille | undefined;
   paiements: Paiement[];
+  /** Absent dans l'espace locataire, ou le document n'est pas imprime. */
+  verification?: { code: string; qr: string; lien: string };
 }) {
   const soldee = facture.reste <= 0;
   const estQuittance = soldee && facture.statut !== "annulee";
 
   return (
-    <article className="mx-auto max-w-[210mm] bg-white p-10 shadow-sm print:max-w-none print:p-0 print:shadow-none">
+    <article className="relative mx-auto max-w-[210mm] overflow-hidden bg-white p-10 shadow-sm print:max-w-none print:p-0 print:shadow-none">
+      <Filigrane agence={agence} />
+      <div className="relative">
       <header className="flex flex-wrap items-start justify-between gap-6 border-b-2 border-brand-600 pb-6">
-        <div>
-          {agence.logo_url ? (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img src={agence.logo_url} alt={agence.nom} className="mb-3 h-14 object-contain" />
-          ) : null}
-          <h1 className="text-xl font-bold text-slate-900">{agence.nom}</h1>
-          <div className="mt-1.5 space-y-0.5 text-xs text-slate-600">
-            {agence.adresse && <p>{agence.adresse}</p>}
-            {agence.ville && <p>{agence.ville}, Sénégal</p>}
-            {agence.telephone && <p>Tél. {telephoneFr(agence.telephone)}</p>}
-            {agence.email && <p>{agence.email}</p>}
-            {agence.ninea && <p>NINEA : {agence.ninea}</p>}
-            {agence.rccm && <p>RCCM : {agence.rccm}</p>}
-          </div>
-        </div>
+        <EnTeteAgence agence={agence} />
 
         <div className="text-right">
           <p className="text-2xl font-extrabold uppercase tracking-tight text-brand-700">
@@ -151,20 +144,33 @@ export function DocumentQuittance({
         </p>
       )}
 
-      <footer className="mt-12 flex items-end justify-between gap-8">
+      <footer className="mt-10 flex items-end justify-between gap-8">
         <div className="text-xs text-slate-500">
           <p>Fait à {agence.ville ?? "Dakar"}, le {dateLongue(new Date().toISOString().slice(0, 10))}.</p>
-          <p className="mt-4 max-w-xs">
-            Document généré par Sen Gestion. Montants exprimés en francs CFA (XOF).
-          </p>
+          <p className="mt-3 max-w-xs">Montants exprimés en francs CFA (XOF).</p>
         </div>
-        <div className="w-56 text-center">
-          <p className="text-xs font-semibold text-slate-700">Pour {agence.nom}</p>
-          <div className="mt-14 border-t border-slate-400 pt-1.5 text-xs text-slate-500">
-            Signature et cachet
+        <div className="flex items-end gap-4">
+          <CachetAgence agence={agence} />
+          <div className="w-48 text-center">
+            <p className="text-xs font-semibold text-slate-700">Pour {agence.nom}</p>
+            {/* Trait a signer a la main : le cachet marque l'agence, il ne
+                signe pas a la place d'une personne. */}
+            <div className="mt-14 border-t border-slate-400 pt-1.5 text-xs text-slate-500">
+              Signature
+            </div>
           </div>
         </div>
       </footer>
+
+      {verification && (
+        <>
+          <div className="mt-8 border-t border-slate-200 pt-4">
+            <BlocVerification {...verification} />
+          </div>
+          <BandeSecurite agence={agence} />
+        </>
+      )}
+      </div>
     </article>
   );
 }

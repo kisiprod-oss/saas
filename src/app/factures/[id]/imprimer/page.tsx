@@ -5,6 +5,8 @@ import { lireContrat, lireFacture, listerPaiementsFacture } from "@/lib/requetes
 import { BoutonImprimer } from "@/components/bouton-imprimer";
 import { DocumentQuittance } from "@/components/document-quittance";
 import { IconeRetour } from "@/components/icones";
+import { adresseDuSite } from "@/lib/email";
+import { codeVerification, lienVerification, qrSvg } from "@/lib/verification";
 
 export const metadata = { title: "Quittance de loyer" };
 export const dynamic = "force-dynamic";
@@ -18,6 +20,12 @@ export default async function PageImpressionFacture({ params }: { params: Promis
   const contrat = lireContrat(agence.id, facture.contrat_id);
   const paiements = listerPaiementsFacture(facture.id);
 
+  // Le code est attribue a la premiere impression : les factures deja en
+  // base en recoivent un sans migration de donnees.
+  const code = codeVerification("quittance", facture.id);
+  const lien = lienVerification(await adresseDuSite(), code);
+  const verification = { code, lien, qr: await qrSvg(lien) };
+
   return (
     <div className="min-h-screen bg-slate-100 py-8 print:bg-white print:py-0">
       <div className="sans-impression mx-auto mb-6 flex max-w-[210mm] flex-wrap items-center justify-between gap-3 px-4">
@@ -30,7 +38,10 @@ export default async function PageImpressionFacture({ params }: { params: Promis
         <BoutonImprimer />
       </div>
 
-      <DocumentQuittance agence={agence} facture={facture} contrat={contrat} paiements={paiements} />
+      <DocumentQuittance
+        agence={agence} facture={facture} contrat={contrat}
+        paiements={paiements} verification={verification}
+      />
     </div>
   );
 }

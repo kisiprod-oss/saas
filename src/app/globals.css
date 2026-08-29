@@ -116,3 +116,15 @@ body {
   body { background: #fff; }
   @page { size: A4; margin: 14mm; }
 }
+
+/*
+ * Par defaut, les navigateurs suppriment les aplats et les images de fond a
+ * l'impression pour economiser l'encre. Sur une quittance, cela effacerait
+ * le filigrane, le cachet et la bande de bas de page — c'est-a-dire tout ce
+ * qui rend le document reconnaissable. Cette classe demande explicitement
+ * de les conserver.
+ */
+.impression-couleurs {
+  -webkit-print-color-adjust: exact;
+  print-color-adjust: exact;
+}

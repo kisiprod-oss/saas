@@ -3,7 +3,7 @@ import { db, tous, un } from "./db";
 import { aujourdhui, decalerMois, moisCourant } from "./format";
 import { DELAI_ENTRE_RELANCES, niveauPour, type Niveau } from "./relances";
 import type {
-  Bien, ContratDetaille, Demande, FactureDetaillee, Locataire, Paiement,
+  Bien, ContratDetaille, ContratPourBail, Demande, FactureDetaillee, Locataire, Paiement,
 } from "./types";
 
 /** Bloc SQL commun : calcule le montant paye, le reste du et l'etat d'une facture. */
@@ -176,6 +176,31 @@ export function lireContrat(agenceId: number, id: number) {
             b.quartier AS bien_quartier, b.ville AS bien_ville,
             l.prenom AS locataire_prenom, l.nom AS locataire_nom,
             l.telephone AS locataire_telephone
+       FROM contrats c
+       JOIN biens b      ON b.id = c.bien_id
+       JOIN locataires l ON l.id = c.locataire_id
+      WHERE c.id = ? AND c.agence_id = ?`,
+    id, agenceId,
+  );
+}
+
+/**
+ * Le contrat avec tout ce qu'exige un bail imprime : l'identite complete du
+ * locataire (CNI, adresse) et la description du logement. `lireContrat` ne
+ * les remonte pas — elle sert aux ecrans de gestion, ou ces champs seraient
+ * du poids inutile.
+ */
+export function lireContratPourBail(agenceId: number, id: number) {
+  return un<ContratPourBail>(
+    `SELECT c.*,
+            b.titre AS bien_titre, b.reference AS bien_reference,
+            b.quartier AS bien_quartier, b.ville AS bien_ville, b.type AS bien_type,
+            b.adresse AS bien_adresse, b.chambres AS bien_chambres,
+            b.salles_bain AS bien_salles_bain, b.surface AS bien_surface,
+            b.meuble AS bien_meuble, b.proprietaire_nom,
+            l.prenom AS locataire_prenom, l.nom AS locataire_nom,
+            l.telephone AS locataire_telephone, l.cni AS locataire_cni,
+            l.adresse AS locataire_adresse, l.profession AS locataire_profession
        FROM contrats c
        JOIN biens b      ON b.id = c.bien_id
        JOIN locataires l ON l.id = c.locataire_id

@@ -81,6 +81,8 @@ function migrer(base: Database.Database) {
     ["artisans", "quiz_reussi", "INTEGER NOT NULL DEFAULT 0"],
     ["artisans", "quiz_passe_le", "TEXT"],
     ["agences", "compte_gratuit_reutilise", "INTEGER NOT NULL DEFAULT 0"],
+    ["factures", "code_verification", "TEXT"],
+    ["contrats", "code_verification", "TEXT"],
   ] as const;
 
   for (const [table, colonne, type] of colonnes) {
@@ -114,6 +116,16 @@ function migrer(base: Database.Database) {
   );
   base.exec(
     "CREATE INDEX IF NOT EXISTS idx_artisans_statut ON artisans(statut_candidature)",
+  );
+  // Unicite des codes de verification : c'est elle qui permet a
+  // codeVerification() de retenter sereinement en cas de collision.
+  base.exec(
+    `CREATE UNIQUE INDEX IF NOT EXISTS idx_factures_verification
+       ON factures(code_verification) WHERE code_verification IS NOT NULL`,
+  );
+  base.exec(
+    `CREATE UNIQUE INDEX IF NOT EXISTS idx_contrats_verification
+       ON contrats(code_verification) WHERE code_verification IS NOT NULL`,
   );
 }
 

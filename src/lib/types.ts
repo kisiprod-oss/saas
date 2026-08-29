@@ -80,6 +80,20 @@ export type ContratDetaille = Contrat & {
   locataire_telephone: string;
 };
 
+/** Le contrat enrichi de tout ce qu'exige un bail imprime. */
+export type ContratPourBail = ContratDetaille & {
+  locataire_cni: string | null;
+  locataire_adresse: string | null;
+  locataire_profession: string | null;
+  bien_type: string;
+  bien_adresse: string | null;
+  bien_chambres: number;
+  bien_salles_bain: number;
+  bien_surface: number | null;
+  bien_meuble: number;
+  proprietaire_nom: string | null;
+};
+
 export type Facture = {
   id: number;
   agence_id: number;

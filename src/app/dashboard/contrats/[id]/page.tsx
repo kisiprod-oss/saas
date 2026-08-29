@@ -49,6 +49,9 @@ export default async function PageContrat({
         titre={`Bail ${contrat.reference}`}
         sousTitre={`${contrat.locataire_prenom} ${contrat.locataire_nom} · ${contrat.bien_titre}`}
       >
+        <Link href={`/contrats/${contrat.id}/imprimer`} className="btn-secondaire">
+          <IconeFacture className="h-4 w-4" /> Imprimer le bail
+        </Link>
         <Link href={`/dashboard/factures/nouvelle?contrat=${contrat.id}`} className="btn-secondaire">
           <IconeFacture className="h-4 w-4" /> Créer une facture
         </Link>
