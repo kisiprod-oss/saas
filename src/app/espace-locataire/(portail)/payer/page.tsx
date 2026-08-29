@@ -4,7 +4,8 @@ import {
   contratActifLocataire, coordonneesPaiementLocataire,
   listerFacturesLocataire, paiementsEnAttenteLocataire,
 } from "@/lib/requetes";
-import { actionDeclarerPaiement } from "@/lib/actions";
+import { actionDeclarerPaiement, actionPayerEnLigne } from "@/lib/actions";
+import { etatEncaissement } from "@/lib/encaissement";
 import { aujourdhui, fcfa, periodeLisible } from "@/lib/format";
 import { MODES_PAIEMENT } from "@/lib/constantes";
 import { Alerte, Carte, MessagesUrl } from "@/components/ui";
@@ -35,6 +36,10 @@ export default async function PagePayerLoyer({ searchParams }: { searchParams: P
     || coordonnees?.paiement_wave
     || coordonnees?.paiement_free_money,
   );
+
+  // L'agence encaisse-t-elle directement dans l'application ?
+  const enLigne = etatEncaissement(locataire.agence_id);
+  const paiementEnLigne = enLigne.actif && enLigne.clesPresentes;
 
   return (
     <>
@@ -74,6 +79,49 @@ export default async function PagePayerLoyer({ searchParams }: { searchParams: P
             en attente de vérification par votre agence. Inutile de le déclarer une seconde fois.
           </Alerte>
         </div>
+      )}
+
+      {soldeDu > 0 && paiementEnLigne && aRegler && (
+        <>
+          <h2 className="mb-3 mt-8 text-lg font-bold text-slate-900">Payer en ligne</h2>
+          <Carte className="border-brand-300 p-5 ring-1 ring-brand-500">
+            <p className="text-sm text-slate-600">
+              Réglez directement depuis cette page avec Orange Money, Wave, Free Money
+              ou votre carte. <strong>Votre quittance est mise à jour toute seule</strong> —
+              rien à déclarer, rien à attendre.
+            </p>
+
+            <form action={actionPayerEnLigne} className="mt-4 space-y-3">
+              <input type="hidden" name="facture_id" value={aRegler.id} />
+              <div>
+                <label className="etiquette" htmlFor="montant_ligne">Montant à régler</label>
+                <input
+                  id="montant_ligne" name="montant" inputMode="numeric"
+                  defaultValue={aRegler.reste} className="champ"
+                />
+                <p className="mt-1 text-xs text-slate-500">
+                  Quittance de {periodeLisible(aRegler.periode)} — reste {fcfa(aRegler.reste)}.
+                </p>
+              </div>
+              <button type="submit" className="btn-primaire w-full py-3">
+                Payer {fcfa(aRegler.reste)} en ligne
+              </button>
+            </form>
+
+            <p className="mt-3 text-center text-xs leading-relaxed text-slate-500">
+              Vous serez redirigé vers la page sécurisée de paiement de
+              {" "}{coordonnees?.agence_nom}. Sen Gestion ne voit jamais votre code secret.
+            </p>
+          </Carte>
+
+          <div className="mt-8 flex items-center gap-3">
+            <span className="h-px flex-1 bg-slate-200" />
+            <span className="text-xs font-medium uppercase tracking-wide text-slate-400">
+              ou payer par vous-même
+            </span>
+            <span className="h-px flex-1 bg-slate-200" />
+          </div>
+        </>
       )}
 
       {soldeDu > 0 && (

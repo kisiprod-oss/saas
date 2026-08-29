@@ -25,6 +25,16 @@ CREATE TABLE IF NOT EXISTS agences (
   paiement_wave         TEXT,
   paiement_free_money   TEXT,
   paiement_consignes    TEXT,   -- precisions libres (RIB, horaires de caisse...)
+  -- Encaissement automatique : chaque agence branche SON propre compte
+  -- marchand. L'argent va directement chez elle ; Sen Gestion ne le touche
+  -- jamais et n'a donc pas besoin d'agrement d'etablissement de paiement.
+  encaissement_actif      INTEGER NOT NULL DEFAULT 0,
+  encaissement_fournisseur TEXT,          -- paydunya (seul gere pour l'instant)
+  encaissement_mode       TEXT NOT NULL DEFAULT 'test',  -- test | reel
+  -- Cles marchandes, chiffrees (voir src/lib/chiffrement.ts). Jamais en clair.
+  encaissement_cle_maitre TEXT,
+  encaissement_cle_privee TEXT,
+  encaissement_jeton      TEXT,
   -- Formule d'abonnement : decouverte | bailleur | agence | pro
   plan          TEXT NOT NULL DEFAULT 'decouverte',
   -- Modeles de messages de relance (vides = modeles par defaut du logiciel)
@@ -196,6 +206,32 @@ CREATE TABLE IF NOT EXISTS paiements (
 );
 CREATE INDEX IF NOT EXISTS idx_paiements_agence  ON paiements(agence_id);
 CREATE INDEX IF NOT EXISTS idx_paiements_facture ON paiements(facture_id);
+
+-- ---------- Transactions d'encaissement en ligne ----------
+-- Une ligne par tentative de paiement lancee depuis l'espace locataire.
+-- Le jeton est celui du fournisseur : c'est lui qui fait foi, et c'est sur
+-- lui qu'on interroge le fournisseur pour connaitre le vrai statut.
+CREATE TABLE IF NOT EXISTS transactions (
+  id            INTEGER PRIMARY KEY AUTOINCREMENT,
+  agence_id     INTEGER NOT NULL REFERENCES agences(id) ON DELETE CASCADE,
+  facture_id    INTEGER REFERENCES factures(id) ON DELETE CASCADE,
+  locataire_id  INTEGER REFERENCES locataires(id) ON DELETE SET NULL,
+  reservation_id INTEGER REFERENCES reservations(id) ON DELETE CASCADE,
+  fournisseur   TEXT NOT NULL DEFAULT 'paydunya',
+  jeton         TEXT NOT NULL,             -- jeton de facture chez le fournisseur
+  montant       INTEGER NOT NULL,
+  statut        TEXT NOT NULL DEFAULT 'initiee',
+                -- initiee | payee | echouee | annulee
+  -- Paiement cree dans la table `paiements` une fois l'argent confirme.
+  -- Sa presence rend la confirmation idempotente : un second appel du
+  -- fournisseur ne peut pas crediter deux fois la meme facture.
+  paiement_id   INTEGER REFERENCES paiements(id) ON DELETE SET NULL,
+  detail        TEXT,                      -- message du fournisseur, pour le journal
+  cree_le       TEXT NOT NULL DEFAULT (datetime('now')),
+  confirme_le   TEXT
+);
+CREATE INDEX IF NOT EXISTS idx_transactions_agence ON transactions(agence_id, cree_le);
+CREATE UNIQUE INDEX IF NOT EXISTS idx_transactions_jeton ON transactions(fournisseur, jeton);
 
 -- ---------- Reservations de courte duree (meubles touristiques) ----------
 -- Une reservation bloque le bien de date_arrivee (incluse) a date_depart

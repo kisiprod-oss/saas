@@ -61,6 +61,12 @@ function migrer(base: Database.Database) {
     ["biens", "prix_nuit", "INTEGER NOT NULL DEFAULT 0"],
     ["biens", "nuits_min", "INTEGER NOT NULL DEFAULT 1"],
     ["biens", "capacite", "INTEGER NOT NULL DEFAULT 2"],
+    ["agences", "encaissement_actif", "INTEGER NOT NULL DEFAULT 0"],
+    ["agences", "encaissement_fournisseur", "TEXT"],
+    ["agences", "encaissement_mode", "TEXT NOT NULL DEFAULT 'test'"],
+    ["agences", "encaissement_cle_maitre", "TEXT"],
+    ["agences", "encaissement_cle_privee", "TEXT"],
+    ["agences", "encaissement_jeton", "TEXT"],
   ] as const;
 
   for (const [table, colonne, type] of colonnes) {

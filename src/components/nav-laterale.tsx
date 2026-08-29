@@ -3,8 +3,9 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
-  IconeAgence, IconeArgent, IconeBoiteReception, IconeCalendrier, IconeContrat,
-  IconeFacture, IconeMaison, IconeRelance, IconeTableauBord, IconeUtilisateurs,
+  IconeAgence, IconeArgent, IconeBoiteReception, IconeCalendrier, IconeCarte,
+  IconeContrat, IconeFacture, IconeMaison, IconeRelance, IconeTableauBord,
+  IconeUtilisateurs,
 } from "./icones";
 
 const LIENS = [
@@ -14,6 +15,7 @@ const LIENS = [
   { href: "/dashboard/contrats",    libelle: "Contrats de bail",Icone: IconeContrat },
   { href: "/dashboard/factures",    libelle: "Factures",        Icone: IconeFacture },
   { href: "/dashboard/paiements",   libelle: "Paiements",       Icone: IconeArgent },
+  { href: "/dashboard/encaissement", libelle: "Encaissement",   Icone: IconeCarte },
   { href: "/dashboard/relances",    libelle: "Relances",        Icone: IconeRelance },
   { href: "/dashboard/reservations", libelle: "Réservations",   Icone: IconeCalendrier },
   { href: "/dashboard/demandes",    libelle: "Demandes",        Icone: IconeBoiteReception },

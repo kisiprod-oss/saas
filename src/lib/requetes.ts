@@ -814,3 +814,47 @@ export function coordonneesPaiementLocataire(locataireId: number) {
     locataireId,
   );
 }
+
+// ------------------------------------------------- Journal d'encaissement
+
+export type LigneTransaction = {
+  id: number;
+  fournisseur: string;
+  jeton: string;
+  montant: number;
+  statut: string;
+  detail: string | null;
+  cree_le: string;
+  confirme_le: string | null;
+  facture_numero: string | null;
+  facture_periode: string | null;
+  locataire_prenom: string | null;
+  locataire_nom: string | null;
+};
+
+/** Dernieres tentatives de paiement en ligne, pour le journal de l'agence. */
+export function listerTransactions(agenceId: number, limite = 50) {
+  return tous<LigneTransaction>(
+    `SELECT t.id, t.fournisseur, t.jeton, t.montant, t.statut, t.detail,
+            t.cree_le, t.confirme_le,
+            f.numero AS facture_numero, f.periode AS facture_periode,
+            l.prenom AS locataire_prenom, l.nom AS locataire_nom
+       FROM transactions t
+       LEFT JOIN factures   f ON f.id = t.facture_id
+       LEFT JOIN locataires l ON l.id = t.locataire_id
+      WHERE t.agence_id = ?
+      ORDER BY t.cree_le DESC
+      LIMIT ?`,
+    agenceId, limite,
+  );
+}
+
+/** Total reellement encaisse en ligne, pour l'en-tete de la page. */
+export function totalEncaisseEnLigne(agenceId: number): { nombre: number; total: number } {
+  const l = un<{ nombre: number; total: number }>(
+    `SELECT COUNT(*) AS nombre, COALESCE(SUM(montant), 0) AS total
+       FROM transactions WHERE agence_id = ? AND statut = 'payee'`,
+    agenceId,
+  );
+  return { nombre: l?.nombre ?? 0, total: l?.total ?? 0 };
+}

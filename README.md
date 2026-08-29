@@ -23,6 +23,7 @@ Tous les montants sont en francs CFA (XOF).
 | **Relances** | Le logiciel repère les loyers en retard, choisit le ton du message selon l'ancienneté de la dette et l'envoie sur WhatsApp ou par SMS en un clic. |
 | **Espace locataire** | Chaque locataire consulte ses quittances, **ajoute sa photo** et signale ses règlements (Orange Money, Wave…). L'agence vérifie et confirme : rien n'est compté comme réglé avant sa validation. |
 | **Payer mon loyer** | Le locataire voit ce qu'il doit, les numéros Orange Money / Wave de son agence (avec bouton « Copier »), puis déclare son règlement avec la référence de transaction. |
+| **Encaissement en ligne** | Chaque agence branche **son propre** compte marchand : le locataire paie dans l'application et sa quittance se solde toute seule. L'argent va directement à l'agence — Sen Gestion ne le détient jamais. |
 | **Courte durée** | Un bien peut se louer à la nuitée : prix par nuit, séjour minimum, capacité. Les visiteurs réservent en ligne avec dates et calcul du total ; les dates déjà prises sont bloquées. |
 | **Demandes** | Les demandes de visite reçues depuis la vitrine, avec appel direct et WhatsApp. |
 | **Formules** | Page tarifs publique, limites appliquées automatiquement selon l'abonnement. |
@@ -144,6 +145,8 @@ src/app/               Les pages du site
   cgu/ confidentialite/ mentions-legales/   Pages légales
   dashboard/             Espace agence (toutes les pages de gestion)
   dashboard/reservations/  Séjours courte durée : demandes, confirmations, règlements
+  dashboard/encaissement/  Compte marchand de l'agence et journal des paiements
+  api/encaissement/        Notifications du fournisseur de paiement
   factures/[id]/imprimer Quittance au format A4
   api/photos/[fichier]   Sert les photos rangées dans data/televersements/
   api/assistant/         Réponses de l'assistant, transmises au fil de l'eau
@@ -160,6 +163,9 @@ src/lib/               Le « moteur » : base de données, calculs, actions
   email.ts               Envoi des e-mails de service (SMTP, ou disque si absent)
   editeur.ts             Identité de l'éditeur, reprise sur les pages légales
   google.ts              Connexion des agences avec un compte Google (OAuth 2.0)
+  chiffrement.ts         Chiffrement des clés marchandes stockées en base
+  encaissement.ts        Dialogue avec le fournisseur de paiement
+  confirmation-paiement.ts  Le seul endroit qui solde une facture payée en ligne
   assistant.ts           Savoir et consignes de l'assistant automatique
 src/components/        Les éléments visuels réutilisés (boutons, cartes, formulaires)
 ```
@@ -342,6 +348,59 @@ ASSISTANT_MODELE=claude-sonnet-5
 
 ⚠️ La clé est un mot de passe : elle se colle uniquement dans le panneau de
 l'hébergeur, jamais dans un message ou une conversation.
+
+### 7. (Facultatif) Activer l'encaissement en ligne
+
+Vos agences clientes peuvent encaisser les loyers **directement dans
+l'application** : le locataire paie, sa quittance se solde toute seule.
+
+**Le point important : chaque agence branche son propre compte marchand.**
+L'argent va de son locataire vers son compte à elle. Sen Gestion ne le
+détient à aucun moment — vous n'avez donc pas besoin d'un agrément
+d'établissement de paiement, ni même d'être immatriculé pour que la fonction
+marche chez vos clientes.
+
+**Ce que vous avez à faire (une seule fois).** Générez une clé de chiffrement
+et ajoutez-la aux variables d'environnement :
+
+```bash
+node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"
+```
+
+```
+CLE_CHIFFREMENT=la valeur obtenue
+```
+
+Elle protège les clés marchandes que vos agences enregistrent. Sans elle, la
+fonction reste simplement désactivée — mieux vaut une fonction indisponible
+qu'un secret écrit en clair.
+
+⚠️ **Ne la changez plus une fois des clés enregistrées** : les anciennes
+deviendraient illisibles et chaque agence devrait ressaisir les siennes.
+Gardez-en une copie hors du serveur.
+
+**Ce que fait l'agence**, depuis « Encaissement » dans son tableau de bord :
+elle ouvre un compte sur paydunya.com, colle ses trois clés, teste, copie
+l'adresse de notification chez son fournisseur, essaie en mode test, puis
+passe en mode réel.
+
+#### Les quatre garde-fous
+
+Encaisser de l'argent est ce qui se pirate le plus. Quatre protections
+s'appliquent, indissociables :
+
+1. **La notification du fournisseur n'est jamais crue.** N'importe qui peut
+   appeler l'adresse de notification et prétendre qu'un paiement a eu lieu.
+   Son contenu n'est donc pas lu : seul le jeton est retenu, et Sen Gestion
+   rappelle le fournisseur, avec les clés de l'agence, pour connaître le vrai
+   statut. Une fausse notification ne peut rien solder.
+2. **Le montant crédité est celui réellement encaissé**, jamais celui qui
+   avait été demandé — payer 1 000 FCFA ne solde pas une facture de 400 000.
+3. **Une transaction ne peut créditer qu'une fois.** Le fournisseur notifie
+   souvent plusieurs fois (c'est normal, et souhaitable si le réseau coupe) ;
+   l'écriture est faite dans une transaction SQLite avec un verrou final.
+4. **Les clés marchandes sont chiffrées en base** (AES-256-GCM) et ne sont
+   jamais réaffichées, même à l'agence qui les a saisies.
 
 ---
 

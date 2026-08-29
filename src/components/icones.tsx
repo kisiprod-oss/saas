@@ -91,3 +91,6 @@ export const IconeRelance = (p: Props) => (
 export const IconeCalendrier = (p: Props) => (
   <Svg {...p}><rect x="3" y="5" width="18" height="16" rx="2" /><path d="M3 10h18" /><path d="M8 3v4M16 3v4" /><path d="M8 14h3M8 17.5h5" /></Svg>
 );
+export const IconeCarte = (p: Props) => (
+  <Svg {...p}><rect x="2.5" y="5" width="19" height="14" rx="2.5" /><path d="M2.5 9.5h19" /><path d="M6 14.5h3.5" /></Svg>
+);

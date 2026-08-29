@@ -18,7 +18,11 @@ import {
   bienDisponible, genererFacturesDuMois, numeroFactureSuivant,
   referenceReservation, referenceSuivante,
 } from "./requetes";
-import { aujourdhui, dateValide, nuitsEntre } from "./format";
+import { aujourdhui, dateValide, nuitsEntre, periodeLisible } from "./format";
+import { chiffrementConfigure, chiffrer } from "./chiffrement";
+import {
+  clesAgence, creerPaiement, FOURNISSEURS, testerCles,
+} from "./encaissement";
 import { enregistrerPhotoProfil, enregistrerPhotos, supprimerPhoto } from "./photos";
 import { peutAjouterBien, plan, planSuivant, PLANS } from "./tarifs";
 
@@ -1028,4 +1032,136 @@ export async function actionSupprimerReservation(fd: FormData) {
   );
   revalidatePath("/dashboard/reservations");
   redirect("/dashboard/reservations?supprime=1");
+}
+
+// --------------------------------------------- encaissement automatique
+
+/**
+ * L'agence enregistre ses cles marchandes.
+ *
+ * Les cles sont chiffrees avant d'entrer en base. Un champ laisse vide
+ * conserve la cle deja enregistree : l'agence peut donc corriger un seul
+ * identifiant sans avoir a tout resaisir — et l'ecran n'a jamais besoin de
+ * reafficher un secret pour le renvoyer.
+ */
+export async function actionEnregistrerEncaissement(fd: FormData) {
+  const { agence } = await exigerSession();
+  const retour = "/dashboard/encaissement";
+
+  if (!chiffrementConfigure()) {
+    erreur(retour, "La clé de chiffrement du serveur (CLE_CHIFFREMENT) n'est pas configurée.");
+  }
+
+  const fournisseur = txt(fd, "fournisseur") || "paydunya";
+  if (!FOURNISSEURS.some((f) => f.code === fournisseur)) {
+    erreur(retour, "Fournisseur inconnu.");
+  }
+
+  const mode = txt(fd, "mode") === "reel" ? "reel" : "test";
+  const actuel = un<{
+    encaissement_cle_maitre: string | null;
+    encaissement_cle_privee: string | null;
+    encaissement_jeton: string | null;
+  }>(
+    `SELECT encaissement_cle_maitre, encaissement_cle_privee, encaissement_jeton
+       FROM agences WHERE id = ?`,
+    agence.id,
+  );
+
+  /** Chiffre la nouvelle valeur, ou garde l'ancienne si le champ est vide. */
+  const cle = (nom: string, ancienne: string | null | undefined) => {
+    const saisie = txt(fd, nom);
+    return saisie ? chiffrer(saisie) : (ancienne ?? null);
+  };
+
+  const cleMaitre = cle("cle_maitre", actuel?.encaissement_cle_maitre);
+  const clePrivee = cle("cle_privee", actuel?.encaissement_cle_privee);
+  const jeton = cle("jeton", actuel?.encaissement_jeton);
+
+  const actif = coche(fd, "actif");
+  if (actif && !(cleMaitre && clePrivee && jeton)) {
+    erreur(retour, "Renseignez les trois clés avant d'activer l'encaissement.");
+  }
+
+  ecrire(
+    `UPDATE agences
+        SET encaissement_actif = ?, encaissement_fournisseur = ?, encaissement_mode = ?,
+            encaissement_cle_maitre = ?, encaissement_cle_privee = ?, encaissement_jeton = ?
+      WHERE id = ?`,
+    actif, fournisseur, mode, cleMaitre, clePrivee, jeton, agence.id,
+  );
+
+  revalidatePath(retour);
+  redirect(`${retour}?ok=1`);
+}
+
+/** Vérifie que les clés saisies fonctionnent vraiment chez le fournisseur. */
+export async function actionTesterEncaissement() {
+  const { agence } = await exigerSession();
+  const retour = "/dashboard/encaissement";
+
+  const cles = clesAgence(agence.id);
+  if (!cles) {
+    erreur(retour, "Activez l'encaissement et enregistrez vos trois clés avant de tester.");
+  }
+
+  const essai = await testerCles(cles, agence.nom, await adresseDuSite());
+  if (!essai.ok) erreur(retour, `Échec du test : ${essai.erreur}`);
+
+  redirect(`${retour}?teste=1`);
+}
+
+/** Le locataire lance le paiement en ligne d'une de ses factures. */
+export async function actionPayerEnLigne(fd: FormData) {
+  const locataire = await exigerSessionLocataire();
+  const factureId = entier(fd, "facture_id");
+  const retour = "/espace-locataire/payer";
+
+  const facture = un<{
+    id: number; agence_id: number; reste: number; periode: string;
+    agence_nom: string; agence_telephone: string | null;
+  }>(
+    `SELECT f.id, f.agence_id, f.periode,
+            f.montant_total - COALESCE(p.paye, 0) AS reste,
+            a.nom AS agence_nom, a.telephone AS agence_telephone
+       FROM factures f
+       JOIN contrats c ON c.id = f.contrat_id
+       JOIN agences  a ON a.id = f.agence_id
+       LEFT JOIN (SELECT facture_id, SUM(montant) AS paye FROM paiements
+                   WHERE confirme = 1 GROUP BY facture_id) p ON p.facture_id = f.id
+      WHERE f.id = ? AND c.locataire_id = ? AND f.statut != 'annulee'`,
+    factureId, locataire.id,
+  );
+  if (!facture) erreur(retour, "Facture introuvable.");
+  if (facture.reste <= 0) erreur(retour, "Cette quittance est déjà réglée.");
+
+  const cles = clesAgence(facture.agence_id);
+  if (!cles) erreur(retour, "Votre agence n'accepte pas encore le paiement en ligne.");
+
+  // Le locataire peut regler une partie seulement, jamais plus que le reste du.
+  const demande = montant(fd, "montant");
+  const aPayer = demande > 0 ? Math.min(demande, facture.reste) : facture.reste;
+
+  const site = await adresseDuSite();
+  const creation = await creerPaiement(cles, {
+    montant: aPayer,
+    description: `Loyer ${periodeLisible(facture.periode)} — ${facture.agence_nom}`,
+    nomAgence: facture.agence_nom,
+    telephoneAgence: facture.agence_telephone,
+    urlNotification: `${site}/api/encaissement/paydunya`,
+    urlRetour: `${site}/espace-locataire/paiement`,
+    urlAnnulation: `${site}/espace-locataire/payer?annule=1`,
+    reference: { facture: String(facture.id), locataire: String(locataire.id) },
+  });
+
+  if (!creation.ok) erreur(retour, creation.erreur);
+
+  ecrire(
+    `INSERT INTO transactions
+       (agence_id, facture_id, locataire_id, fournisseur, jeton, montant, statut)
+     VALUES (?, ?, ?, ?, ?, ?, 'initiee')`,
+    facture.agence_id, facture.id, locataire.id, cles.fournisseur, creation.jeton, aPayer,
+  );
+
+  redirect(creation.url);
 }
