@@ -22,6 +22,8 @@ const DOSSIER = path.join(dossierData, "televersements");
 const PREFIXE_URL = "/api/photos/";
 
 const LARGEUR_MAX = 1600;
+/** Photo de profil : carree, elle ne s'affiche jamais plus grande. */
+const LARGEUR_PROFIL = 512;
 const QUALITE = 78;
 export const TAILLE_MAX_FICHIER = 15 * 1024 * 1024; // 15 Mo par photo
 export const NOMBRE_MAX_PHOTOS = 12;
@@ -82,6 +84,42 @@ export async function enregistrerPhotos(fichiers: File[]): Promise<ResultatTelev
   }
 
   return { urls, erreurs };
+}
+
+/**
+ * Enregistre une photo de profil : recadree en carre, 512 px de cote.
+ *
+ * Separee de `enregistrerPhotos` parce que les contraintes different — une
+ * seule image, cadrage carre, poids reduit : la vignette s'affiche dans des
+ * listes, souvent sur une connexion mobile.
+ */
+export async function enregistrerPhotoProfil(
+  fichier: File,
+): Promise<{ url: string | null; erreur: string | null }> {
+  if (!fichier || fichier.size === 0) return { url: null, erreur: null };
+
+  if (fichier.size > TAILLE_MAX_FICHIER) {
+    return { url: null, erreur: "La photo dépasse 15 Mo. Choisissez une image plus légère." };
+  }
+  if (fichier.type && !TYPES_ACCEPTES.includes(fichier.type)) {
+    return { url: null, erreur: "Ce fichier n'est pas une image reconnue (JPEG, PNG ou HEIC)." };
+  }
+
+  try {
+    const donnees = Buffer.from(await fichier.arrayBuffer());
+    const image = await sharp(donnees, { failOn: "none" })
+      .rotate()
+      .resize(LARGEUR_PROFIL, LARGEUR_PROFIL, { fit: "cover", position: "attention" })
+      .webp({ quality: QUALITE })
+      .toBuffer();
+
+    await fsp.mkdir(DOSSIER, { recursive: true });
+    const nom = `${crypto.randomBytes(16).toString("hex")}.webp`;
+    await fsp.writeFile(path.join(DOSSIER, nom), image);
+    return { url: PREFIXE_URL + nom, erreur: null };
+  } catch {
+    return { url: null, erreur: "La photo n'a pas pu être traitée : le fichier est peut-être abîmé." };
+  }
 }
 
 /** Vrai si l'adresse designe une photo stockee par nos soins. */

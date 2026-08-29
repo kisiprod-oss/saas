@@ -74,12 +74,15 @@ db.exec(`
 
 // ----------------------------------------------------------------- agence
 const agenceId = db.prepare(`
-  INSERT INTO agences (nom, slug, ninea, rccm, telephone, email, adresse, ville, commission_pct, plan)
-  VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 'agence')
+  INSERT INTO agences (nom, slug, ninea, rccm, telephone, email, adresse, ville, commission_pct, plan,
+                       paiement_orange_money, paiement_wave, paiement_consignes)
+  VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 'agence', ?, ?, ?)
 `).run(
   "Teranga Immobilier", "teranga-immobilier", "005812345 2V2", "SN DKR 2021 B 18342",
   "771234567", "contact@teranga-immo.sn",
   "Rue 10 x Avenue Cheikh Anta Diop, Immeuble Baobab, 2e étage", "Dakar", 10,
+  "771234567", "781234567",
+  "Indiquez votre nom et le mois concerné en objet du transfert.",
 ).lastInsertRowid;
 
 db.prepare(`
@@ -165,6 +168,7 @@ const BIENS = [
     titre: "Appartement meublé 2 chambres — Saly Portudal",
     type: "appartement", quartier: "Saly", ville: "Mbour", chambres: 2, sdb: 2, surface: 85,
     etage: "1er étage", meuble: 1, loyer: 400000, charges: 35000, caution: 2,
+    courteDuree: 1, prixNuit: 35000, nuitsMin: 2, capacite: 4,
     equipements: "Climatisation, Piscine, Cuisine équipée, Gardien, Terrasse, Internet / Fibre",
     description:
       "Appartement meublé dans une résidence avec piscine à Saly Portudal, à 300 m de la plage.\n" +
@@ -256,6 +260,7 @@ const BIENS = [
     titre: "Villa meublée à 200 m de la plage — Ngaparou",
     type: "villa", quartier: "Ngaparou", ville: "Mbour", chambres: 3, sdb: 3, surface: 200,
     etage: "RDC", meuble: 1, loyer: 900000, charges: 70000, caution: 2,
+    courteDuree: 1, prixNuit: 85000, nuitsMin: 3, capacite: 6,
     equipements: "Climatisation, Piscine, Jardin, Parking, Gardien, Terrasse, Cuisine équipée, Internet / Fibre",
     description:
       "Villa meublée avec piscine à Ngaparou, à 200 m de la plage et à 10 minutes de Saly.\n" +
@@ -267,8 +272,10 @@ const BIENS = [
 const insererBien = db.prepare(`
   INSERT INTO biens (agence_id, reference, titre, type, description, ville, quartier, adresse,
                      chambres, salles_bain, surface, etage, meuble, equipements, photos,
-                     loyer, charges, caution_mois, statut, publie, proprietaire_nom, proprietaire_telephone)
-  VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 1, ?, ?)
+                     loyer, charges, caution_mois,
+                     courte_duree, prix_nuit, nuits_min, capacite,
+                     statut, publie, proprietaire_nom, proprietaire_telephone)
+  VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 1, ?, ?)
 `);
 
 const idsBiens = BIENS.map((b, i) => {
@@ -282,7 +289,9 @@ const idsBiens = BIENS.map((b, i) => {
     agenceId, `BIEN-${String(i + 1).padStart(4, "0")}`, b.titre, b.type, b.description,
     b.ville ?? "Dakar", b.quartier, `${b.quartier}, ${b.ville ?? "Dakar"}`,
     b.chambres, b.sdb, b.surface, b.etage, b.meuble, b.equipements, photos,
-    b.loyer, b.charges, b.caution, "disponible",
+    b.loyer, b.charges, b.caution,
+    b.courteDuree ?? 0, b.prixNuit ?? 0, b.nuitsMin ?? 1, b.capacite ?? 2,
+    "disponible",
     b.proprietaire[0], b.proprietaire[1],
   ).lastInsertRowid);
 });

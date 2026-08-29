@@ -71,7 +71,8 @@ export function lireBien(agenceId: number, id: number) {
 
 /** Biens publies et disponibles, tous agences confondues : la vitrine publique. */
 export function listerVitrine(filtres: {
-  ville?: string; type?: string; chambres?: string; budgetMax?: string; recherche?: string;
+  ville?: string; type?: string; chambres?: string; budgetMax?: string;
+  recherche?: string; duree?: string;
 } = {}) {
   const conditions = ["b.publie = 1", "b.statut IN ('disponible', 'reserve')"];
   const params: unknown[] = [];
@@ -79,7 +80,14 @@ export function listerVitrine(filtres: {
   if (filtres.ville) { conditions.push("b.ville = ?"); params.push(filtres.ville); }
   if (filtres.type) { conditions.push("b.type = ?"); params.push(filtres.type); }
   if (filtres.chambres) { conditions.push("b.chambres >= ?"); params.push(Number(filtres.chambres)); }
-  if (filtres.budgetMax) { conditions.push("b.loyer <= ?"); params.push(Number(filtres.budgetMax)); }
+  if (filtres.duree === "courte") conditions.push("b.courte_duree = 1");
+  if (filtres.duree === "longue") conditions.push("b.courte_duree = 0");
+  // Le budget porte sur le loyer mensuel : l'appliquer a un meuble touristique
+  // le ferait disparaitre alors que son loyer vaut zero.
+  if (filtres.budgetMax) {
+    conditions.push("(b.courte_duree = 1 OR b.loyer <= ?)");
+    params.push(Number(filtres.budgetMax));
+  }
   if (filtres.recherche) {
     conditions.push("(b.titre LIKE ? OR b.quartier LIKE ? OR b.ville LIKE ? OR b.description LIKE ?)");
     const q = `%${filtres.recherche}%`;
@@ -645,4 +653,164 @@ export function referenceSuivante(agenceId: number, table: "biens" | "contrats",
     prefixe.length + 2, agenceId, `${prefixe}-%`,
   );
   return `${prefixe}-${String((r?.max ?? 0) + 1).padStart(4, "0")}`;
+}
+
+// ------------------------------------------------- Reservations courte duree
+
+export type Reservation = {
+  id: number;
+  agence_id: number;
+  bien_id: number;
+  reference: string;
+  nom: string;
+  telephone: string;
+  email: string | null;
+  date_arrivee: string;
+  date_depart: string;
+  nuits: number;
+  voyageurs: number;
+  prix_nuit: number;
+  montant_total: number;
+  montant_paye: number;
+  statut: string;
+  message: string | null;
+  note: string | null;
+  cree_le: string;
+};
+
+export type ReservationDetaillee = Reservation & {
+  bien_titre: string;
+  bien_reference: string;
+  bien_ville: string;
+  bien_quartier: string | null;
+};
+
+const SELECT_RESERVATION = `
+  SELECT r.*, b.titre AS bien_titre, b.reference AS bien_reference,
+         b.ville AS bien_ville, b.quartier AS bien_quartier
+    FROM reservations r
+    JOIN biens b ON b.id = r.bien_id
+`;
+
+export function listerReservations(agenceId: number, statut?: string) {
+  const conditions = ["r.agence_id = ?"];
+  const params: unknown[] = [agenceId];
+  if (statut) {
+    conditions.push("r.statut = ?");
+    params.push(statut);
+  }
+  return tous<ReservationDetaillee>(
+    `${SELECT_RESERVATION} WHERE ${conditions.join(" AND ")}
+      ORDER BY r.date_arrivee DESC`,
+    ...params,
+  );
+}
+
+export function lireReservation(agenceId: number, id: number) {
+  return un<ReservationDetaillee>(
+    `${SELECT_RESERVATION} WHERE r.id = ? AND r.agence_id = ?`, id, agenceId,
+  );
+}
+
+/** Reservations a venir, pour la pastille du menu et le tableau de bord. */
+export function compterReservationsDemandes(agenceId: number): number {
+  const l = un<{ n: number }>(
+    "SELECT COUNT(*) AS n FROM reservations WHERE agence_id = ? AND statut = 'demande'",
+    agenceId,
+  );
+  return l?.n ?? 0;
+}
+
+/**
+ * Sejours qui bloquent un bien, a partir d'aujourd'hui.
+ *
+ * Seules les reservations 'demande' et 'confirmee' bloquent : une demande non
+ * encore traitee doit empecher une double reservation, sinon deux voyageurs
+ * pourraient reserver les memes nuits pendant que l'agence hesite.
+ */
+export function sejoursBloquants(bienId: number, sauf?: number) {
+  const conditions = [
+    "bien_id = ?",
+    "statut IN ('demande', 'confirmee')",
+    "date(date_depart) > date('now')",
+  ];
+  const params: unknown[] = [bienId];
+  if (sauf) {
+    conditions.push("id != ?");
+    params.push(sauf);
+  }
+  return tous<{ date_arrivee: string; date_depart: string }>(
+    `SELECT date_arrivee, date_depart FROM reservations
+      WHERE ${conditions.join(" AND ")} ORDER BY date_arrivee`,
+    ...params,
+  );
+}
+
+/**
+ * Vrai si le bien est libre sur toute la periode demandee.
+ *
+ * Deux sejours se chevauchent si l'un commence avant que l'autre finisse.
+ * Le jour du depart ne compte pas : un depart le 10 laisse le bien libre
+ * pour une arrivee le 10.
+ */
+export function bienDisponible(
+  bienId: number, arrivee: string, depart: string, sauf?: number,
+): boolean {
+  const conditions = [
+    "bien_id = ?",
+    "statut IN ('demande', 'confirmee')",
+    "date(date_arrivee) < date(?)",
+    "date(date_depart) > date(?)",
+  ];
+  const params: unknown[] = [bienId, depart, arrivee];
+  if (sauf) {
+    conditions.push("id != ?");
+    params.push(sauf);
+  }
+  const l = un<{ n: number }>(
+    `SELECT COUNT(*) AS n FROM reservations WHERE ${conditions.join(" AND ")}`,
+    ...params,
+  );
+  return (l?.n ?? 0) === 0;
+}
+
+/** Reservations a venir d'un bien, pour l'afficher sur sa fiche publique. */
+export function prochainsSejours(bienId: number, limite = 20) {
+  return tous<{ date_arrivee: string; date_depart: string }>(
+    `SELECT date_arrivee, date_depart FROM reservations
+      WHERE bien_id = ? AND statut IN ('demande', 'confirmee')
+        AND date(date_depart) >= date('now')
+      ORDER BY date_arrivee LIMIT ?`,
+    bienId, limite,
+  );
+}
+
+/** Reference lisible d'une reservation : RES-0001, RES-0002... */
+export function referenceReservation(agenceId: number): string {
+  const l = un<{ n: number }>(
+    "SELECT COUNT(*) AS n FROM reservations WHERE agence_id = ?", agenceId,
+  );
+  return `RES-${String((l?.n ?? 0) + 1).padStart(4, "0")}`;
+}
+
+// ------------------------------------------------ Coordonnees de paiement
+
+export type CoordonneesPaiement = {
+  agence_nom: string;
+  paiement_orange_money: string | null;
+  paiement_wave: string | null;
+  paiement_free_money: string | null;
+  paiement_consignes: string | null;
+};
+
+/** Numeros sur lesquels l'agence du locataire encaisse ses loyers. */
+export function coordonneesPaiementLocataire(locataireId: number) {
+  return un<CoordonneesPaiement>(
+    `SELECT a.nom AS agence_nom, a.paiement_orange_money, a.paiement_wave,
+            a.paiement_free_money, a.paiement_consignes
+       FROM locataires l
+       JOIN agences a ON a.id = l.agence_id
+      WHERE l.id = ?`,
+    locataireId,
+  );
 }

@@ -64,6 +64,31 @@ export default async function PageAgence({ searchParams }: { searchParams: Promi
                    placeholder="https://…/logo.png" aide="Affiché en haut de vos factures." />
           </Section>
 
+          <Section titre="Encaissement des loyers">
+            <p className="text-sm text-slate-500 sm:col-span-2">
+              Ces numéros s&apos;affichent dans l&apos;espace locataire, sur la page
+              « Payer mon loyer ». Sans eux, vos locataires ne savent pas où envoyer l&apos;argent.
+            </p>
+            <Champ label="Numéro Orange Money" nom="paiement_orange_money"
+                   valeur={agence.paiement_orange_money} placeholder="77 123 45 67" />
+            <Champ label="Numéro Wave" nom="paiement_wave"
+                   valeur={agence.paiement_wave} placeholder="77 123 45 67" />
+            <Champ label="Numéro Free Money" nom="paiement_free_money"
+                   valeur={agence.paiement_free_money} placeholder="76 123 45 67" />
+            <div className="sm:col-span-2">
+              <label className="etiquette" htmlFor="paiement_consignes">Précisions pour vos locataires</label>
+              <textarea
+                id="paiement_consignes" name="paiement_consignes" rows={3}
+                defaultValue={agence.paiement_consignes ?? ""}
+                placeholder={"Ex : mettez votre nom et le mois en objet du transfert.\nCaisse ouverte du lundi au vendredi, 9h–17h."}
+                className="champ"
+              />
+              <p className="mt-1 text-xs text-slate-500">
+                Coordonnées bancaires, horaires de caisse, consignes de référence…
+              </p>
+            </div>
+          </Section>
+
           <Section titre="Paramètres de gestion">
             <Champ
               label="Honoraires de gestion par défaut (%)" nom="commission_pct" type="number" min={0} max={100}

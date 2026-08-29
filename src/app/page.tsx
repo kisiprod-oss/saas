@@ -29,6 +29,7 @@ export default async function PageVitrine({ searchParams }: { searchParams: Prom
     chambres: lire(params, "chambres"),
     budgetMax: lire(params, "budget"),
     recherche: lire(params, "q"),
+    duree: lire(params, "duree"),
   };
 
   const biens = listerVitrine(filtres);
@@ -86,12 +87,22 @@ export default async function PageVitrine({ searchParams }: { searchParams: Prom
             </div>
 
             <div className="mt-3 flex flex-wrap items-center justify-between gap-3">
-              <div className="flex items-center gap-2">
+              <div className="flex flex-wrap items-center gap-4">
+                <div className="flex items-center gap-2">
+                  <label className="text-sm text-slate-600" htmlFor="duree">Durée</label>
+                  <select id="duree" name="duree" defaultValue={filtres.duree} className="champ w-auto py-2">
+                    <option value="">Toutes</option>
+                    <option value="longue">Location au mois</option>
+                    <option value="courte">Courte durée</option>
+                  </select>
+                </div>
+                <div className="flex items-center gap-2">
                 <label className="text-sm text-slate-600" htmlFor="chambres">Chambres min.</label>
                 <select id="chambres" name="chambres" defaultValue={filtres.chambres} className="champ w-24 py-2">
                   <option value="">—</option>
                   {[1, 2, 3, 4, 5].map((n) => <option key={n} value={n}>{n}+</option>)}
                 </select>
+                </div>
               </div>
               <div className="flex items-center gap-2">
                 {aDesFiltres && (

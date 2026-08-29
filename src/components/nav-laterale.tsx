@@ -3,8 +3,8 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
-  IconeAgence, IconeArgent, IconeBoiteReception, IconeContrat, IconeFacture,
-  IconeMaison, IconeRelance, IconeTableauBord, IconeUtilisateurs,
+  IconeAgence, IconeArgent, IconeBoiteReception, IconeCalendrier, IconeContrat,
+  IconeFacture, IconeMaison, IconeRelance, IconeTableauBord, IconeUtilisateurs,
 } from "./icones";
 
 const LIENS = [
@@ -15,13 +15,17 @@ const LIENS = [
   { href: "/dashboard/factures",    libelle: "Factures",        Icone: IconeFacture },
   { href: "/dashboard/paiements",   libelle: "Paiements",       Icone: IconeArgent },
   { href: "/dashboard/relances",    libelle: "Relances",        Icone: IconeRelance },
+  { href: "/dashboard/reservations", libelle: "Réservations",   Icone: IconeCalendrier },
   { href: "/dashboard/demandes",    libelle: "Demandes",        Icone: IconeBoiteReception },
   { href: "/dashboard/agence",      libelle: "Mon agence",      Icone: IconeAgence },
 ];
 
 export function NavLaterale({
-  nouvellesDemandes, aRelancer, paiementsEnAttente,
-}: { nouvellesDemandes: number; aRelancer: number; paiementsEnAttente: number }) {
+  nouvellesDemandes, aRelancer, paiementsEnAttente, reservations,
+}: {
+  nouvellesDemandes: number; aRelancer: number;
+  paiementsEnAttente: number; reservations: number;
+}) {
   const chemin = usePathname();
 
   const estActif = (href: string) =>
@@ -37,6 +41,11 @@ export function NavLaterale({
         >
           <Icone className="h-5 w-5 shrink-0" />
           <span className="whitespace-nowrap">{libelle}</span>
+          {href === "/dashboard/reservations" && reservations > 0 && (
+            <span className="ml-auto rounded-full bg-rose-500 px-2 py-0.5 text-xs font-bold text-white">
+              {reservations}
+            </span>
+          )}
           {href === "/dashboard/demandes" && nouvellesDemandes > 0 && (
             <span className="ml-auto rounded-full bg-rose-500 px-2 py-0.5 text-xs font-bold text-white">
               {nouvellesDemandes}

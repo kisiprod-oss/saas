@@ -14,9 +14,12 @@ import {
   activerAccesLocataire, desactiverAccesLocataire, exigerSessionLocataire,
   fermerSessionLocataire, ouvrirSessionLocataire, verifierIdentifiantsLocataire,
 } from "./auth-locataire";
-import { genererFacturesDuMois, numeroFactureSuivant, referenceSuivante } from "./requetes";
-import { aujourdhui } from "./format";
-import { enregistrerPhotos, supprimerPhoto } from "./photos";
+import {
+  bienDisponible, genererFacturesDuMois, numeroFactureSuivant,
+  referenceReservation, referenceSuivante,
+} from "./requetes";
+import { aujourdhui, dateValide, nuitsEntre } from "./format";
+import { enregistrerPhotoProfil, enregistrerPhotos, supprimerPhoto } from "./photos";
 import { peutAjouterBien, plan, planSuivant, PLANS } from "./tarifs";
 
 // ------------------------------------------------------------- utilitaires
@@ -128,7 +131,9 @@ export async function actionEnregistrerAgence(fd: FormData) {
   const { agence } = await exigerSession();
   ecrire(
     `UPDATE agences SET nom = ?, ninea = ?, rccm = ?, telephone = ?, email = ?,
-            adresse = ?, ville = ?, logo_url = ?, commission_pct = ?
+            adresse = ?, ville = ?, logo_url = ?, commission_pct = ?,
+            paiement_orange_money = ?, paiement_wave = ?, paiement_free_money = ?,
+            paiement_consignes = ?
       WHERE id = ?`,
     txt(fd, "nom") || agence.nom,
     vide(txt(fd, "ninea")), vide(txt(fd, "rccm")),
@@ -136,6 +141,8 @@ export async function actionEnregistrerAgence(fd: FormData) {
     vide(txt(fd, "adresse")), vide(txt(fd, "ville")),
     vide(txt(fd, "logo_url")),
     entier(fd, "commission_pct", 10),
+    vide(txt(fd, "paiement_orange_money")), vide(txt(fd, "paiement_wave")),
+    vide(txt(fd, "paiement_free_money")), vide(txt(fd, "paiement_consignes")),
     agence.id,
   );
   revalidatePath("/dashboard/agence");
@@ -178,6 +185,8 @@ export async function actionEnregistrerBien(fd: FormData) {
     entier(fd, "chambres"), entier(fd, "salles_bain"), entier(fd, "surface") || null,
     vide(txt(fd, "etage")), coche(fd, "meuble"), vide(equipements), vide(photos.join("\n")),
     montant(fd, "loyer"), montant(fd, "charges"), entier(fd, "caution_mois", 2),
+    coche(fd, "courte_duree"), montant(fd, "prix_nuit"),
+    Math.max(1, entier(fd, "nuits_min", 1)), Math.max(1, entier(fd, "capacite", 2)),
     txt(fd, "statut") || "disponible", coche(fd, "publie"),
     vide(txt(fd, "proprietaire_nom")), vide(txt(fd, "proprietaire_telephone")),
   ];
@@ -188,7 +197,9 @@ export async function actionEnregistrerBien(fd: FormData) {
     ecrire(
       `UPDATE biens SET titre=?, type=?, description=?, ville=?, quartier=?, adresse=?,
               chambres=?, salles_bain=?, surface=?, etage=?, meuble=?, equipements=?, photos=?,
-              loyer=?, charges=?, caution_mois=?, statut=?, publie=?,
+              loyer=?, charges=?, caution_mois=?,
+              courte_duree=?, prix_nuit=?, nuits_min=?, capacite=?,
+              statut=?, publie=?,
               proprietaire_nom=?, proprietaire_telephone=?
         WHERE id=? AND agence_id=?`,
       ...champs, id, agence.id,
@@ -197,9 +208,11 @@ export async function actionEnregistrerBien(fd: FormData) {
     const res = ecrire(
       `INSERT INTO biens (agence_id, reference, titre, type, description, ville, quartier, adresse,
                           chambres, salles_bain, surface, etage, meuble, equipements, photos,
-                          loyer, charges, caution_mois, statut, publie,
+                          loyer, charges, caution_mois,
+                          courte_duree, prix_nuit, nuits_min, capacite,
+                          statut, publie,
                           proprietaire_nom, proprietaire_telephone)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       agence.id, referenceSuivante(agence.id, "biens", "BIEN"), ...champs,
     );
     bienId = Number(res.lastInsertRowid);
@@ -810,4 +823,209 @@ export async function actionDesactiverAccesLocataire(fd: FormData) {
   desactiverAccesLocataire(locataireId);
   revalidatePath(`/dashboard/locataires/${locataireId}`);
   redirect(`/dashboard/locataires/${locataireId}?ok=1`);
+}
+
+// -------------------------------------------------- photo du locataire
+
+/**
+ * Le locataire envoie sa propre photo depuis son espace.
+ *
+ * C'est lui qui la fournit, pas l'agence : cela evite a l'agent de courir
+ * apres une piece d'identite, et le locataire garde la main sur son image.
+ * L'ancienne photo est effacee du disque pour ne pas accumuler de fichiers
+ * orphelins.
+ */
+export async function actionEnregistrerPhotoLocataire(fd: FormData) {
+  const locataire = await exigerSessionLocataire();
+  const fichier = fd.get("photo");
+  const retour = "/espace-locataire/profil";
+
+  if (!(fichier instanceof File) || fichier.size === 0) {
+    erreur(retour, "Choisissez une photo avant d'enregistrer.");
+  }
+
+  const { url, erreur: probleme } = await enregistrerPhotoProfil(fichier);
+  if (probleme) erreur(retour, probleme);
+  if (!url) erreur(retour, "La photo n'a pas pu être enregistrée.");
+
+  const ancienne = un<{ photo_url: string | null }>(
+    "SELECT photo_url FROM locataires WHERE id = ?", locataire.id,
+  );
+  ecrire("UPDATE locataires SET photo_url = ? WHERE id = ?", url, locataire.id);
+  if (ancienne?.photo_url) await supprimerPhoto(ancienne.photo_url);
+
+  revalidatePath("/espace-locataire");
+  revalidatePath(`/dashboard/locataires/${locataire.id}`);
+  redirect(`${retour}?ok=1`);
+}
+
+export async function actionSupprimerPhotoLocataire() {
+  const locataire = await exigerSessionLocataire();
+
+  const ligne = un<{ photo_url: string | null }>(
+    "SELECT photo_url FROM locataires WHERE id = ?", locataire.id,
+  );
+  ecrire("UPDATE locataires SET photo_url = NULL WHERE id = ?", locataire.id);
+  if (ligne?.photo_url) await supprimerPhoto(ligne.photo_url);
+
+  revalidatePath("/espace-locataire");
+  revalidatePath(`/dashboard/locataires/${locataire.id}`);
+  redirect("/espace-locataire/profil?retiree=1");
+}
+
+// ------------------------------------------- reservations de courte duree
+
+/** Bornes communes a toute saisie de sejour, cote public comme cote agence. */
+const NUITS_MAX = 90;
+const VOYAGEURS_MAX = 30;
+
+/**
+ * Verifie et normalise un sejour saisi dans un formulaire.
+ * Renvoie soit les valeurs propres, soit le premier probleme rencontre.
+ */
+function lireSejour(fd: FormData, bien: {
+  prix_nuit: number; nuits_min: number; capacite: number;
+}): { ok: true; arrivee: string; depart: string; nuits: number; voyageurs: number; total: number }
+  | { ok: false; message: string } {
+  const arrivee = txt(fd, "date_arrivee");
+  const depart = txt(fd, "date_depart");
+
+  if (!dateValide(arrivee) || !dateValide(depart)) {
+    return { ok: false, message: "Indiquez une date d'arrivée et une date de départ valides." };
+  }
+  if (arrivee < aujourdhui()) {
+    return { ok: false, message: "La date d'arrivée ne peut pas être dans le passé." };
+  }
+
+  const nuits = nuitsEntre(arrivee, depart);
+  if (nuits < 1) return { ok: false, message: "Le départ doit être après l'arrivée." };
+  if (nuits > NUITS_MAX) {
+    return { ok: false, message: `Un séjour ne peut pas dépasser ${NUITS_MAX} nuits. Passez par un bail classique.` };
+  }
+  const minimum = Math.max(1, bien.nuits_min);
+  if (nuits < minimum) {
+    return { ok: false, message: `Ce logement se loue à partir de ${minimum} nuit${minimum > 1 ? "s" : ""}.` };
+  }
+
+  const voyageurs = Math.min(Math.max(1, entier(fd, "voyageurs", 1)), VOYAGEURS_MAX);
+  if (voyageurs > bien.capacite) {
+    return { ok: false, message: `Ce logement accueille au maximum ${bien.capacite} voyageur${bien.capacite > 1 ? "s" : ""}.` };
+  }
+
+  return { ok: true, arrivee, depart, nuits, voyageurs, total: nuits * bien.prix_nuit };
+}
+
+/** Un visiteur demande à réserver un logement depuis la vitrine publique. */
+export async function actionDemanderReservation(fd: FormData) {
+  const bienId = entier(fd, "bien_id");
+  const retour = `/biens/${bienId}`;
+
+  const bien = un<{
+    id: number; agence_id: number; courte_duree: number;
+    prix_nuit: number; nuits_min: number; capacite: number; statut: string;
+  }>(
+    `SELECT id, agence_id, courte_duree, prix_nuit, nuits_min, capacite, statut
+       FROM biens WHERE id = ? AND publie = 1`,
+    bienId,
+  );
+  if (!bien || !bien.courte_duree) erreur("/", "Ce logement n'accepte pas les réservations.");
+
+  const nom = txt(fd, "nom");
+  const telephone = txt(fd, "telephone");
+  if (!nom || !telephone) erreur(retour, "Votre nom et votre téléphone sont nécessaires.");
+
+  const sejour = lireSejour(fd, bien);
+  if (!sejour.ok) erreur(retour, sejour.message);
+
+  // Le controle de disponibilite et l'insertion doivent etre indissociables :
+  // sans cela, deux demandes simultanees pourraient reserver les memes nuits.
+  const reserver = db.transaction(() => {
+    if (!bienDisponible(bienId, sejour.arrivee, sejour.depart)) return null;
+    const reference = referenceReservation(bien.agence_id);
+    ecrire(
+      `INSERT INTO reservations
+         (agence_id, bien_id, reference, nom, telephone, email, date_arrivee, date_depart,
+          nuits, voyageurs, prix_nuit, montant_total, message)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      bien.agence_id, bienId, reference, nom, telephone, vide(txt(fd, "email")),
+      sejour.arrivee, sejour.depart, sejour.nuits, sejour.voyageurs,
+      bien.prix_nuit, sejour.total, vide(txt(fd, "message")),
+    );
+    return reference;
+  });
+
+  const reference = reserver();
+  if (!reference) {
+    erreur(retour, "Ces dates viennent d'être réservées. Choisissez d'autres dates.");
+  }
+
+  revalidatePath("/dashboard/reservations");
+  revalidatePath(retour);
+  redirect(`${retour}?reserve=${reference}`);
+}
+
+/** L'agence confirme, annule ou clôture une réservation. */
+export async function actionStatutReservation(fd: FormData) {
+  const { agence } = await exigerSession();
+  const id = entier(fd, "id");
+  const statut = txt(fd, "statut");
+
+  if (!["demande", "confirmee", "annulee", "terminee"].includes(statut)) {
+    erreur("/dashboard/reservations", "Statut inconnu.");
+  }
+
+  const reservation = un<{ bien_id: number; date_arrivee: string; date_depart: string }>(
+    "SELECT bien_id, date_arrivee, date_depart FROM reservations WHERE id = ? AND agence_id = ?",
+    id, agence.id,
+  );
+  if (!reservation) erreur("/dashboard/reservations", "Réservation introuvable.");
+
+  // Confirmer un sejour qui chevauche un autre sejour confirme creerait une
+  // double reservation : on le refuse plutot que de laisser l'agence decouvrir
+  // le probleme le jour de l'arrivee.
+  if (statut === "confirmee"
+      && !bienDisponible(reservation.bien_id, reservation.date_arrivee, reservation.date_depart, id)) {
+    erreur(
+      `/dashboard/reservations/${id}`,
+      "Ces dates chevauchent une autre réservation. Annulez-la d'abord.",
+    );
+  }
+
+  ecrire(
+    "UPDATE reservations SET statut = ?, note = ? WHERE id = ? AND agence_id = ?",
+    statut, vide(txt(fd, "note")), id, agence.id,
+  );
+  revalidatePath("/dashboard/reservations");
+  revalidatePath(`/dashboard/reservations/${id}`);
+  redirect(`/dashboard/reservations/${id}?ok=1`);
+}
+
+/** L'agence enregistre un acompte ou le solde d'un séjour. */
+export async function actionPaiementReservation(fd: FormData) {
+  const { agence } = await exigerSession();
+  const id = entier(fd, "id");
+  const somme = montant(fd, "montant_paye");
+
+  const reservation = un<{ montant_total: number }>(
+    "SELECT montant_total FROM reservations WHERE id = ? AND agence_id = ?", id, agence.id,
+  );
+  if (!reservation) erreur("/dashboard/reservations", "Réservation introuvable.");
+  if (somme < 0) erreur(`/dashboard/reservations/${id}`, "Le montant ne peut pas être négatif.");
+
+  ecrire(
+    "UPDATE reservations SET montant_paye = ? WHERE id = ? AND agence_id = ?",
+    Math.min(somme, reservation.montant_total), id, agence.id,
+  );
+  revalidatePath(`/dashboard/reservations/${id}`);
+  redirect(`/dashboard/reservations/${id}?ok=1`);
+}
+
+/** L'agence supprime une réservation devenue inutile (doublon, test…). */
+export async function actionSupprimerReservation(fd: FormData) {
+  const { agence } = await exigerSession();
+  ecrire(
+    "DELETE FROM reservations WHERE id = ? AND agence_id = ?", entier(fd, "id"), agence.id,
+  );
+  revalidatePath("/dashboard/reservations");
+  redirect("/dashboard/reservations?supprime=1");
 }

@@ -52,12 +52,29 @@ function migrer(base: Database.Database) {
     ["agences", "modele_rappel", "TEXT"],
     ["agences", "modele_relance", "TEXT"],
     ["agences", "modele_mise_en_demeure", "TEXT"],
+    ["agences", "paiement_orange_money", "TEXT"],
+    ["agences", "paiement_wave", "TEXT"],
+    ["agences", "paiement_free_money", "TEXT"],
+    ["agences", "paiement_consignes", "TEXT"],
+    ["locataires", "photo_url", "TEXT"],
+    ["biens", "courte_duree", "INTEGER NOT NULL DEFAULT 0"],
+    ["biens", "prix_nuit", "INTEGER NOT NULL DEFAULT 0"],
+    ["biens", "nuits_min", "INTEGER NOT NULL DEFAULT 1"],
+    ["biens", "capacite", "INTEGER NOT NULL DEFAULT 2"],
   ] as const;
 
   for (const [table, colonne, type] of colonnes) {
     const existantes = base.pragma(`table_info(${table})`) as { name: string }[];
-    if (!existantes.some((c) => c.name === colonne)) {
+    if (existantes.some((c) => c.name === colonne)) continue;
+
+    try {
       base.exec(`ALTER TABLE ${table} ADD COLUMN ${colonne} ${type}`);
+    } catch (e) {
+      // Plusieurs processus peuvent demarrer en meme temps (Next.js compile
+      // les pages en parallele) et tenter la meme migration : le second
+      // recoit « duplicate column name ». La colonne existe alors bien,
+      // c'est exactement le resultat voulu. Toute autre erreur est reelle.
+      if (!String((e as Error).message).includes("duplicate column name")) throw e;
     }
   }
 

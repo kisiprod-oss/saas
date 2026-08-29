@@ -163,3 +163,41 @@ export function enLettres(montant: number): string {
   if (n > 0) morceaux.push(centaineEnLettres(n));
   return morceaux.join(" ");
 }
+
+/** Nombre de nuits entre deux dates AAAA-MM-JJ. Negatif si l'ordre est inverse. */
+export function nuitsEntre(arrivee: string, depart: string): number {
+  const a = Date.parse(`${arrivee}T00:00:00Z`);
+  const d = Date.parse(`${depart}T00:00:00Z`);
+  if (!Number.isFinite(a) || !Number.isFinite(d)) return 0;
+  return Math.round((d - a) / 86400_000);
+}
+
+/** Vrai si la chaine est une date AAAA-MM-JJ reellement existante. */
+export function dateValide(iso: string): boolean {
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(iso)) return false;
+  const d = new Date(`${iso}T00:00:00Z`);
+  return !Number.isNaN(d.getTime()) && d.toISOString().slice(0, 10) === iso;
+}
+
+/** Ajoute (ou retire) des jours a une date AAAA-MM-JJ. */
+export function decalerJours(iso: string, n: number): string {
+  const d = new Date(`${iso}T00:00:00Z`);
+  d.setUTCDate(d.getUTCDate() + n);
+  return d.toISOString().slice(0, 10);
+}
+
+/** « du 12 au 18 mars 2026 » — deux dates en une seule phrase lisible. */
+export function periodeSejour(arrivee: string, depart: string): string {
+  const a = new Date(`${arrivee}T00:00:00Z`);
+  const d = new Date(`${depart}T00:00:00Z`);
+  if (Number.isNaN(a.getTime()) || Number.isNaN(d.getTime())) return `${arrivee} → ${depart}`;
+
+  const memeMois = a.getUTCMonth() === d.getUTCMonth() && a.getUTCFullYear() === d.getUTCFullYear();
+  const mois = (x: Date) =>
+    x.toLocaleDateString("fr-FR", { month: "long", timeZone: "UTC" });
+  const an = d.getUTCFullYear();
+
+  return memeMois
+    ? `du ${a.getUTCDate()} au ${d.getUTCDate()} ${mois(d)} ${an}`
+    : `du ${a.getUTCDate()} ${mois(a)} au ${d.getUTCDate()} ${mois(d)} ${an}`;
+}

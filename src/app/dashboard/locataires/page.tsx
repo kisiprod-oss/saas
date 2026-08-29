@@ -57,9 +57,18 @@ export default async function PageLocataires({ searchParams }: { searchParams: P
                   <tr key={l.id}>
                     <td>
                       <div className="flex items-center gap-3">
-                        <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-brand-100 text-sm font-bold text-brand-700">
-                          {l.prenom[0]}{l.nom[0]}
-                        </span>
+                        {l.photo_url ? (
+                          /* eslint-disable-next-line @next/next/no-img-element */
+                          <img
+                            src={l.photo_url}
+                            alt=""
+                            className="h-9 w-9 shrink-0 rounded-full border border-slate-200 object-cover"
+                          />
+                        ) : (
+                          <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-brand-100 text-sm font-bold text-brand-700">
+                            {l.prenom[0]}{l.nom[0]}
+                          </span>
+                        )}
                         <div>
                           <p className="font-medium text-slate-900">{l.prenom} {l.nom}</p>
                           {l.profession && <p className="text-xs text-slate-400">{l.profession}</p>}

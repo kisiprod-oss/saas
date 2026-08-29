@@ -101,6 +101,32 @@ export function FormulaireBien({ bien }: { bien?: Bien }) {
         />
       </Section>
 
+      <Section titre="Location courte durée (type Airbnb)">
+        <div className="sm:col-span-2">
+          <Case
+            label="Louer ce bien à la nuitée, avec réservation en ligne"
+            nom="courte_duree"
+            coche={bien ? bien.courte_duree === 1 : false}
+          />
+          <p className="mt-1.5 text-xs text-slate-500">
+            Une fois coché, c&apos;est le prix à la nuit qui s&apos;affiche sur l&apos;annonce,
+            avec un calendrier et un formulaire de réservation.
+          </p>
+        </div>
+        <Champ
+          label="Prix par nuit (FCFA)" nom="prix_nuit" valeur={bien?.prix_nuit || ""} inputMode="numeric"
+          placeholder="35000" aide="Ce qui est facturé pour une nuit, tout compris."
+        />
+        <Champ
+          label="Nombre de voyageurs" nom="capacite" type="number" min={1} max={30}
+          valeur={bien?.capacite ?? 2} aide="Capacité maximale du logement."
+        />
+        <Champ
+          label="Nuits minimum" nom="nuits_min" type="number" min={1} max={90}
+          valeur={bien?.nuits_min ?? 1} aide="Séjour le plus court accepté."
+        />
+      </Section>
+
       <Section titre="Propriétaire et publication">
         <Champ label="Nom du propriétaire" nom="proprietaire_nom" valeur={bien?.proprietaire_nom} />
         <Champ label="Téléphone du propriétaire" nom="proprietaire_telephone" valeur={bien?.proprietaire_telephone}

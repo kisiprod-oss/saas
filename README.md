@@ -21,7 +21,9 @@ Tous les montants sont en francs CFA (XOF).
 | **Factures & quittances** | Génération de toutes les factures du mois en un clic, impression au format A4 (montant en toutes lettres, NINEA, RCCM, cachet). |
 | **Paiements** | Orange Money, Wave, Free Money, espèces, virement, chèque — avec la référence de transaction. |
 | **Relances** | Le logiciel repère les loyers en retard, choisit le ton du message selon l'ancienneté de la dette et l'envoie sur WhatsApp ou par SMS en un clic. |
-| **Espace locataire** | Chaque locataire consulte ses quittances et signale ses règlements (Orange Money, Wave…). L'agence vérifie et confirme : rien n'est compté comme réglé avant sa validation. |
+| **Espace locataire** | Chaque locataire consulte ses quittances, **ajoute sa photo** et signale ses règlements (Orange Money, Wave…). L'agence vérifie et confirme : rien n'est compté comme réglé avant sa validation. |
+| **Payer mon loyer** | Le locataire voit ce qu'il doit, les numéros Orange Money / Wave de son agence (avec bouton « Copier »), puis déclare son règlement avec la référence de transaction. |
+| **Courte durée** | Un bien peut se louer à la nuitée : prix par nuit, séjour minimum, capacité. Les visiteurs réservent en ligne avec dates et calcul du total ; les dates déjà prises sont bloquées. |
 | **Demandes** | Les demandes de visite reçues depuis la vitrine, avec appel direct et WhatsApp. |
 | **Formules** | Page tarifs publique, limites appliquées automatiquement selon l'abonnement. |
 | **Assistant** | Une bulle de discussion répond aux visiteurs sur le logiciel et les formules, jour et nuit. Elle ne lit aucun dossier et n'invente rien : ce qu'elle ignore, elle le dit. |
@@ -136,11 +138,12 @@ src/app/               Les pages du site
   connexion/             Connexion et inscription
   connexion/google/      Aller-retour avec Google pour la connexion des agences
   tarifs/                Page publique des formules et des prix
-  espace-locataire/      Portail du locataire : quittances et déclarations
+  espace-locataire/      Portail du locataire : quittances, photo et paiements
   mot-de-passe-oublie/   Demande de réinitialisation
   reinitialiser/[token]/ Choix d'un nouveau mot de passe
   cgu/ confidentialite/ mentions-legales/   Pages légales
   dashboard/             Espace agence (toutes les pages de gestion)
+  dashboard/reservations/  Séjours courte durée : demandes, confirmations, règlements
   factures/[id]/imprimer Quittance au format A4
   api/photos/[fichier]   Sert les photos rangées dans data/televersements/
   api/assistant/         Réponses de l'assistant, transmises au fil de l'eau

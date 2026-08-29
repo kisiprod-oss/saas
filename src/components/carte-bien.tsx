@@ -17,12 +17,14 @@ type Props = {
     id: number; titre: string; type: string; ville: string; quartier: string | null;
     chambres: number; salles_bain: number; surface: number | null; loyer: number;
     charges: number; photos: string | null; statut: string; meuble: number;
+    courte_duree?: number; prix_nuit?: number;
   };
   agenceNom?: string;
 };
 
 export function CarteBien({ bien, agenceNom }: Props) {
   const photo = premierePhoto(bien.photos);
+  const courteDuree = bien.courte_duree === 1;
 
   return (
     <Link
@@ -45,7 +47,11 @@ export function CarteBien({ bien, agenceNom }: Props) {
           <span className="rounded-full bg-white/95 px-2.5 py-1 text-xs font-semibold text-brand-800 shadow-sm">
             {libelle(TYPES_BIEN, bien.type)}
           </span>
-          {bien.meuble === 1 && (
+          {courteDuree ? (
+            <span className="rounded-full bg-brand-600/95 px-2.5 py-1 text-xs font-semibold text-white shadow-sm">
+              Courte durée
+            </span>
+          ) : bien.meuble === 1 && (
             <span className="rounded-full bg-sable-500/95 px-2.5 py-1 text-xs font-semibold text-white shadow-sm">
               Meublé
             </span>
@@ -85,8 +91,12 @@ export function CarteBien({ bien, agenceNom }: Props) {
 
         <div className="mt-4 flex items-end justify-between border-t border-slate-100 pt-3">
           <div>
-            <p className="text-lg font-bold text-brand-700">{fcfa(bien.loyer)}</p>
-            <p className="text-xs text-slate-400">par mois{bien.charges > 0 ? " + charges" : ""}</p>
+            <p className="text-lg font-bold text-brand-700">
+              {fcfa(courteDuree ? (bien.prix_nuit ?? 0) : bien.loyer)}
+            </p>
+            <p className="text-xs text-slate-400">
+              {courteDuree ? "par nuit" : `par mois${bien.charges > 0 ? " + charges" : ""}`}
+            </p>
           </div>
           {agenceNom && (
             <p className="max-w-[45%] truncate text-right text-xs text-slate-400">{agenceNom}</p>

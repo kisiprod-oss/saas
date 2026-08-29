@@ -22,6 +22,7 @@ export type Locataire2 = {
   prenom: string;
   nom: string;
   telephone: string;
+  photo_url: string | null;
 };
 
 /** Ne garde que les chiffres, pour comparer deux numeros ecrits differemment. */
@@ -62,7 +63,7 @@ export async function locataireCourant(): Promise<Locataire2 | null> {
   if (!token) return null;
 
   const ligne = un<Locataire2 & { expire_le: string }>(
-    `SELECT l.id, l.agence_id, l.prenom, l.nom, l.telephone, s.expire_le
+    `SELECT l.id, l.agence_id, l.prenom, l.nom, l.telephone, l.photo_url, s.expire_le
        FROM sessions_locataires s
        JOIN locataires l ON l.id = s.locataire_id
       WHERE s.token = ? AND l.acces_actif = 1`,

@@ -18,6 +18,10 @@ export type Bien = {
   loyer: number;
   charges: number;
   caution_mois: number;
+  courte_duree: number;
+  prix_nuit: number;
+  nuits_min: number;
+  capacite: number;
   statut: string;
   publie: number;
   proprietaire_nom: string | null;
@@ -40,6 +44,7 @@ export type Locataire = {
   garant_nom: string | null;
   garant_telephone: string | null;
   notes: string | null;
+  photo_url: string | null;
   mot_de_passe_hash: string | null;
   acces_actif: number;
   cree_le: string;

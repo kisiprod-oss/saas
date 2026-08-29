@@ -88,3 +88,6 @@ export const IconeCrayon = (p: Props) => (
 export const IconeRelance = (p: Props) => (
   <Svg {...p}><path d="M21 11.5a8.4 8.4 0 0 1-9 8.4 8.9 8.9 0 0 1-3.8-.9L3 20.5l1.6-4.9A8.4 8.4 0 0 1 12 3.1a8.4 8.4 0 0 1 9 8.4z" /><path d="M12 8v4M12 15.5v.01" /></Svg>
 );
+export const IconeCalendrier = (p: Props) => (
+  <Svg {...p}><rect x="3" y="5" width="18" height="16" rx="2" /><path d="M3 10h18" /><path d="M8 3v4M16 3v4" /><path d="M8 14h3M8 17.5h5" /></Svg>
+);

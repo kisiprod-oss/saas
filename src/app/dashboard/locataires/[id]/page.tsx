@@ -58,6 +58,21 @@ export default async function PageLocataire({
         </div>
 
         <aside className="space-y-5">
+          {locataire.photo_url && (
+            <Carte className="p-5">
+              <h2 className="font-semibold text-slate-900">Photo</h2>
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src={locataire.photo_url}
+                alt={`${locataire.prenom} ${locataire.nom}`}
+                className="mt-3 aspect-square w-full rounded-lg border border-slate-200 object-cover"
+              />
+              <p className="mt-2 text-xs text-slate-500">
+                Envoyée par le locataire depuis son espace.
+              </p>
+            </Carte>
+          )}
+
           <Carte className="p-5">
             <div className="flex items-center justify-between">
               <h2 className="font-semibold text-slate-900">Espace locataire</h2>

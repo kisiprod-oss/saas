@@ -20,6 +20,11 @@ CREATE TABLE IF NOT EXISTS agences (
   ville         TEXT DEFAULT 'Dakar',
   logo_url      TEXT,
   commission_pct REAL NOT NULL DEFAULT 10,
+  -- Numeros ou l'agence encaisse les loyers, montres au locataire
+  paiement_orange_money TEXT,
+  paiement_wave         TEXT,
+  paiement_free_money   TEXT,
+  paiement_consignes    TEXT,   -- precisions libres (RIB, horaires de caisse...)
   -- Formule d'abonnement : decouverte | bailleur | agence | pro
   plan          TEXT NOT NULL DEFAULT 'decouverte',
   -- Modeles de messages de relance (vides = modeles par defaut du logiciel)
@@ -79,6 +84,12 @@ CREATE TABLE IF NOT EXISTS biens (
   loyer         INTEGER NOT NULL DEFAULT 0, -- loyer mensuel FCFA
   charges       INTEGER NOT NULL DEFAULT 0, -- charges mensuelles FCFA
   caution_mois  INTEGER NOT NULL DEFAULT 2, -- nombre de mois de caution
+  -- Location courte duree (meuble touristique, type Airbnb).
+  -- Quand courte_duree = 1, c'est prix_nuit qui s'affiche, pas le loyer.
+  courte_duree  INTEGER NOT NULL DEFAULT 0,
+  prix_nuit     INTEGER NOT NULL DEFAULT 0, -- FCFA par nuit
+  nuits_min     INTEGER NOT NULL DEFAULT 1,
+  capacite      INTEGER NOT NULL DEFAULT 2, -- nombre de voyageurs
   statut        TEXT NOT NULL DEFAULT 'disponible',
                 -- disponible | loue | reserve | travaux
   publie        INTEGER NOT NULL DEFAULT 1, -- visible sur la vitrine publique
@@ -106,6 +117,8 @@ CREATE TABLE IF NOT EXISTS locataires (
   garant_nom        TEXT,
   garant_telephone  TEXT,
   notes             TEXT,
+  -- Photo de profil, envoyee par le locataire depuis son espace
+  photo_url         TEXT,
   -- Acces a l'espace locataire (facultatif : active par l'agence)
   mot_de_passe_hash TEXT,
   acces_actif       INTEGER NOT NULL DEFAULT 0,
@@ -183,6 +196,34 @@ CREATE TABLE IF NOT EXISTS paiements (
 );
 CREATE INDEX IF NOT EXISTS idx_paiements_agence  ON paiements(agence_id);
 CREATE INDEX IF NOT EXISTS idx_paiements_facture ON paiements(facture_id);
+
+-- ---------- Reservations de courte duree (meubles touristiques) ----------
+-- Une reservation bloque le bien de date_arrivee (incluse) a date_depart
+-- (exclue) : le jour du depart, le bien peut deja etre reloue.
+CREATE TABLE IF NOT EXISTS reservations (
+  id            INTEGER PRIMARY KEY AUTOINCREMENT,
+  agence_id     INTEGER NOT NULL REFERENCES agences(id) ON DELETE CASCADE,
+  bien_id       INTEGER NOT NULL REFERENCES biens(id) ON DELETE CASCADE,
+  reference     TEXT NOT NULL,
+  nom           TEXT NOT NULL,
+  telephone     TEXT NOT NULL,
+  email         TEXT,
+  date_arrivee  TEXT NOT NULL,             -- AAAA-MM-JJ
+  date_depart   TEXT NOT NULL,             -- AAAA-MM-JJ (exclue)
+  nuits         INTEGER NOT NULL DEFAULT 1,
+  voyageurs     INTEGER NOT NULL DEFAULT 1,
+  prix_nuit     INTEGER NOT NULL DEFAULT 0, -- fige au moment de la demande
+  montant_total INTEGER NOT NULL DEFAULT 0,
+  montant_paye  INTEGER NOT NULL DEFAULT 0,
+  statut        TEXT NOT NULL DEFAULT 'demande',
+                -- demande | confirmee | annulee | terminee
+  message       TEXT,
+  note          TEXT,                       -- note interne de l'agence
+  cree_le       TEXT NOT NULL DEFAULT (datetime('now'))
+);
+CREATE INDEX IF NOT EXISTS idx_reservations_agence ON reservations(agence_id, statut);
+CREATE INDEX IF NOT EXISTS idx_reservations_bien   ON reservations(bien_id, date_arrivee);
+CREATE UNIQUE INDEX IF NOT EXISTS idx_reservations_ref ON reservations(agence_id, reference);
 
 -- ---------- Demandes recues depuis la vitrine publique ----------
 CREATE TABLE IF NOT EXISTS demandes (

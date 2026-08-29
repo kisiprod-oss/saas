@@ -64,6 +64,25 @@ export default async function PageEspaceLocataire() {
         )}
       </div>
 
+      {soldeDu > 0 && (
+        <div className="mt-4">
+          <Link href="/espace-locataire/payer" className="btn-primaire w-full py-3 text-base">
+            Payer mon loyer
+          </Link>
+        </div>
+      )}
+
+      {!locataire.photo_url && (
+        <div className="mt-4 flex flex-wrap items-center justify-between gap-3 rounded-lg border border-slate-200 bg-white px-4 py-3">
+          <p className="text-sm text-slate-600">
+            Ajoutez votre photo pour aider votre agence à vous reconnaître.
+          </p>
+          <Link href="/espace-locataire/profil" className="btn-secondaire shrink-0 px-3 py-2 text-sm">
+            Ajouter ma photo
+          </Link>
+        </div>
+      )}
+
       {enAttente.length > 0 && (
         <div className="mt-6">
           <Alerte type="info">

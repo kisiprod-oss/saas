@@ -1,12 +1,13 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { lireBienPublic } from "@/lib/requetes";
-import { fcfa, telephoneBrut, telephoneFr } from "@/lib/format";
+import { lireBienPublic, prochainsSejours } from "@/lib/requetes";
+import { aujourdhui, fcfa, periodeSejour, telephoneBrut, telephoneFr } from "@/lib/format";
 import { libelle, TYPES_BIEN } from "@/lib/constantes";
 import { actionEnvoyerDemande } from "@/lib/actions";
 import { toutesPhotos } from "@/components/carte-bien";
 import { EntetePublic, PiedPublic } from "@/components/entete-public";
 import { Alerte } from "@/components/ui";
+import { FormulaireReservation } from "@/components/formulaire-reservation";
 import {
   IconeDouche, IconeLieu, IconeLit, IconeRetour, IconeSurface, IconeTelephone,
 } from "@/components/icones";
@@ -31,6 +32,10 @@ export default async function PageBienPublic({
   const caution = bien.loyer * bien.caution_mois;
   const envoye = lire(requete, "envoye") === "1";
   const erreur = lire(requete, "erreur");
+
+  const courteDuree = bien.courte_duree === 1;
+  const sejours = courteDuree ? prochainsSejours(bien.id) : [];
+  const reserve = lire(requete, "reserve");
 
   return (
     <div className="min-h-screen">
@@ -129,14 +134,21 @@ export default async function PageBienPublic({
             )}
 
             <section className="mt-8">
-              <h2 className="text-lg font-bold text-slate-900">Conditions de location</h2>
+              <h2 className="text-lg font-bold text-slate-900">
+                {courteDuree ? "Conditions du séjour" : "Conditions de location"}
+              </h2>
               <dl className="carte mt-3 divide-y divide-slate-100">
-                {[
+                {(courteDuree ? [
+                  ["Prix par nuit", fcfa(bien.prix_nuit)],
+                  ["Séjour minimum", `${bien.nuits_min} nuit${bien.nuits_min > 1 ? "s" : ""}`],
+                  ["Capacité", `${bien.capacite} voyageur${bien.capacite > 1 ? "s" : ""}`],
+                  ["Pour une semaine", fcfa(bien.prix_nuit * 7)],
+                ] : [
                   ["Loyer mensuel", fcfa(bien.loyer)],
                   ...(bien.charges > 0 ? [["Charges mensuelles", fcfa(bien.charges)] as const] : []),
                   ["Caution", `${fcfa(caution)} (${bien.caution_mois} mois de loyer)`],
                   ["Total à l'entrée", fcfa(caution + bien.loyer + bien.charges)],
-                ].map(([k, v]) => (
+                ]).map(([k, v]) => (
                   <div key={k} className="flex items-center justify-between px-4 py-3 text-sm">
                     <dt className="text-slate-500">{k}</dt>
                     <dd className="font-semibold text-slate-900">{v}</dd>
@@ -144,15 +156,36 @@ export default async function PageBienPublic({
                 ))}
               </dl>
             </section>
+
+            {courteDuree && sejours.length > 0 && (
+              <section className="mt-8">
+                <h2 className="text-lg font-bold text-slate-900">Dates déjà réservées</h2>
+                <p className="mt-1 text-sm text-slate-500">
+                  Le logement est occupé sur ces périodes. Le jour du départ, il est
+                  de nouveau disponible.
+                </p>
+                <ul className="carte mt-3 divide-y divide-slate-100">
+                  {sejours.map((s) => (
+                    <li key={`${s.date_arrivee}-${s.date_depart}`} className="px-4 py-3 text-sm text-slate-600">
+                      Occupé {periodeSejour(s.date_arrivee, s.date_depart)}
+                    </li>
+                  ))}
+                </ul>
+              </section>
+            )}
           </div>
 
           {/* --------------------------- Colonne de contact --------------------------- */}
           <aside className="lg:col-span-1">
             <div className="sticky top-20 space-y-4">
               <div className="carte p-5">
-                <p className="text-3xl font-extrabold text-brand-700">{fcfa(bien.loyer)}</p>
+                <p className="text-3xl font-extrabold text-brand-700">
+                  {fcfa(courteDuree ? bien.prix_nuit : bien.loyer)}
+                </p>
                 <p className="text-sm text-slate-500">
-                  par mois {bien.charges > 0 && `+ ${fcfa(bien.charges)} de charges`}
+                  {courteDuree
+                    ? `par nuit · ${bien.nuits_min} nuit${bien.nuits_min > 1 ? "s" : ""} minimum`
+                    : `par mois ${bien.charges > 0 ? `+ ${fcfa(bien.charges)} de charges` : ""}`}
                 </p>
 
                 <div className="mt-4 rounded-lg bg-slate-50 p-3 text-sm">
@@ -180,8 +213,36 @@ export default async function PageBienPublic({
                 )}
               </div>
 
+              {courteDuree && (
+                <div className="carte p-5">
+                  <h3 className="font-semibold text-slate-900">Réserver ce logement</h3>
+
+                  {reserve && (
+                    <div className="mt-4">
+                      <Alerte type="succes">
+                        Demande enregistrée sous la référence <strong>{reserve}</strong>.
+                        L&apos;agence vous rappelle pour confirmer.
+                      </Alerte>
+                    </div>
+                  )}
+
+                  <div className="mt-4">
+                    <FormulaireReservation
+                      bienId={bien.id}
+                      prixNuit={bien.prix_nuit}
+                      nuitsMin={bien.nuits_min}
+                      capacite={bien.capacite}
+                      sejours={sejours}
+                      aujourdhui={aujourdhui()}
+                    />
+                  </div>
+                </div>
+              )}
+
               <div className="carte p-5">
-                <h3 className="font-semibold text-slate-900">Demander une visite</h3>
+                <h3 className="font-semibold text-slate-900">
+                  {courteDuree ? "Une question ?" : "Demander une visite"}
+                </h3>
                 <p className="mt-1 text-sm text-slate-500">
                   L&apos;agence vous rappelle pour organiser la visite.
                 </p>
