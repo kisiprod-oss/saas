@@ -67,6 +67,19 @@ function migrer(base: Database.Database) {
     ["agences", "encaissement_cle_maitre", "TEXT"],
     ["agences", "encaissement_cle_privee", "TEXT"],
     ["agences", "encaissement_jeton", "TEXT"],
+    ["artisans", "origine", "TEXT NOT NULL DEFAULT 'agence'"],
+    ["artisans", "email", "TEXT"],
+    ["artisans", "mot_de_passe_hash", "TEXT"],
+    ["artisans", "experience_annees", "INTEGER NOT NULL DEFAULT 0"],
+    ["artisans", "cv_url", "TEXT"],
+    ["artisans", "documents", "TEXT"],
+    ["artisans", "statut_candidature", "TEXT NOT NULL DEFAULT 'valide'"],
+    ["artisans", "motif_refus", "TEXT"],
+    ["artisans", "valide_le", "TEXT"],
+    ["artisans", "quiz_score", "INTEGER"],
+    ["artisans", "quiz_total", "INTEGER"],
+    ["artisans", "quiz_reussi", "INTEGER NOT NULL DEFAULT 0"],
+    ["artisans", "quiz_passe_le", "TEXT"],
   ] as const;
 
   for (const [table, colonne, type] of colonnes) {
@@ -84,6 +97,8 @@ function migrer(base: Database.Database) {
     }
   }
 
+  ouvrirArtisansAuxCandidatures(base);
+
   // Index — et non contrainte inline : ALTER TABLE ne sait pas ajouter de
   // contrainte UNIQUE a une table existante. Il se cree ici, apres les
   // colonnes : place dans schema.sql, il s'executerait avant elles.
@@ -91,6 +106,92 @@ function migrer(base: Database.Database) {
     `CREATE UNIQUE INDEX IF NOT EXISTS idx_utilisateurs_google
        ON utilisateurs(google_id) WHERE google_id IS NOT NULL`,
   );
+  base.exec(
+    `CREATE UNIQUE INDEX IF NOT EXISTS idx_artisans_email
+       ON artisans(email) WHERE email IS NOT NULL`,
+  );
+  base.exec(
+    "CREATE INDEX IF NOT EXISTS idx_artisans_statut ON artisans(statut_candidature)",
+  );
+}
+
+/**
+ * Rend `artisans.agence_id` facultatif sur une base ancienne.
+ *
+ * A l'origine, un artisan appartenait forcement a une agence. Depuis que les
+ * professionnels peuvent postuler seuls, cette colonne doit accepter NULL —
+ * et SQLite ne sait pas retirer une contrainte NOT NULL par ALTER TABLE.
+ * La seule voie est de reconstruire la table : on en cree une correcte, on y
+ * recopie les donnees, puis on remplace l'ancienne.
+ *
+ * L'operation ne s'execute que si la contrainte est encore la, et tout se
+ * fait dans une transaction : en cas d'interruption, la base reste intacte.
+ */
+function ouvrirArtisansAuxCandidatures(base: Database.Database) {
+  const colonnes = base.pragma("table_info(artisans)") as {
+    name: string; notnull: number;
+  }[];
+  const agenceId = colonnes.find((c) => c.name === "agence_id");
+  if (!agenceId || agenceId.notnull === 0) return; // deja fait, ou table absente
+
+  // Les cles etrangeres doivent etre desactivees le temps de l'echange, sinon
+  // le DROP TABLE emporterait les lignes qui referencent les artisans.
+  // Un PRAGMA ne peut pas vivre dans une transaction : d'ou l'ordre ci-dessous.
+  base.pragma("foreign_keys = OFF");
+  try {
+    base.transaction(() => {
+      base.exec(`
+        CREATE TABLE artisans_nouveau (
+          id            INTEGER PRIMARY KEY AUTOINCREMENT,
+          agence_id     INTEGER REFERENCES agences(id) ON DELETE CASCADE,
+          origine       TEXT NOT NULL DEFAULT 'agence',
+          nom           TEXT NOT NULL,
+          metier        TEXT NOT NULL DEFAULT 'autre',
+          telephone     TEXT NOT NULL,
+          telephone2    TEXT,
+          ville         TEXT NOT NULL DEFAULT 'Dakar',
+          quartier      TEXT,
+          description   TEXT,
+          tarif_indicatif TEXT,
+          photo_url     TEXT,
+          publie        INTEGER NOT NULL DEFAULT 1,
+          email             TEXT,
+          mot_de_passe_hash TEXT,
+          experience_annees INTEGER NOT NULL DEFAULT 0,
+          cv_url            TEXT,
+          documents         TEXT,
+          statut_candidature TEXT NOT NULL DEFAULT 'valide',
+          motif_refus       TEXT,
+          valide_le         TEXT,
+          quiz_score        INTEGER,
+          quiz_total        INTEGER,
+          quiz_reussi       INTEGER NOT NULL DEFAULT 0,
+          quiz_passe_le     TEXT,
+          cree_le       TEXT NOT NULL DEFAULT (datetime('now'))
+        );
+
+        INSERT INTO artisans_nouveau
+          (id, agence_id, origine, nom, metier, telephone, telephone2, ville, quartier,
+           description, tarif_indicatif, photo_url, publie, email, mot_de_passe_hash,
+           experience_annees, cv_url, documents, statut_candidature, motif_refus,
+           valide_le, quiz_score, quiz_total, quiz_reussi, quiz_passe_le, cree_le)
+        SELECT
+           id, agence_id, origine, nom, metier, telephone, telephone2, ville, quartier,
+           description, tarif_indicatif, photo_url, publie, email, mot_de_passe_hash,
+           experience_annees, cv_url, documents, statut_candidature, motif_refus,
+           valide_le, quiz_score, quiz_total, quiz_reussi, quiz_passe_le, cree_le
+          FROM artisans;
+
+        DROP TABLE artisans;
+        ALTER TABLE artisans_nouveau RENAME TO artisans;
+
+        CREATE INDEX IF NOT EXISTS idx_artisans_agence  ON artisans(agence_id);
+        CREATE INDEX IF NOT EXISTS idx_artisans_vitrine ON artisans(publie, metier);
+      `);
+    })();
+  } finally {
+    base.pragma("foreign_keys = ON");
+  }
 }
 
 // En developpement, Next.js recharge les modules a chaque modification :

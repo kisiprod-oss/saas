@@ -2,9 +2,9 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { exigerSession } from "@/lib/auth";
 import { lireArtisan } from "@/lib/requetes";
-import { actionSupprimerArtisan } from "@/lib/actions";
-import { telephoneBrut } from "@/lib/format";
-import { MessagesUrl } from "@/components/ui";
+import { actionDeclarerIntervention, actionSupprimerArtisan } from "@/lib/actions";
+import { aujourdhui, telephoneBrut } from "@/lib/format";
+import { Carte, MessagesUrl } from "@/components/ui";
 import { FormulaireArtisan } from "@/components/formulaire-artisan";
 import { IconeCorbeille, IconeRetour } from "@/components/icones";
 
@@ -44,6 +44,31 @@ export default async function PageArtisan({
       </div>
 
       <MessagesUrl params={requete} />
+
+      <Carte className="mb-5 p-5">
+        <h2 className="font-semibold text-slate-900">Déclarer une intervention</h2>
+        <p className="mt-1 text-sm text-slate-500">
+          Après un chantier, déclarez-le : vous obtiendrez un lien pour noter cet
+          artisan. Un lien par intervention, utilisable une seule fois — c&apos;est
+          ce qui rend les avis fiables.
+        </p>
+        <form action={actionDeclarerIntervention} className="mt-4 grid gap-3 sm:grid-cols-3">
+          <input type="hidden" name="artisan_id" value={artisan.id} />
+          <div className="sm:col-span-2">
+            <label className="etiquette" htmlFor="description">Nature des travaux</label>
+            <input id="description" name="description" className="champ"
+                   placeholder="Ex : réparation d'une fuite, salle de bain" />
+          </div>
+          <div>
+            <label className="etiquette" htmlFor="date_intervention">Date</label>
+            <input id="date_intervention" name="date_intervention" type="date"
+                   defaultValue={aujourdhui()} max={aujourdhui()} className="champ" />
+          </div>
+          <div className="sm:col-span-3">
+            <button type="submit" className="btn-primaire">Déclarer et noter</button>
+          </div>
+        </form>
+      </Carte>
 
       <FormulaireArtisan artisan={artisan} />
     </>

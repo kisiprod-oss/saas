@@ -3,6 +3,8 @@ import { listerArtisansVitrine } from "@/lib/requetes";
 import { libelle, METIERS, VILLES } from "@/lib/constantes";
 import { telephoneBrut, telephoneFr } from "@/lib/format";
 import { EntetePublic, PiedPublic } from "@/components/entete-public";
+import { Etoiles } from "@/components/etoiles";
+import { BadgeVerifie } from "@/components/badge-verifie";
 import { IconeLieu, IconeOutils, IconeRecherche, IconeTelephone } from "@/components/icones";
 
 export const metadata = { title: "Artisans et professionnels" };
@@ -37,9 +39,13 @@ export default async function PageProfessionnels({ searchParams }: { searchParam
             Trouvez un artisan de confiance
           </h1>
           <p className="mt-4 max-w-xl text-base text-brand-50/90">
-            Plombiers, électriciens, maçons, menuisiers… Chaque professionnel est recommandé
-            par une agence utilisant Sen Gestion.
+            Plombiers, électriciens, maçons, menuisiers… Compétences vérifiées
+            et avis de vrais clients.
           </p>
+
+          <Link href="/pro/candidature" className="btn-sable mt-5 inline-flex">
+            Vous êtes artisan ? Rejoignez-nous
+          </Link>
 
           <form action="/professionnels" method="get" className="mt-8 rounded-2xl bg-white p-4 shadow-lg">
             <div className="grid gap-3 sm:grid-cols-3">
@@ -102,11 +108,22 @@ export default async function PageProfessionnels({ searchParams }: { searchParam
                   )}
                   <div className="min-w-0">
                     <h3 className="truncate font-semibold text-slate-900">{a.nom}</h3>
-                    <span className="mt-1 inline-flex rounded-full bg-brand-50 px-2.5 py-0.5 text-xs font-semibold text-brand-800">
-                      {libelle(METIERS, a.metier)}
-                    </span>
+                    <div className="mt-1 flex flex-wrap items-center gap-1.5">
+                      <span className="inline-flex rounded-full bg-brand-50 px-2.5 py-0.5 text-xs font-semibold text-brand-800">
+                        {libelle(METIERS, a.metier)}
+                      </span>
+                      {a.quiz_reussi === 1 && <BadgeVerifie score={a.quiz_score} total={a.quiz_total} />}
+                    </div>
                   </div>
                 </div>
+
+                {a.nb_avis > 0 ? (
+                  <div className="mt-3">
+                    <Etoiles note={a.note_moyenne ?? 0} nombre={a.nb_avis} />
+                  </div>
+                ) : (
+                  <p className="mt-3 text-xs text-slate-400">Pas encore d&apos;avis client</p>
+                )}
 
                 <p className="mt-3 flex items-center gap-1.5 text-sm text-slate-500">
                   <IconeLieu className="h-4 w-4 shrink-0" />
@@ -133,7 +150,9 @@ export default async function PageProfessionnels({ searchParams }: { searchParam
                   </a>
                 </div>
                 <p className="mt-2 text-center text-xs text-slate-400">
-                  Recommandé par {a.agence_nom}
+                  {a.origine === "candidature"
+                    ? "Dossier vérifié par Sen Gestion"
+                    : `Recommandé par ${a.agence_nom}`}
                 </p>
               </div>
             ))}

@@ -265,9 +265,14 @@ CREATE UNIQUE INDEX IF NOT EXISTS idx_reservations_ref ON reservations(agence_id
 -- Annuaire des professionnels du batiment que l'agence connait et
 -- recommande : plombiers, electriciens, macons... Visible publiquement,
 -- comme les biens, pour que locataires et proprietaires les trouvent.
+-- Deux origines possibles :
+--  * 'agence'      : un contact que l'agence ajoute elle-meme (agence_id renseigne)
+--  * 'candidature' : un professionnel qui postule seul (agence_id NUL), et qui
+--                    passe alors par la validation de la plateforme puis le quiz.
 CREATE TABLE IF NOT EXISTS artisans (
   id            INTEGER PRIMARY KEY AUTOINCREMENT,
-  agence_id     INTEGER NOT NULL REFERENCES agences(id) ON DELETE CASCADE,
+  agence_id     INTEGER REFERENCES agences(id) ON DELETE CASCADE,
+  origine       TEXT NOT NULL DEFAULT 'agence',
   nom           TEXT NOT NULL,
   metier        TEXT NOT NULL DEFAULT 'autre',
   telephone     TEXT NOT NULL,
@@ -278,10 +283,109 @@ CREATE TABLE IF NOT EXISTS artisans (
   tarif_indicatif TEXT,        -- texte libre : "À partir de 5 000 FCFA"
   photo_url     TEXT,
   publie        INTEGER NOT NULL DEFAULT 1,  -- visible sur la vitrine publique
+
+  -- ---- Candidature libre (origine = 'candidature') ----
+  email             TEXT,
+  mot_de_passe_hash TEXT,
+  experience_annees INTEGER NOT NULL DEFAULT 0,
+  cv_url            TEXT,           -- CV televerse
+  documents         TEXT,           -- diplomes / attestations, une URL par ligne
+  -- brouillon | en_attente | valide | refuse
+  statut_candidature TEXT NOT NULL DEFAULT 'valide',
+  motif_refus       TEXT,
+  valide_le         TEXT,
+
+  -- ---- Resultat du quiz metier ----
+  quiz_score        INTEGER,        -- bonnes reponses
+  quiz_total        INTEGER,        -- questions posees
+  quiz_reussi       INTEGER NOT NULL DEFAULT 0,
+  quiz_passe_le     TEXT,
+
   cree_le       TEXT NOT NULL DEFAULT (datetime('now'))
 );
 CREATE INDEX IF NOT EXISTS idx_artisans_agence  ON artisans(agence_id);
 CREATE INDEX IF NOT EXISTS idx_artisans_vitrine ON artisans(publie, metier);
+-- Les index qui portent sur des colonnes ajoutees par migration
+-- (statut_candidature, email) sont crees dans src/lib/db.ts, APRES les
+-- colonnes : places ici, ils s'executeraient trop tot sur une base existante
+-- et feraient echouer tout le reste du schema.
+
+-- ---------- Sessions de connexion des artisans ----------
+CREATE TABLE IF NOT EXISTS sessions_artisans (
+  token       TEXT PRIMARY KEY,
+  artisan_id  INTEGER NOT NULL REFERENCES artisans(id) ON DELETE CASCADE,
+  expire_le   TEXT NOT NULL,
+  cree_le     TEXT NOT NULL DEFAULT (datetime('now'))
+);
+CREATE INDEX IF NOT EXISTS idx_sessions_art ON sessions_artisans(artisan_id);
+
+-- ---------- Banque de questions du quiz metier ----------
+-- Les questions sont ecrites a l'avance par l'IA, metier par metier, puis
+-- tirees au hasard au moment du quiz. Deux raisons : le cout (une seule
+-- generation sert des centaines de candidats) et la fiabilite (si l'IA est
+-- indisponible, le quiz fonctionne quand meme).
+CREATE TABLE IF NOT EXISTS quiz_questions (
+  id            INTEGER PRIMARY KEY AUTOINCREMENT,
+  metier        TEXT NOT NULL,
+  question      TEXT NOT NULL,
+  -- Les quatre propositions, une par ligne.
+  propositions  TEXT NOT NULL,
+  -- Index de la bonne reponse (0 a 3). Ne quitte JAMAIS le serveur.
+  bonne_reponse INTEGER NOT NULL,
+  explication   TEXT,
+  active        INTEGER NOT NULL DEFAULT 1,
+  cree_le       TEXT NOT NULL DEFAULT (datetime('now'))
+);
+CREATE INDEX IF NOT EXISTS idx_quiz_metier ON quiz_questions(metier, active);
+
+-- ---------- Sessions de quiz ----------
+-- expire_le est fixe a l'ouverture et fait foi : le minuteur affiche dans le
+-- navigateur n'est qu'un confort, il ne protege rien.
+CREATE TABLE IF NOT EXISTS quiz_sessions (
+  id           INTEGER PRIMARY KEY AUTOINCREMENT,
+  artisan_id   INTEGER NOT NULL REFERENCES artisans(id) ON DELETE CASCADE,
+  metier       TEXT NOT NULL,
+  -- Les identifiants des questions tirees, dans l'ordre, separes par des virgules.
+  questions    TEXT NOT NULL,
+  score        INTEGER,
+  total        INTEGER NOT NULL,
+  reussi       INTEGER NOT NULL DEFAULT 0,
+  commence_le  TEXT NOT NULL DEFAULT (datetime('now')),
+  expire_le    TEXT NOT NULL,
+  termine_le   TEXT
+);
+CREATE INDEX IF NOT EXISTS idx_quiz_sessions ON quiz_sessions(artisan_id);
+
+-- ---------- Interventions realisees par un artisan ----------
+-- Une intervention est declaree par une agence ou un locataire. Elle ouvre le
+-- droit a UN avis, et un seul : c'est ce qui rend les avis verifiables.
+CREATE TABLE IF NOT EXISTS interventions (
+  id           INTEGER PRIMARY KEY AUTOINCREMENT,
+  artisan_id   INTEGER NOT NULL REFERENCES artisans(id) ON DELETE CASCADE,
+  agence_id    INTEGER REFERENCES agences(id) ON DELETE SET NULL,
+  locataire_id INTEGER REFERENCES locataires(id) ON DELETE SET NULL,
+  description  TEXT,
+  date_intervention TEXT NOT NULL,
+  -- Jeton du lien d'avis, a usage unique.
+  jeton        TEXT NOT NULL UNIQUE,
+  cree_le      TEXT NOT NULL DEFAULT (datetime('now'))
+);
+CREATE INDEX IF NOT EXISTS idx_interventions_artisan ON interventions(artisan_id);
+
+-- ---------- Avis clients ----------
+-- Un avis est toujours rattache a une intervention declaree : sans
+-- intervention, pas d'avis. C'est ce qui interdit les faux avis.
+CREATE TABLE IF NOT EXISTS avis (
+  id              INTEGER PRIMARY KEY AUTOINCREMENT,
+  artisan_id      INTEGER NOT NULL REFERENCES artisans(id) ON DELETE CASCADE,
+  intervention_id INTEGER NOT NULL UNIQUE REFERENCES interventions(id) ON DELETE CASCADE,
+  note            INTEGER NOT NULL,   -- 1 a 5
+  commentaire     TEXT,
+  auteur          TEXT,               -- prenom affiche
+  publie          INTEGER NOT NULL DEFAULT 1,
+  cree_le         TEXT NOT NULL DEFAULT (datetime('now'))
+);
+CREATE INDEX IF NOT EXISTS idx_avis_artisan ON avis(artisan_id, publie);
 
 -- ---------- Demandes recues depuis la vitrine publique ----------
 CREATE TABLE IF NOT EXISTS demandes (

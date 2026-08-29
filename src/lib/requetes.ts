@@ -863,7 +863,8 @@ export function totalEncaisseEnLigne(agenceId: number): { nombre: number; total:
 
 export type Artisan = {
   id: number;
-  agence_id: number;
+  agence_id: number | null;
+  origine: string;
   nom: string;
   metier: string;
   telephone: string;
@@ -874,11 +875,25 @@ export type Artisan = {
   tarif_indicatif: string | null;
   photo_url: string | null;
   publie: number;
+  email: string | null;
+  experience_annees: number;
+  cv_url: string | null;
+  documents: string | null;
+  statut_candidature: string;
+  motif_refus: string | null;
+  valide_le: string | null;
+  quiz_score: number | null;
+  quiz_total: number | null;
+  quiz_reussi: number;
+  quiz_passe_le: string | null;
   cree_le: string;
 };
 
+/** Note moyenne et nombre d'avis, calcules a la volee. */
+export type NoteArtisan = { moyenne: number; nombre: number };
+
 export function listerArtisans(agenceId: number, recherche?: string) {
-  const conditions = ["agence_id = ?"];
+  const conditions = ["agence_id = ?", "origine = 'agence'"];
   const params: unknown[] = [agenceId];
   if (recherche) {
     conditions.push("(nom LIKE ? OR metier LIKE ? OR ville LIKE ?)");
@@ -897,7 +912,12 @@ export function lireArtisan(agenceId: number, id: number) {
 
 /** Annuaire public, toutes agences confondues : chacune reste identifiee. */
 export function listerArtisansVitrine(filtres: { metier?: string; ville?: string; recherche?: string } = {}) {
-  const conditions = ["a.publie = 1"];
+  // Un candidat n'apparait qu'une fois sa candidature validee ; un contact
+  // ajoute par une agence apparait des qu'elle le publie.
+  const conditions = [
+    "a.publie = 1",
+    "(a.origine = 'agence' OR a.statut_candidature = 'valide')",
+  ];
   const params: unknown[] = [];
   if (filtres.metier) { conditions.push("a.metier = ?"); params.push(filtres.metier); }
   if (filtres.ville) { conditions.push("a.ville = ?"); params.push(filtres.ville); }
@@ -906,11 +926,121 @@ export function listerArtisansVitrine(filtres: { metier?: string; ville?: string
     const q = `%${filtres.recherche}%`;
     params.push(q, q);
   }
-  return tous<Artisan & { agence_nom: string }>(
-    `SELECT a.*, ag.nom AS agence_nom
-       FROM artisans a JOIN agences ag ON ag.id = a.agence_id
+  return tous<Artisan & { agence_nom: string | null; note_moyenne: number | null; nb_avis: number }>(
+    `SELECT a.*, ag.nom AS agence_nom,
+            (SELECT ROUND(AVG(note), 1) FROM avis v WHERE v.artisan_id = a.id AND v.publie = 1) AS note_moyenne,
+            (SELECT COUNT(*)            FROM avis v WHERE v.artisan_id = a.id AND v.publie = 1) AS nb_avis
+       FROM artisans a
+       LEFT JOIN agences ag ON ag.id = a.agence_id
       WHERE ${conditions.join(" AND ")}
-      ORDER BY a.nom`,
+      ORDER BY a.quiz_reussi DESC, a.nom`,
     ...params,
+  );
+}
+
+/** Fiche publique d'un artisan, avec sa note et ses avis. */
+export function lireArtisanPublic(id: number) {
+  return un<Artisan & { agence_nom: string | null }>(
+    `SELECT a.*, ag.nom AS agence_nom
+       FROM artisans a
+       LEFT JOIN agences ag ON ag.id = a.agence_id
+      WHERE a.id = ? AND a.publie = 1
+        AND (a.origine = 'agence' OR a.statut_candidature = 'valide')`,
+    id,
+  );
+}
+
+export function noteArtisan(artisanId: number): NoteArtisan {
+  const l = un<{ moyenne: number | null; nombre: number }>(
+    `SELECT AVG(note) AS moyenne, COUNT(*) AS nombre
+       FROM avis WHERE artisan_id = ? AND publie = 1`,
+    artisanId,
+  );
+  return { moyenne: l?.moyenne ?? 0, nombre: l?.nombre ?? 0 };
+}
+
+export type AvisPublic = {
+  id: number;
+  note: number;
+  commentaire: string | null;
+  auteur: string | null;
+  cree_le: string;
+  description: string | null;
+};
+
+export function listerAvis(artisanId: number, limite = 30) {
+  return tous<AvisPublic>(
+    `SELECT v.id, v.note, v.commentaire, v.auteur, v.cree_le, i.description
+       FROM avis v JOIN interventions i ON i.id = v.intervention_id
+      WHERE v.artisan_id = ? AND v.publie = 1
+      ORDER BY v.cree_le DESC LIMIT ?`,
+    artisanId, limite,
+  );
+}
+
+// ------------------------------------------------- Candidatures (admin)
+
+/** File d'attente de l'administrateur : les candidatures a examiner. */
+export function listerCandidatures(statut?: string) {
+  const conditions = ["origine = 'candidature'"];
+  const params: unknown[] = [];
+  if (statut) { conditions.push("statut_candidature = ?"); params.push(statut); }
+  return tous<Artisan>(
+    `SELECT * FROM artisans WHERE ${conditions.join(" AND ")}
+      ORDER BY cree_le DESC`,
+    ...params,
+  );
+}
+
+export function lireCandidature(id: number) {
+  return un<Artisan>(
+    "SELECT * FROM artisans WHERE id = ? AND origine = 'candidature'", id,
+  );
+}
+
+export function compterCandidaturesEnAttente(): number {
+  const l = un<{ n: number }>(
+    `SELECT COUNT(*) AS n FROM artisans
+      WHERE origine = 'candidature' AND statut_candidature = 'en_attente'`,
+  );
+  return l?.n ?? 0;
+}
+
+// ------------------------------------------------------- Interventions
+
+export type Intervention = {
+  id: number;
+  artisan_id: number;
+  agence_id: number | null;
+  locataire_id: number | null;
+  description: string | null;
+  date_intervention: string;
+  jeton: string;
+  cree_le: string;
+  artisan_nom: string;
+  artisan_metier: string;
+  avis_id: number | null;
+};
+
+/** Intervention designee par son jeton d'avis, si l'avis reste a donner. */
+export function interventionParJeton(jeton: string) {
+  return un<Intervention>(
+    `SELECT i.*, a.nom AS artisan_nom, a.metier AS artisan_metier,
+            (SELECT v.id FROM avis v WHERE v.intervention_id = i.id) AS avis_id
+       FROM interventions i JOIN artisans a ON a.id = i.artisan_id
+      WHERE i.jeton = ?`,
+    jeton,
+  );
+}
+
+/** Interventions declarees par une agence, pour son suivi. */
+export function listerInterventionsAgence(agenceId: number, limite = 50) {
+  return tous<Intervention>(
+    `SELECT i.*, a.nom AS artisan_nom, a.metier AS artisan_metier,
+            (SELECT v.id FROM avis v WHERE v.intervention_id = i.id) AS avis_id
+       FROM interventions i JOIN artisans a ON a.id = i.artisan_id
+      WHERE i.agence_id = ?
+      ORDER BY i.date_intervention DESC LIMIT ?`,
+    agenceId, limite,
   );
 }

@@ -25,6 +25,19 @@ import {
 } from "./encaissement";
 import { enregistrerPhotoProfil, enregistrerPhotos, supprimerPhoto } from "./photos";
 import { peutAjouterBien, plan, planSuivant, PLANS } from "./tarifs";
+import { METIERS } from "./constantes";
+import { hacherMotDePasse } from "./auth";
+import { exigerAdmin } from "./admin";
+import {
+  exigerSessionArtisan, fermerSessionArtisan, ouvrirSessionArtisan,
+  verifierIdentifiantsArtisan,
+} from "./auth-artisan";
+import { enregistrerDocuments } from "./documents";
+import {
+  corrigerSession, genererQuestions, ouvrirSessionQuiz, sessionEnCours,
+  viderBanque, type SessionQuiz,
+} from "./quiz";
+import crypto from "node:crypto";
 
 // ------------------------------------------------------------- utilitaires
 
@@ -1214,4 +1227,224 @@ export async function actionSupprimerArtisan(fd: FormData) {
   revalidatePath("/dashboard/artisans");
   revalidatePath("/professionnels");
   redirect("/dashboard/artisans?supprime=1");
+}
+
+// ------------------------------------------- candidature d'un professionnel
+
+/** Un professionnel postule depuis la vitrine publique. */
+export async function actionCandidature(fd: FormData) {
+  const retour = "/pro/candidature";
+  const nom = txt(fd, "nom");
+  const email = txt(fd, "email").toLowerCase();
+  const telephone = txt(fd, "telephone");
+  const metier = txt(fd, "metier");
+  const motDePasse = String(fd.get("motDePasse") ?? "");
+
+  if (!nom || !email || !telephone) erreur(retour, "Nom, e-mail et téléphone sont obligatoires.");
+  if (!METIERS.some((m) => m.valeur === metier)) erreur(retour, "Choisissez votre corps de métier.");
+  if (motDePasse.length < 6) erreur(retour, "Le mot de passe doit contenir au moins 6 caractères.");
+
+  const existe = un<{ id: number }>("SELECT id FROM artisans WHERE email = ?", email);
+  if (existe) erreur(retour, "Une candidature existe déjà avec cette adresse e-mail.");
+
+  const cv = fd.get("cv");
+  const { urls: cvUrls, erreurs: pbCv } = await enregistrerDocuments(
+    cv instanceof File ? [cv] : [],
+  );
+  if (pbCv.length > 0) erreur(retour, pbCv[0]);
+
+  const pieces = fd.getAll("documents").filter((f): f is File => f instanceof File);
+  const { urls: docUrls, erreurs: pbDocs } = await enregistrerDocuments(pieces);
+
+  const res = ecrire(
+    `INSERT INTO artisans
+       (agence_id, origine, nom, metier, telephone, telephone2, ville, quartier,
+        description, tarif_indicatif, email, mot_de_passe_hash, experience_annees,
+        cv_url, documents, statut_candidature, publie)
+     VALUES (NULL, 'candidature', ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'en_attente', 1)`,
+    nom, metier, telephone, vide(txt(fd, "telephone2")),
+    txt(fd, "ville") || "Dakar", vide(txt(fd, "quartier")),
+    vide(txt(fd, "description")), vide(txt(fd, "tarif_indicatif")),
+    email, hacherMotDePasse(motDePasse), Math.max(0, entier(fd, "experience_annees")),
+    cvUrls[0] ?? null, vide(docUrls.join("\n")),
+  );
+
+  await ouvrirSessionArtisan(Number(res.lastInsertRowid));
+  revalidatePath("/admin/candidatures");
+
+  const suffixe = pbDocs.length > 0
+    ? `?avertissement=${encodeURIComponent(pbDocs.join(" "))}`
+    : "?envoye=1";
+  redirect(`/pro${suffixe}`);
+}
+
+export async function actionConnexionArtisan(fd: FormData) {
+  const email = txt(fd, "email").toLowerCase();
+  const motDePasse = String(fd.get("motDePasse") ?? "");
+  const origine = await adresseIp();
+  const cle = `pro:${email}`;
+
+  if (tropDeTentatives(cle) || (origine !== null && tropDeTentatives(origine))) {
+    erreur("/pro/connexion", `Trop de tentatives. Réessayez dans ${MINUTES_BLOCAGE} minutes.`);
+  }
+
+  const resultat = verifierIdentifiantsArtisan(email, motDePasse);
+  if (!resultat.ok) {
+    noterTentative(cle, false);
+    if (origine !== null) noterTentative(origine, false);
+    erreur("/pro/connexion", resultat.erreur);
+  }
+
+  reinitialiserTentatives(cle);
+  if (origine !== null) reinitialiserTentatives(origine);
+  await ouvrirSessionArtisan(resultat.id);
+  redirect("/pro");
+}
+
+export async function actionDeconnexionArtisan() {
+  await fermerSessionArtisan();
+  redirect("/pro/connexion");
+}
+
+// ------------------------------------------------------ quiz metier
+
+/** L'artisan démarre son test. Le minuteur part à cet instant, côté serveur. */
+export async function actionDemarrerQuiz() {
+  const artisan = await exigerSessionArtisan();
+
+  if (artisan.statut_candidature !== "valide") {
+    erreur("/pro", "Votre candidature doit d'abord être validée par la plateforme.");
+  }
+  if (sessionEnCours(artisan.id)) redirect("/pro/quiz");
+
+  const ouverture = ouvrirSessionQuiz(artisan.id, artisan.metier);
+  if (!ouverture.ok) erreur("/pro", ouverture.erreur);
+  redirect("/pro/quiz");
+}
+
+/** L'artisan rend sa copie. La correction se fait entièrement ici. */
+export async function actionRendreQuiz(fd: FormData) {
+  const artisan = await exigerSessionArtisan();
+
+  const session = un<SessionQuiz>(
+    `SELECT * FROM quiz_sessions
+      WHERE id = ? AND artisan_id = ? AND termine_le IS NULL`,
+    entier(fd, "session_id"), artisan.id,
+  );
+  if (!session) erreur("/pro", "Test introuvable ou déjà terminé.");
+
+  // Les réponses arrivent sous la forme « reponse_<id de question> ».
+  const reponses = new Map<number, number>();
+  for (const [cle, valeur] of fd.entries()) {
+    if (!cle.startsWith("reponse_")) continue;
+    const questionId = Number(cle.slice("reponse_".length));
+    const choix = Number(valeur);
+    if (Number.isFinite(questionId) && Number.isFinite(choix)) {
+      reponses.set(questionId, choix);
+    }
+  }
+
+  corrigerSession(session, reponses);
+  revalidatePath("/pro");
+  revalidatePath("/professionnels");
+  redirect(`/pro/quiz/resultat?s=${session.id}`);
+}
+
+// ------------------------------------ administration des candidatures
+
+export async function actionStatuerCandidature(fd: FormData) {
+  await exigerAdmin();
+  const id = entier(fd, "id");
+  const decision = txt(fd, "decision");
+
+  if (!["valide", "refuse", "en_attente"].includes(decision)) {
+    erreur("/admin/candidatures", "Décision inconnue.");
+  }
+
+  const candidature = un<{ id: number }>(
+    "SELECT id FROM artisans WHERE id = ? AND origine = 'candidature'", id,
+  );
+  if (!candidature) erreur("/admin/candidatures", "Candidature introuvable.");
+
+  ecrire(
+    `UPDATE artisans
+        SET statut_candidature = ?, motif_refus = ?,
+            valide_le = CASE WHEN ? = 'valide' THEN datetime('now') ELSE valide_le END
+      WHERE id = ?`,
+    decision, decision === "refuse" ? vide(txt(fd, "motif")) : null, decision, id,
+  );
+
+  revalidatePath("/admin/candidatures");
+  revalidatePath("/professionnels");
+  redirect(`/admin/candidatures/${id}?ok=1`);
+}
+
+/** L'administrateur remplit la banque de questions d'un métier. */
+export async function actionGenererQuestions(fd: FormData) {
+  await exigerAdmin();
+  const metier = txt(fd, "metier");
+
+  if (coche(fd, "remplacer")) viderBanque(metier);
+
+  const resultat = await genererQuestions(metier);
+  if (!resultat.ok) erreur("/admin/quiz", resultat.erreur);
+
+  revalidatePath("/admin/quiz");
+  redirect(`/admin/quiz?ajoutees=${resultat.ajoutees}&metier=${encodeURIComponent(metier)}`);
+}
+
+// ----------------------------------------- interventions et avis clients
+
+/**
+ * Une agence déclare avoir fait appel à un artisan.
+ * C'est cette déclaration qui ouvre le droit à un avis — un seul.
+ */
+export async function actionDeclarerIntervention(fd: FormData) {
+  const { agence } = await exigerSession();
+  const artisanId = entier(fd, "artisan_id");
+
+  const artisan = un<{ id: number }>("SELECT id FROM artisans WHERE id = ?", artisanId);
+  if (!artisan) erreur("/dashboard/artisans", "Artisan introuvable.");
+
+  const jeton = crypto.randomBytes(24).toString("hex");
+  ecrire(
+    `INSERT INTO interventions (artisan_id, agence_id, description, date_intervention, jeton)
+     VALUES (?, ?, ?, ?, ?)`,
+    artisanId, agence.id, vide(txt(fd, "description")),
+    txt(fd, "date_intervention") || aujourdhui(), jeton,
+  );
+
+  revalidatePath("/dashboard/interventions");
+  redirect(`/avis/${jeton}`);
+}
+
+/** Le client note l'intervention. Le jeton ne sert qu'une fois. */
+export async function actionDonnerAvis(fd: FormData) {
+  const jeton = txt(fd, "jeton");
+  const retour = `/avis/${jeton}`;
+  const note = entier(fd, "note");
+
+  if (note < 1 || note > 5) erreur(retour, "Choisissez une note de 1 à 5 étoiles.");
+
+  const intervention = un<{ id: number; artisan_id: number }>(
+    "SELECT id, artisan_id FROM interventions WHERE jeton = ?", jeton,
+  );
+  if (!intervention) erreur("/", "Ce lien d'avis n'est pas valable.");
+
+  // La contrainte UNIQUE sur intervention_id fait foi ; ce test evite
+  // seulement d'afficher une erreur technique au client.
+  const deja = un<{ id: number }>(
+    "SELECT id FROM avis WHERE intervention_id = ?", intervention.id,
+  );
+  if (deja) erreur(retour, "Un avis a déjà été donné pour cette intervention.");
+
+  ecrire(
+    `INSERT INTO avis (artisan_id, intervention_id, note, commentaire, auteur)
+     VALUES (?, ?, ?, ?, ?)`,
+    intervention.artisan_id, intervention.id, note,
+    vide(txt(fd, "commentaire")), vide(txt(fd, "auteur")),
+  );
+
+  revalidatePath("/professionnels");
+  redirect(`${retour}?merci=1`);
 }

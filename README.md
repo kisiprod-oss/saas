@@ -28,7 +28,9 @@ Tous les montants sont en francs CFA (XOF).
 | **Demandes** | Les demandes de visite reçues depuis la vitrine, avec appel direct et WhatsApp. |
 | **Formules** | Page tarifs publique, limites appliquées automatiquement selon l'abonnement. |
 | **Assistant** | Une bulle de discussion répond aux visiteurs sur le logiciel et les formules, jour et nuit. Elle ne lit aucun dossier et n'invente rien : ce qu'elle ignore, elle le dit. |
-| **Professionnels** | Annuaire public des artisans (plombiers, électriciens, maçons…) recommandés par les agences. Chaque agence gère sa propre liste, visible sur la vitrine. |
+| **Professionnels** | Annuaire public des artisans (plombiers, électriciens, maçons…). Deux origines : les contacts qu'une agence ajoute elle-même, et les professionnels qui **postulent librement**, dossier vérifié par la plateforme. |
+| **Test de compétence** | Un candidat validé passe un test de 10 questions tirées au hasard sur son métier, en 10 minutes. À partir de 7 bonnes réponses, le badge « Compétence vérifiée » s'affiche sur sa fiche. |
+| **Avis clients** | Une agence déclare une intervention et reçoit un lien à usage unique pour la noter. Pas d'intervention, pas d'avis : c'est ce qui interdit les faux avis. Les étoiles viennent uniquement de là. |
 | **Compte** | Connexion par mot de passe **ou avec un compte Google**. Récupération du mot de passe par e-mail, blocage après 8 essais infructueux. |
 | **Sauvegarde** | Script quotidien et téléchargement de ses données depuis l'espace agence. |
 
@@ -165,6 +167,10 @@ src/lib/               Le « moteur » : base de données, calculs, actions
   editeur.ts             Identité de l'éditeur, reprise sur les pages légales
   google.ts              Connexion des agences avec un compte Google (OAuth 2.0)
   chiffrement.ts         Chiffrement des clés marchandes stockées en base
+  admin.ts               Rôle administrateur de la plateforme (ADMIN_EMAILS)
+  auth-artisan.ts        Connexion des professionnels (3e espace, séparé)
+  quiz.ts                Banque de questions, tirage, minuteur et correction
+  documents.ts           CV et diplômes : stockage privé, accès contrôlé
   encaissement.ts        Dialogue avec le fournisseur de paiement
   confirmation-paiement.ts  Le seul endroit qui solde une facture payée en ligne
   assistant.ts           Savoir et consignes de l'assistant automatique
@@ -415,6 +421,56 @@ s'appliquent, indissociables :
    l'écriture est faite dans une transaction SQLite avec un verrou final.
 4. **Les clés marchandes sont chiffrées en base** (AES-256-GCM) et ne sont
    jamais réaffichées, même à l'agence qui les a saisies.
+
+### 9. (Facultatif) Ouvrir les candidatures de professionnels
+
+Les artisans peuvent postuler seuls depuis `/pro/candidature`. Leur dossier
+arrive dans une file d'attente que **vous seul** examinez.
+
+**Désignez-vous administrateur** en ajoutant votre adresse aux variables
+d'environnement :
+
+```
+ADMIN_EMAILS=votre@adresse.sn
+```
+
+Vous vous connectez ensuite avec votre compte d'agence habituel : un menu
+« Administration » apparaît en bas du menu de gauche. Plusieurs adresses se
+séparent par des virgules. Sans cette variable, l'espace d'administration
+reste fermé à tout le monde.
+
+**Préparez les tests** avant d'ouvrir un métier : Administration → Questions
+→ « Générer ». L'IA écrit 25 questions pour le métier choisi ; il en faut au
+moins 10 pour qu'un test soit possible.
+
+⚠️ **Relisez ce que l'IA produit, et passez le test vous-même une fois.**
+Une question fausse fausserait durablement la note de tous les candidats de
+ce métier.
+
+#### Ce que le badge prouve — et ce qu'il ne prouve pas
+
+Le test se passe en ligne, sans surveillance. Rien n'empêche un candidat de
+se faire aider. Il écarte donc ceux qui ne connaissent pas les bases de leur
+métier ; **il ne garantit pas un bon chantier.** Les textes de l'application
+le disent tels quels, et c'est délibéré : promettre davantage tromperait
+l'agence ou le locataire qui choisit un artisan sur cette base.
+
+C'est aussi pourquoi le score du quiz et les étoiles restent **séparés** :
+
+- **Le badge** vient du test — des connaissances.
+- **Les étoiles** viennent uniquement des clients, après un vrai chantier.
+
+Beaucoup d'excellents artisans ont appris sur le terrain, pas à l'école.
+Faire dépendre leurs étoiles d'un questionnaire écrit les pénaliserait
+injustement, et mettrait en avant ceux qui écrivent bien plutôt que ceux qui
+travaillent bien.
+
+#### Pourquoi les avis sont fiables
+
+Un avis n'existe jamais tout seul : il est rattaché à une **intervention**
+déclarée par une agence, avec un lien utilisable **une seule fois**. Sans
+intervention déclarée, aucun avis n'est possible — personne ne peut donc en
+fabriquer, ni pour se valoriser ni pour nuire à un concurrent.
 
 ---
 
