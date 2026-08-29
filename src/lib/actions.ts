@@ -3,7 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { db, ecrire, un } from "./db";
-import { headers } from "next/headers";
+import { cookies, headers } from "next/headers";
 import {
   appliquerNouveauMotDePasse, creerDemandeReinitialisation, exigerSession, fermerSession,
   inscrireAgence, lireDemandeReinitialisation, MINUTES_BLOCAGE, noterTentative, ouvrirSession,
@@ -23,7 +23,9 @@ import { chiffrementConfigure, chiffrer } from "./chiffrement";
 import {
   clesAgence, creerPaiement, FOURNISSEURS, testerCles,
 } from "./encaissement";
-import { enregistrerPhotoProfil, enregistrerPhotos, supprimerPhoto } from "./photos";
+import {
+  enregistrerLogo, enregistrerPhotoProfil, enregistrerPhotos, supprimerPhoto,
+} from "./photos";
 import { peutAjouterBien, plan, planSuivant, PLANS } from "./tarifs";
 import { METIERS } from "./constantes";
 import { hacherMotDePasse } from "./auth";
@@ -146,6 +148,20 @@ export async function actionDeconnexion() {
 
 export async function actionEnregistrerAgence(fd: FormData) {
   const { agence } = await exigerSession();
+
+  // Un logo televerse remplace l'adresse web ; sans nouveau fichier, on
+  // conserve ce qui est deja enregistre.
+  const fichierLogo = fd.get("logo");
+  let logoUrl = vide(txt(fd, "logo_url"));
+  if (fichierLogo instanceof File && fichierLogo.size > 0) {
+    const { url, erreur: probleme } = await enregistrerLogo(fichierLogo);
+    if (probleme) erreur("/dashboard/agence", probleme);
+    if (url) {
+      if (agence.logo_url) await supprimerPhoto(agence.logo_url);
+      logoUrl = url;
+    }
+  }
+
   ecrire(
     `UPDATE agences SET nom = ?, ninea = ?, rccm = ?, telephone = ?, email = ?,
             adresse = ?, ville = ?, logo_url = ?, commission_pct = ?,
@@ -156,7 +172,7 @@ export async function actionEnregistrerAgence(fd: FormData) {
     vide(txt(fd, "ninea")), vide(txt(fd, "rccm")),
     vide(txt(fd, "telephone")), vide(txt(fd, "email")),
     vide(txt(fd, "adresse")), vide(txt(fd, "ville")),
-    vide(txt(fd, "logo_url")),
+    logoUrl,
     entier(fd, "commission_pct", 10),
     vide(txt(fd, "paiement_orange_money")), vide(txt(fd, "paiement_wave")),
     vide(txt(fd, "paiement_free_money")), vide(txt(fd, "paiement_consignes")),
@@ -888,6 +904,25 @@ export async function actionSupprimerPhotoLocataire() {
   revalidatePath("/espace-locataire");
   revalidatePath(`/dashboard/locataires/${locataire.id}`);
   redirect("/espace-locataire/profil?retiree=1");
+}
+
+/**
+ * Le locataire remet a plus tard l'ajout de sa photo.
+ *
+ * Le report tient dans un cookie de session, pas en base : c'est un simple
+ * confort d'affichage. La demande revient a la prochaine connexion — on
+ * insiste sans jamais bloquer l'acces a ses propres quittances.
+ */
+export async function actionReporterPhotoLocataire() {
+  await exigerSessionLocataire();
+  const jar = await cookies();
+  jar.set("sen_photo_reportee", "1", {
+    httpOnly: true,
+    sameSite: "lax",
+    secure: process.env.NODE_ENV === "production",
+    path: "/",
+  });
+  redirect("/espace-locataire");
 }
 
 // ------------------------------------------- reservations de courte duree

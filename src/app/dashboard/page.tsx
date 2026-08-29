@@ -62,6 +62,26 @@ export default async function PageTableauBord({ searchParams }: { searchParams: 
 
       <MessagesUrl params={params} />
 
+      {/* Le logo figure en tete de chaque quittance : son absence se voit
+          par tous les locataires, pas seulement par l'agence. */}
+      {!agence.logo_url && (
+        <div className="mb-5 flex flex-wrap items-center justify-between gap-3 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3">
+          <div className="flex items-start gap-3">
+            <span className="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-amber-100 text-amber-700">
+              <IconeAlerte className="h-5 w-5" />
+            </span>
+            <div>
+              <p className="font-semibold text-amber-900">Votre logo manque</p>
+              <p className="text-sm text-amber-800">
+                Il apparaît en haut de chaque quittance de loyer. Sans lui, vos
+                documents arrivent chez vos locataires sans votre identité.
+              </p>
+            </div>
+          </div>
+          <Link href="/dashboard/agence" className="btn-sable shrink-0">Ajouter mon logo</Link>
+        </div>
+      )}
+
       {/* ------------------------------- Indicateurs ------------------------------- */}
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
         <Indicateur

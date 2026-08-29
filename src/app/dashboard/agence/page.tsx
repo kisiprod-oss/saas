@@ -7,6 +7,7 @@ import { adresseDuSite, adresseSiteDeclaree, smtpConfigure } from "@/lib/email";
 import Link from "next/link";
 import { VILLES } from "@/lib/constantes";
 import { Carte, Champ, EnTetePage, MessagesUrl, Section } from "@/components/ui";
+import { ChampLogo } from "@/components/champ-logo";
 
 export const metadata = { title: "Mon agence" };
 export const dynamic = "force-dynamic";
@@ -60,8 +61,17 @@ export default async function PageAgence({ searchParams }: { searchParams: Promi
               <input id="ville" name="ville" list="villes-agence" defaultValue={agence.ville ?? "Dakar"} className="champ" />
               <datalist id="villes-agence">{VILLES.map((v) => <option key={v} value={v} />)}</datalist>
             </div>
-            <Champ label="Logo (adresse web de l'image)" nom="logo_url" valeur={agence.logo_url}
-                   placeholder="https://…/logo.png" aide="Affiché en haut de vos factures." />
+            <div className="sm:col-span-2">
+              <p className="etiquette">Logo de l&apos;agence</p>
+              <ChampLogo logoActuel={agence.logo_url} />
+              <details className="mt-3">
+                <summary className="cursor-pointer text-sm font-medium text-slate-500 hover:text-brand-700">
+                  Ou indiquer l&apos;adresse web d&apos;une image
+                </summary>
+                <input name="logo_url" defaultValue={agence.logo_url ?? ""}
+                       placeholder="https://…/logo.png" className="champ mt-2" />
+              </details>
+            </div>
           </Section>
 
           <Section titre="Encaissement des loyers">

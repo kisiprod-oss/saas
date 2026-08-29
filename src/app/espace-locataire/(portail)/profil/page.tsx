@@ -2,7 +2,8 @@ import Link from "next/link";
 import { exigerSessionLocataire } from "@/lib/auth-locataire";
 import { contratActifLocataire } from "@/lib/requetes";
 import {
-  actionEnregistrerPhotoLocataire, actionSupprimerPhotoLocataire,
+  actionEnregistrerPhotoLocataire, actionReporterPhotoLocataire,
+  actionSupprimerPhotoLocataire,
 } from "@/lib/actions";
 import { telephoneFr } from "@/lib/format";
 import { Alerte, Carte, MessagesUrl } from "@/components/ui";
@@ -17,15 +18,24 @@ export default async function PageProfilLocataire({ searchParams }: { searchPara
   const locataire = await exigerSessionLocataire();
   const contrat = contratActifLocataire(locataire.id);
   const params = await searchParams;
-  const retiree = (Array.isArray(params.retiree) ? params.retiree[0] : params.retiree) === "1";
+  const lire = (c: string) => {
+    const v = params[c];
+    return (Array.isArray(v) ? v[0] : v) ?? "";
+  };
+  const retiree = lire("retiree") === "1";
+  const bienvenue = lire("bienvenue") === "1";
 
   return (
     <>
-      <Link href="/espace-locataire" className="text-sm font-medium text-brand-700 hover:underline">
-        ← Retour à mon espace
-      </Link>
+      {!bienvenue && (
+        <Link href="/espace-locataire" className="text-sm font-medium text-brand-700 hover:underline">
+          ← Retour à mon espace
+        </Link>
+      )}
 
-      <h1 className="mt-3 text-2xl font-bold tracking-tight text-slate-900">Ma photo</h1>
+      <h1 className="mt-3 text-2xl font-bold tracking-tight text-slate-900">
+        {bienvenue ? "Ajoutez votre photo" : "Ma photo"}
+      </h1>
       <p className="mt-1 text-sm text-slate-500">
         Votre photo aide votre agence à vous reconnaître lors de vos échanges et de la
         remise des clés. Elle n&apos;est visible que par {contrat ? contrat.agence_nom : "votre agence"}.
@@ -49,6 +59,14 @@ export default async function PageProfilLocataire({ searchParams }: { searchPara
           </form>
         )}
       </Carte>
+
+      {bienvenue && (
+        <form action={actionReporterPhotoLocataire} className="mt-4 text-center">
+          <button type="submit" className="text-sm font-medium text-slate-500 hover:text-slate-800 hover:underline">
+            Plus tard — voir mes quittances
+          </button>
+        </form>
+      )}
 
       <Carte className="mt-5 p-6">
         <h2 className="font-semibold text-slate-900">Mes informations</h2>

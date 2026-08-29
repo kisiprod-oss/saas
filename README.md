@@ -19,9 +19,11 @@ Tous les montants sont en francs CFA (XOF).
 | **Locataires** | Fiches complètes : identité, CNI, profession, garant, historique des factures. |
 | **Contrats de bail** | Relie un bien à un locataire : loyer, charges, caution, jour d'échéance, honoraires d'agence. |
 | **Factures & quittances** | Génération de toutes les factures du mois en un clic, impression au format A4 (montant en toutes lettres, NINEA, RCCM, cachet). |
+| **Logo de l'agence** | Téléversé depuis l'ordinateur ou le téléphone, il s'imprime en haut de chaque facture et de chaque quittance. Les proportions sont conservées et la transparence d'un PNG est préservée. |
 | **Paiements** | Orange Money, Wave, Free Money, espèces, virement, chèque — avec la référence de transaction. |
 | **Relances** | Le logiciel repère les loyers en retard, choisit le ton du message selon l'ancienneté de la dette et l'envoie sur WhatsApp ou par SMS en un clic. |
-| **Espace locataire** | Chaque locataire consulte ses quittances, **ajoute sa photo** et signale ses règlements (Orange Money, Wave…). L'agence vérifie et confirme : rien n'est compté comme réglé avant sa validation. |
+| **Espace locataire** | Chaque locataire consulte ses quittances, ajoute sa photo et signale ses règlements (Orange Money, Wave…). L'agence vérifie et confirme : rien n'est compté comme réglé avant sa validation. |
+| **Photo du locataire** | Demandée à la première connexion, avec un « Plus tard » : elle permet à l'agence de reconnaître la personne lors des échanges et de la remise des clés. Tant qu'elle manque, un rappel discret s'affiche sur son espace. |
 | **Payer mon loyer** | Le locataire voit ce qu'il doit, les numéros Orange Money / Wave de son agence (avec bouton « Copier »), puis déclare son règlement avec la référence de transaction. |
 | **Encaissement en ligne** | Chaque agence branche **son propre** compte marchand : le locataire paie dans l'application et sa quittance se solde toute seule. L'argent va directement à l'agence — Sen Gestion ne le détient jamais. |
 | **Courte durée** | Un bien peut se louer à la nuitée : prix par nuit, séjour minimum, capacité. Les visiteurs réservent en ligne avec dates et calcul du total ; les dates déjà prises sont bloquées. |
@@ -161,7 +163,7 @@ src/lib/               Le « moteur » : base de données, calculs, actions
   format.ts              Affichage des montants en FCFA, dates, montants en lettres
   constantes.ts          Villes, quartiers, types de biens, modes de paiement
   auth-locataire.ts      Connexion des locataires (par téléphone, séparée de l'agence)
-  photos.ts              Réception, compression et stockage des photos
+  photos.ts              Réception, compression et stockage des photos et logos
   relances.ts            Niveaux de relance et modèles de messages
   tarifs.ts              Formules d'abonnement, prix et limites
   email.ts               Envoi des e-mails de service (SMTP, ou disque si absent)

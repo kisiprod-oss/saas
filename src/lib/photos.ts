@@ -24,6 +24,8 @@ const PREFIXE_URL = "/api/photos/";
 const LARGEUR_MAX = 1600;
 /** Photo de profil : carree, elle ne s'affiche jamais plus grande. */
 const LARGEUR_PROFIL = 512;
+/** Logo : borne dans un carre de ce cote, sans etre deforme. */
+const LARGEUR_LOGO = 400;
 const QUALITE = 78;
 export const TAILLE_MAX_FICHIER = 15 * 1024 * 1024; // 15 Mo par photo
 export const NOMBRE_MAX_PHOTOS = 12;
@@ -119,6 +121,43 @@ export async function enregistrerPhotoProfil(
     return { url: PREFIXE_URL + nom, erreur: null };
   } catch {
     return { url: null, erreur: "La photo n'a pas pu être traitée : le fichier est peut-être abîmé." };
+  }
+}
+
+/**
+ * Enregistre le logo d'une agence.
+ *
+ * Traitement different d'une photo de profil : on NE recadre PAS en carre.
+ * Un logo a ses proportions, les ecraser le defigure. On borne seulement la
+ * taille, et on garde la transparence — un logo sur fond blanc colle sur une
+ * quittance ferait une vilaine boite blanche.
+ */
+export async function enregistrerLogo(
+  fichier: File,
+): Promise<{ url: string | null; erreur: string | null }> {
+  if (!fichier || fichier.size === 0) return { url: null, erreur: null };
+
+  if (fichier.size > TAILLE_MAX_FICHIER) {
+    return { url: null, erreur: "Le logo dépasse 15 Mo. Choisissez un fichier plus léger." };
+  }
+  if (fichier.type && !TYPES_ACCEPTES.includes(fichier.type)) {
+    return { url: null, erreur: "Ce fichier n'est pas une image reconnue (JPEG, PNG ou WebP)." };
+  }
+
+  try {
+    const donnees = Buffer.from(await fichier.arrayBuffer());
+    const image = await sharp(donnees, { failOn: "none" })
+      .rotate()
+      .resize({ width: LARGEUR_LOGO, height: LARGEUR_LOGO, fit: "inside", withoutEnlargement: true })
+      .webp({ quality: QUALITE, alphaQuality: 100 })
+      .toBuffer();
+
+    await fsp.mkdir(DOSSIER, { recursive: true });
+    const nom = `${crypto.randomBytes(16).toString("hex")}.webp`;
+    await fsp.writeFile(path.join(DOSSIER, nom), image);
+    return { url: PREFIXE_URL + nom, erreur: null };
+  } catch {
+    return { url: null, erreur: "Le logo n'a pas pu être traité : le fichier est peut-être abîmé." };
   }
 }
 

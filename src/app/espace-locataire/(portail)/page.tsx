@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
+import { cookies } from "next/headers";
 import { exigerSessionLocataire } from "@/lib/auth-locataire";
 import {
   contratActifLocataire, listerFacturesLocataire, paiementsEnAttenteLocataire,
@@ -29,6 +30,12 @@ export default async function PageEspaceLocataire() {
 
   const soldeDu = factures.reduce((s, f) => s + Math.max(0, f.reste), 0);
   const facturesIdsEnAttente = new Set(enAttente.map((p) => p.facture_id));
+
+  // Premiere visite sans photo : on la demande avant tout le reste. Le
+  // locataire peut passer — bloquer l'acces a ses propres quittances pour une
+  // photo serait disproportionne — mais la demande revient a chaque connexion.
+  const reportee = (await cookies()).get("sen_photo_reportee")?.value === "1";
+  if (!locataire.photo_url && !reportee) redirect("/espace-locataire/profil?bienvenue=1");
 
   if (!contrat && factures.length === 0) {
     redirect("/espace-locataire/connexion?erreur=" + encodeURIComponent(
@@ -73,11 +80,12 @@ export default async function PageEspaceLocataire() {
       )}
 
       {!locataire.photo_url && (
-        <div className="mt-4 flex flex-wrap items-center justify-between gap-3 rounded-lg border border-slate-200 bg-white px-4 py-3">
-          <p className="text-sm text-slate-600">
-            Ajoutez votre photo pour aider votre agence à vous reconnaître.
+        <div className="mt-4 flex flex-wrap items-center justify-between gap-3 rounded-lg border border-amber-200 bg-amber-50 px-4 py-3">
+          <p className="text-sm text-amber-900">
+            <strong>Votre photo manque.</strong> Elle permet à votre agence de vous
+            reconnaître lors de vos échanges et de la remise des clés.
           </p>
-          <Link href="/espace-locataire/profil" className="btn-secondaire shrink-0 px-3 py-2 text-sm">
+          <Link href="/espace-locataire/profil" className="btn-sable shrink-0 px-3 py-2 text-sm">
             Ajouter ma photo
           </Link>
         </div>
