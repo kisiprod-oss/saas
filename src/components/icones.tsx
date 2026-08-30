@@ -100,3 +100,6 @@ export const IconeOutils = (p: Props) => (
 export const IconeMenu = (p: Props) => (
   <Svg {...p}><path d="M4 6h16" /><path d="M4 12h16" /><path d="M4 18h16" /></Svg>
 );
+export const IconeGraphique = (p: Props) => (
+  <Svg {...p}><path d="M4 20V4" /><path d="M4 20h16" /><rect x="7" y="12" width="3" height="8" /><rect x="12.5" y="8" width="3" height="12" /><rect x="18" y="14" width="3" height="6" /></Svg>
+);
