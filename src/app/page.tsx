@@ -33,8 +33,9 @@ const ATOUTS = [
 
 /**
  * Photo d'un agent pour l'accueil, hebergee ailleurs et renseignee par
- * l'agence elle-meme (aucune photo n'est fabriquee ou empruntee ici).
- * Variable facultative : sans elle, un visuel illustratif la remplace.
+ * l'agence elle-meme. Variable facultative : sans elle, l'illustration
+ * generique ci-dessous est utilisee a la place (aucune photo n'est
+ * presentee comme celle d'une personne reelle precise).
  */
 const photoAgent = process.env.PHOTO_AGENT_URL;
 
@@ -90,29 +91,14 @@ export default async function PageVitrine({ searchParams }: { searchParams: Prom
               </ul>
             </div>
 
-            {/* Photo d'un agent, renseignee par vous (voir PHOTO_AGENT_URL) */}
+            {/* Photo d'un agent : la vôtre (PHOTO_AGENT_URL) ou une illustration générique */}
             <div className="hidden justify-self-center lg:block">
-              {photoAgent ? (
-                // eslint-disable-next-line @next/next/no-img-element
-                <img
-                  src={photoAgent}
-                  alt="Agent immobilier utilisant Sen Gestion"
-                  className="aspect-[4/5] w-80 rounded-2xl border-4 border-white/20 object-cover shadow-2xl"
-                />
-              ) : (
-                <div className="flex aspect-[4/5] w-80 flex-col items-center justify-center gap-3 rounded-2xl border-2 border-dashed border-white/25 bg-white/10 p-6 text-center">
-                  <span className="flex h-14 w-14 items-center justify-center rounded-full bg-white/15">
-                    <svg viewBox="0 0 24 24" className="h-7 w-7 text-white/70" fill="none" stroke="currentColor"
-                         strokeWidth={1.5} strokeLinecap="round" aria-hidden="true">
-                      <circle cx="12" cy="8.5" r="3.8" />
-                      <path d="M4.5 20.5a7.5 7.5 0 0 1 15 0" />
-                    </svg>
-                  </span>
-                  <p className="text-sm text-white/70">
-                    Votre photo ou celle de votre agence peut apparaître ici.
-                  </p>
-                </div>
-              )}
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src={photoAgent || "/photos/hero-agence.webp"}
+                alt={photoAgent ? "Agent immobilier utilisant Sen Gestion" : "Illustration : une gérante d'agence consulte Sen Gestion sur son téléphone"}
+                className="aspect-[4/5] w-80 rounded-2xl border-4 border-white/20 object-cover shadow-2xl"
+              />
             </div>
           </div>
 
@@ -213,7 +199,7 @@ export default async function PageVitrine({ searchParams }: { searchParams: Prom
 
       {/* ------------------------------ Professionnels ----------------------------- */}
       <section className="border-y border-slate-200 bg-sable-50">
-        <div className="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-5 px-4 py-8">
+        <div className="mx-auto grid max-w-6xl items-center gap-6 px-4 py-8 sm:grid-cols-[1fr_auto] lg:grid-cols-[1fr_auto_auto]">
           <div className="flex items-center gap-4">
             <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-sable-500 text-white">
               <IconeOutils className="h-6 w-6" />
@@ -225,12 +211,42 @@ export default async function PageVitrine({ searchParams }: { searchParams: Prom
               </p>
             </div>
           </div>
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src="/photos/artisan-electricien.webp"
+            alt="Illustration : un électricien intervient chez un particulier"
+            className="hidden h-20 w-32 rounded-xl object-cover shadow-md sm:block"
+          />
           <Link href="/professionnels" className="btn-sable shrink-0">Voir les professionnels</Link>
         </div>
       </section>
 
-      {/* ----------------------- Argumentaire pour les agences --------------------- */}
+      {/* --------------------------- Confiance & vérification ----------------------- */}
       <section className="bg-white">
+        <div className="mx-auto grid max-w-6xl items-center gap-8 px-4 py-14 lg:grid-cols-2">
+          <div className="order-2 lg:order-1">
+            <h2 className="text-2xl font-bold text-slate-900">Chaque quittance peut être vérifiée</h2>
+            <p className="mt-3 text-slate-600">
+              Chaque quittance et chaque facture générée porte un code unique,
+              imprimé sur le document. N&apos;importe qui — un locataire, un
+              propriétaire, un tribunal — peut vérifier son authenticité sans
+              avoir de compte, simplement en saisissant ce code sur le lien
+              indiqué sur le document.
+            </p>
+          </div>
+          <div className="order-1 justify-self-center lg:order-2">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src="/photos/confiance-quittance.webp"
+              alt="Illustration : une locataire compare sa quittance papier et son téléphone"
+              className="aspect-[3/2] w-full max-w-md rounded-2xl object-cover shadow-lg"
+            />
+          </div>
+        </div>
+      </section>
+
+      {/* ----------------------- Argumentaire pour les agences --------------------- */}
+      <section className="bg-sable-50">
         <div className="mx-auto max-w-6xl px-4 py-14">
           <div className="mx-auto max-w-2xl text-center">
             <h2 className="text-2xl font-bold text-slate-900">Vous gérez des biens en location ?</h2>

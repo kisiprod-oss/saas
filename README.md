@@ -372,8 +372,9 @@ l'hébergeur, jamais dans un message ou une conversation.
 ### 7. (Facultatif) Mettre votre photo en page d'accueil
 
 La page d'accueil peut afficher une photo de vous ou de votre équipe, à côté
-du texte de présentation. Sans réglage, un visuel neutre la remplace —
-aucune photo n'est jamais inventée ou empruntée à votre place.
+du texte de présentation. Sans réglage, une illustration générique la
+remplace — jamais une photo présentée comme celle d'une personne réelle
+précise.
 
 Hébergez votre photo où vous le souhaitez (votre site, un espace de stockage
 en ligne qui fournit un lien direct vers l'image), puis ajoutez :
