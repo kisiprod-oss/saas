@@ -1092,3 +1092,68 @@ export function listerInterventionsAgence(agenceId: number, limite = 50) {
     agenceId, limite,
   );
 }
+
+// -------------------------------------------------------------- Devis
+
+export type Devis = {
+  id: number;
+  artisan_id: number;
+  jeton: string;
+  nom_client: string;
+  telephone_client: string;
+  ville: string | null;
+  description: string;
+  statut: string;
+  montant_propose: number | null;
+  message_artisan: string | null;
+  motif_refus: string | null;
+  intervention_id: number | null;
+  cree_le: string;
+  repondu_le: string | null;
+  conclu_le: string | null;
+};
+
+/**
+ * Un artisan ne peut recevoir de devis que s'il a son propre acces a
+ * l'espace pro : un contact simplement recommande par une agence n'a
+ * personne pour repondre a une demande.
+ */
+export function artisanPourDevis(id: number) {
+  return un<Artisan>(
+    `SELECT * FROM artisans
+      WHERE id = ? AND publie = 1 AND origine = 'candidature' AND statut_candidature = 'valide'`,
+    id,
+  );
+}
+
+export function devisParJeton(jeton: string) {
+  return un<Devis & { artisan_nom: string; artisan_metier: string; artisan_telephone: string; intervention_jeton: string | null }>(
+    `SELECT d.*, a.nom AS artisan_nom, a.metier AS artisan_metier, a.telephone AS artisan_telephone,
+            (SELECT i.jeton FROM interventions i WHERE i.id = d.intervention_id) AS intervention_jeton
+       FROM devis d JOIN artisans a ON a.id = d.artisan_id
+      WHERE d.jeton = ?`,
+    jeton,
+  );
+}
+
+export function lireDevisArtisan(artisanId: number, id: number) {
+  return un<Devis>("SELECT * FROM devis WHERE id = ? AND artisan_id = ?", id, artisanId);
+}
+
+/** Devis d'un artisan, les plus recents d'abord. */
+export function listerDevisArtisan(artisanId: number) {
+  return tous<Devis>(
+    "SELECT * FROM devis WHERE artisan_id = ? ORDER BY cree_le DESC",
+    artisanId,
+  );
+}
+
+/** Devis repondus ce mois-ci : c'est ce que consomme le quota gratuit. */
+export function devisReponduesCeMois(artisanId: number): number {
+  return un<{ n: number }>(
+    `SELECT COUNT(*) AS n FROM devis
+      WHERE artisan_id = ? AND repondu_le IS NOT NULL
+        AND strftime('%Y-%m', repondu_le) = strftime('%Y-%m', 'now')`,
+    artisanId,
+  )!.n;
+}

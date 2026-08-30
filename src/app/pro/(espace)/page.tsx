@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { exigerSessionArtisan } from "@/lib/auth-artisan";
 import { actionDemarrerQuiz } from "@/lib/actions";
-import { listerAvis, noteArtisan } from "@/lib/requetes";
+import { listerAvis, listerDevisArtisan, noteArtisan } from "@/lib/requetes";
 import { un } from "@/lib/db";
 import { libelle, METIERS } from "@/lib/constantes";
 import { dateFr } from "@/lib/format";
@@ -26,6 +26,7 @@ export default async function PageEspacePro({ searchParams }: { searchParams: Pr
   );
   const note = noteArtisan(artisan.id);
   const avis = listerAvis(artisan.id, 5);
+  const devisEnAttente = listerDevisArtisan(artisan.id).filter((d) => d.statut === "demande").length;
   const enCours = sessionEnCours(artisan.id);
   const banquePrete = compterQuestions(artisan.metier) >= NB_QUESTIONS;
 
@@ -78,6 +79,25 @@ export default async function PageEspacePro({ searchParams }: { searchParams: Pr
           </Link>
         </div>
       </Carte>
+
+      {/* ------------------------------ Mes devis ------------------------------ */}
+      {artisan.statut_candidature === "valide" && (
+        <Carte className="mt-5 p-5">
+          <div className="flex items-center justify-between gap-3">
+            <div>
+              <h2 className="font-semibold text-slate-900">Mes devis</h2>
+              <p className="mt-0.5 text-sm text-slate-500">
+                {devisEnAttente > 0
+                  ? `${devisEnAttente} nouvelle${devisEnAttente > 1 ? "s" : ""} demande${devisEnAttente > 1 ? "s" : ""} en attente de réponse.`
+                  : "Les demandes des particuliers apparaissent ici."}
+              </p>
+            </div>
+            <Link href="/pro/devis" className="btn-secondaire shrink-0">
+              Voir {devisEnAttente > 0 && `(${devisEnAttente})`}
+            </Link>
+          </div>
+        </Carte>
+      )}
 
       {/* ------------------------------ Où en est le dossier ------------------------------ */}
       <Carte className="mt-5 p-5">

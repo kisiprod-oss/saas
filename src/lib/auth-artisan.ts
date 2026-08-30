@@ -26,6 +26,7 @@ export type ArtisanConnecte = {
   quiz_score: number | null;
   quiz_total: number | null;
   quiz_passe_le: string | null;
+  plan_devis: string;
 };
 
 export async function ouvrirSessionArtisan(artisanId: number) {
@@ -59,7 +60,7 @@ export async function artisanCourant(): Promise<ArtisanConnecte | null> {
 
   const ligne = un<ArtisanConnecte & { expire_le: string }>(
     `SELECT a.id, a.nom, a.metier, a.email, a.statut_candidature,
-            a.quiz_reussi, a.quiz_score, a.quiz_total, a.quiz_passe_le, s.expire_le
+            a.quiz_reussi, a.quiz_score, a.quiz_total, a.quiz_passe_le, a.plan_devis, s.expire_le
        FROM sessions_artisans s
        JOIN artisans a ON a.id = s.artisan_id
       WHERE s.token = ? AND a.origine = 'candidature'`,

@@ -83,6 +83,7 @@ function migrer(base: Database.Database) {
     ["agences", "compte_gratuit_reutilise", "INTEGER NOT NULL DEFAULT 0"],
     ["factures", "code_verification", "TEXT"],
     ["contrats", "code_verification", "TEXT"],
+    ["artisans", "plan_devis", "TEXT NOT NULL DEFAULT 'gratuit'"],
   ] as const;
 
   for (const [table, colonne, type] of colonnes) {

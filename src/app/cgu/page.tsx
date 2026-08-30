@@ -112,6 +112,13 @@ export default function PageCgu() {
           des documents qu&apos;il émet et des sommes qu&apos;il encaisse.
         </p>
         <p>
+          Il en va de même pour les devis échangés entre un particulier et un
+          professionnel via l&apos;annuaire des artisans : {EDITEUR.service} facilite la
+          mise en relation et la formulation du devis, mais n&apos;est partie à aucun
+          moment ni au paiement, ni à la réalisation, ni à la qualité du projet convenu
+          entre les deux parties.
+        </p>
+        <p>
           La responsabilité de l&apos;éditeur ne peut excéder le montant des sommes
           effectivement versées par l&apos;utilisateur au titre des douze derniers mois.
         </p>

@@ -468,6 +468,34 @@ CREATE TABLE IF NOT EXISTS avis (
 );
 CREATE INDEX IF NOT EXISTS idx_avis_artisan ON avis(artisan_id, publie);
 
+-- ---------- Devis entre un particulier et un artisan ----------
+-- Un particulier demande un devis a un artisan depuis l'annuaire public,
+-- sans creer de compte. L'artisan repond depuis son espace ; le particulier
+-- suit l'echange et repond via un lien personnel (le jeton), sur le meme
+-- principe que les avis. La plateforme ne touche jamais l'argent du
+-- projet : elle facilite seulement la mise en relation et le devis.
+CREATE TABLE IF NOT EXISTS devis (
+  id               INTEGER PRIMARY KEY AUTOINCREMENT,
+  artisan_id       INTEGER NOT NULL REFERENCES artisans(id) ON DELETE CASCADE,
+  jeton            TEXT NOT NULL UNIQUE,
+  nom_client       TEXT NOT NULL,
+  telephone_client TEXT NOT NULL,
+  ville            TEXT,
+  description      TEXT NOT NULL,
+  statut           TEXT NOT NULL DEFAULT 'demande',
+                   -- demande | propose | accepte | refuse | termine
+  montant_propose  INTEGER,
+  message_artisan  TEXT,
+  motif_refus      TEXT,
+  -- Renseigne quand le projet est marque termine : ouvre le droit a UN
+  -- avis, sur la table interventions deja utilisee pour les avis clients.
+  intervention_id  INTEGER REFERENCES interventions(id) ON DELETE SET NULL,
+  cree_le          TEXT NOT NULL DEFAULT (datetime('now')),
+  repondu_le       TEXT,
+  conclu_le        TEXT
+);
+CREATE INDEX IF NOT EXISTS idx_devis_artisan ON devis(artisan_id, statut);
+
 -- ---------- Demandes recues depuis la vitrine publique ----------
 CREATE TABLE IF NOT EXISTS demandes (
   id          INTEGER PRIMARY KEY AUTOINCREMENT,

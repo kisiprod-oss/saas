@@ -113,6 +113,45 @@ export const PLANS: Plan[] = [
 export const PLAN_PAR_DEFAUT = "decouverte";
 
 /**
+ * Devis repondus offerts par mois a un artisan sur la formule gratuite.
+ * Repondre est ce qui compte, pas recevoir : une demande peut toujours
+ * arriver, seule la reponse avec un prix consomme le quota.
+ */
+export const DEVIS_REPONSES_GRATUITES_PAR_MOIS = 3;
+
+export type PlanArtisan = {
+  code: string;
+  nom: string;
+  prixMois: number;
+  atouts: string[];
+};
+
+export const PLANS_ARTISAN: PlanArtisan[] = [
+  {
+    code: "gratuit",
+    nom: "Gratuit",
+    prixMois: 0,
+    atouts: [
+      `${DEVIS_REPONSES_GRATUITES_PAR_MOIS} devis répondus par mois`,
+      "Fiche publique, avis clients et badge de compétence",
+    ],
+  },
+  {
+    code: "pro",
+    nom: "Devis Pro",
+    prixMois: 3_000,
+    atouts: [
+      "Devis répondus illimités",
+      "Tout ce que contient la formule Gratuite",
+    ],
+  },
+];
+
+export function planArtisan(code: string | null | undefined): PlanArtisan {
+  return PLANS_ARTISAN.find((p) => p.code === code) ?? PLANS_ARTISAN[0];
+}
+
+/**
  * Prix affiche d'une formule, en tenant compte de l'essai.
  * Rendu separement du nombre pour que la page tarifs et le tableau de bord
  * disent exactement la meme chose.

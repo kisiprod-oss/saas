@@ -1,5 +1,5 @@
 import "server-only";
-import { FACTURES_GRATUITES_PAR_MOIS } from "./tarifs";
+import { DEVIS_REPONSES_GRATUITES_PAR_MOIS, FACTURES_GRATUITES_PAR_MOIS } from "./tarifs";
 
 /**
  * Ce que la formule gratuite permet, et ce qu'elle ne permet pas.
@@ -89,4 +89,26 @@ export function etatQuota(agence: AgenceQuota, emisesCeMois: number): EtatQuota 
   }
   const restantes = Math.max(0, quota - emisesCeMois);
   return { illimite: false, quota, emisesCeMois, restantes, atteint: restantes === 0 };
+}
+
+export type EtatQuotaDevis = {
+  illimite: boolean;
+  quota: number | null;
+  reponduesCeMois: number;
+  restantes: number;
+  atteint: boolean;
+};
+
+/** Un artisan sur la formule Pro repond a autant de devis qu'il veut. */
+export function quotaDevis(planDevis: string | null | undefined): number | null {
+  return planDevis === "pro" ? null : DEVIS_REPONSES_GRATUITES_PAR_MOIS;
+}
+
+export function etatQuotaDevis(planDevis: string | null | undefined, reponduesCeMois: number): EtatQuotaDevis {
+  const quota = quotaDevis(planDevis);
+  if (quota === null) {
+    return { illimite: true, quota: null, reponduesCeMois, restantes: Infinity, atteint: false };
+  }
+  const restantes = Math.max(0, quota - reponduesCeMois);
+  return { illimite: false, quota, reponduesCeMois, restantes, atteint: restantes === 0 };
 }

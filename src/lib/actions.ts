@@ -15,8 +15,9 @@ import {
   fermerSessionLocataire, ouvrirSessionLocataire, verifierIdentifiantsLocataire,
 } from "./auth-locataire";
 import {
-  bienDisponible, facturesEmisesCeMois, genererFacturesDuMois, lireFacture,
-  numeroFactureSuivant, referenceReservation, referenceSuivante,
+  artisanPourDevis, bienDisponible, devisReponduesCeMois, facturesEmisesCeMois,
+  genererFacturesDuMois, lireDevisArtisan, lireFacture, numeroFactureSuivant,
+  referenceReservation, referenceSuivante,
 } from "./requetes";
 import { aujourdhui, dateValide, nuitsEntre, periodeLisible, telephoneBrut } from "./format";
 import { chiffrementConfigure, chiffrer } from "./chiffrement";
@@ -26,8 +27,8 @@ import {
 import {
   enregistrerLogo, enregistrerPhotoProfil, enregistrerPhotos, supprimerPhoto,
 } from "./photos";
-import { peutAjouterBien, plan, planSuivant, PLANS } from "./tarifs";
-import { etatQuota } from "./quota";
+import { peutAjouterBien, plan, planArtisan, planSuivant, PLANS, PLANS_ARTISAN } from "./tarifs";
+import { etatQuota, etatQuotaDevis } from "./quota";
 import { refusMotDePasse } from "./mot-de-passe";
 import { accuserReception, envoiDuDocument, messageWhatsApp, noterEnvoi } from "./envois";
 import { codeVerification } from "./verification";
@@ -1556,6 +1557,164 @@ export async function actionDonnerAvis(fd: FormData) {
 
   revalidatePath("/professionnels");
   redirect(`${retour}?merci=1`);
+}
+
+// ------------------------------------------------------------------ devis
+
+/**
+ * Un particulier demande un devis a un artisan, sans creer de compte.
+ * Seuls les artisans qui ont leur propre espace (candidature validee)
+ * peuvent en recevoir : un contact recommande par une agence n'a personne
+ * pour y repondre.
+ */
+export async function actionDemanderDevis(fd: FormData) {
+  const artisanId = entier(fd, "artisan_id");
+  const retour = `/professionnels/${artisanId}/devis`;
+
+  const artisan = artisanPourDevis(artisanId);
+  if (!artisan) erreur("/professionnels", "Cet artisan ne peut pas recevoir de demande de devis.");
+
+  const nom = txt(fd, "nom_client");
+  const telephone = txt(fd, "telephone_client");
+  const description = txt(fd, "description");
+  if (!nom || !telephone) erreur(retour, "Votre nom et votre téléphone sont obligatoires.");
+  if (!description) erreur(retour, "Décrivez le projet pour lequel vous souhaitez un devis.");
+
+  const jeton = crypto.randomBytes(24).toString("hex");
+  ecrire(
+    `INSERT INTO devis (artisan_id, jeton, nom_client, telephone_client, ville, description)
+     VALUES (?, ?, ?, ?, ?, ?)`,
+    artisanId, jeton, nom, telephone, vide(txt(fd, "ville")), description,
+  );
+
+  revalidatePath("/pro/devis");
+  redirect(`/devis/${jeton}`);
+}
+
+/** L'artisan propose un prix. Consomme le quota gratuit du mois. */
+export async function actionRepondreDevis(fd: FormData) {
+  const artisan = await exigerSessionArtisan();
+  const id = entier(fd, "id");
+  const retour = "/pro/devis";
+
+  const devis = lireDevisArtisan(artisan.id, id);
+  if (!devis) erreur(retour, "Ce devis est introuvable.");
+  if (devis.statut !== "demande") erreur(retour, "Ce devis a déjà reçu une réponse.");
+
+  const quota = etatQuotaDevis(artisan.plan_devis, devisReponduesCeMois(artisan.id));
+  if (quota.atteint) {
+    erreur(retour, `Vous avez utilisé vos ${quota.quota} devis gratuits de ce mois-ci. Passez à la formule Devis Pro pour continuer.`);
+  }
+
+  const prix = montant(fd, "montant_propose");
+  if (prix <= 0) erreur(retour, "Indiquez un montant pour votre devis.");
+
+  ecrire(
+    `UPDATE devis
+        SET statut = 'propose', montant_propose = ?, message_artisan = ?, repondu_le = datetime('now')
+      WHERE id = ?`,
+    prix, vide(txt(fd, "message_artisan")), id,
+  );
+
+  revalidatePath("/pro/devis");
+  redirect(`${retour}?ok=1`);
+}
+
+/** L'artisan decline sans proposer de prix : ne consomme pas le quota. */
+export async function actionDeclinerDevisArtisan(fd: FormData) {
+  const artisan = await exigerSessionArtisan();
+  const id = entier(fd, "id");
+  const retour = "/pro/devis";
+
+  const devis = lireDevisArtisan(artisan.id, id);
+  if (!devis) erreur(retour, "Ce devis est introuvable.");
+  if (devis.statut !== "demande") erreur(retour, "Ce devis a déjà reçu une réponse.");
+
+  ecrire(
+    `UPDATE devis SET statut = 'refuse', motif_refus = ?, repondu_le = datetime('now') WHERE id = ?`,
+    vide(txt(fd, "motif_refus")) ?? "Ce projet ne peut pas être pris en charge.", id,
+  );
+
+  revalidatePath("/pro/devis");
+  redirect(`${retour}?ok=1`);
+}
+
+/** Le particulier accepte le prix propose. */
+export async function actionAccepterDevis(fd: FormData) {
+  const jeton = txt(fd, "jeton");
+  const retour = `/devis/${jeton}`;
+
+  const devis = un<{ id: number; statut: string }>("SELECT id, statut FROM devis WHERE jeton = ?", jeton);
+  if (!devis) erreur("/", "Ce lien de devis n'est pas valable.");
+  if (devis.statut !== "propose") erreur(retour, "Ce devis ne peut plus être accepté.");
+
+  ecrire("UPDATE devis SET statut = 'accepte' WHERE id = ?", devis.id);
+  redirect(`${retour}?ok=1`);
+}
+
+/** Le particulier refuse le prix propose. */
+export async function actionRefuserDevis(fd: FormData) {
+  const jeton = txt(fd, "jeton");
+  const retour = `/devis/${jeton}`;
+
+  const devis = un<{ id: number; statut: string }>("SELECT id, statut FROM devis WHERE jeton = ?", jeton);
+  if (!devis) erreur("/", "Ce lien de devis n'est pas valable.");
+  if (devis.statut !== "propose") erreur(retour, "Ce devis ne peut plus être refusé.");
+
+  ecrire(
+    "UPDATE devis SET statut = 'refuse', motif_refus = ? WHERE id = ?",
+    vide(txt(fd, "motif_refus")), devis.id,
+  );
+  redirect(`${retour}?ok=1`);
+}
+
+/**
+ * L'artisan marque le projet termine. Ouvre automatiquement le droit a un
+ * avis, sur le meme mecanisme que les interventions declarees par une
+ * agence : le particulier ne cree rien, il suit simplement le lien.
+ */
+export async function actionTerminerDevis(fd: FormData) {
+  const artisan = await exigerSessionArtisan();
+  const id = entier(fd, "id");
+  const retour = "/pro/devis";
+
+  const devis = lireDevisArtisan(artisan.id, id);
+  if (!devis) erreur(retour, "Ce devis est introuvable.");
+  if (devis.statut !== "accepte") erreur(retour, "Seul un devis accepté peut être marqué terminé.");
+
+  const jetonAvis = crypto.randomBytes(24).toString("hex");
+  const conclure = db.transaction(() => {
+    const resultat = ecrire(
+      `INSERT INTO interventions (artisan_id, description, date_intervention, jeton)
+       VALUES (?, ?, ?, ?)`,
+      artisan.id, devis.description, aujourdhui(), jetonAvis,
+    );
+    ecrire(
+      `UPDATE devis SET statut = 'termine', conclu_le = datetime('now'), intervention_id = ? WHERE id = ?`,
+      resultat.lastInsertRowid, id,
+    );
+  });
+  conclure();
+
+  revalidatePath("/pro/devis");
+  redirect(`${retour}?termine=1`);
+}
+
+/**
+ * Change la formule de devis de l'artisan.
+ * Comme pour les agences, la facturation n'est pas encore branchee : le
+ * changement est immediat.
+ */
+export async function actionChangerPlanArtisan(fd: FormData) {
+  const artisan = await exigerSessionArtisan();
+  const code = txt(fd, "plan_devis");
+  const retour = "/pro/devis";
+
+  if (!PLANS_ARTISAN.some((p) => p.code === code)) erreur(retour, "Formule inconnue.");
+
+  ecrire("UPDATE artisans SET plan_devis = ? WHERE id = ?", code, artisan.id);
+  revalidatePath("/pro/devis");
+  redirect(`${retour}?ok=1`);
 }
 
 

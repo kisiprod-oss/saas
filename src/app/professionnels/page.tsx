@@ -95,7 +95,9 @@ export default async function PageProfessionnels({ searchParams }: { searchParam
           </div>
         ) : (
           <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
-            {artisans.map((a) => (
+            {artisans.map((a) => {
+              const peutDevis = a.origine === "candidature" && a.statut_candidature === "valide";
+              return (
               <div key={a.id} className="carte overflow-hidden p-5">
                 <div className="flex items-start gap-3">
                   {a.photo_url ? (
@@ -156,7 +158,7 @@ export default async function PageProfessionnels({ searchParams }: { searchParam
                   <p className="mt-2 text-sm font-semibold text-brand-700">{a.tarif_indicatif}</p>
                 )}
 
-                <div className="mt-4 grid grid-cols-2 gap-2 border-t border-slate-100 pt-4">
+                <div className={`mt-4 grid gap-2 border-t border-slate-100 pt-4 ${peutDevis ? "grid-cols-3" : "grid-cols-2"}`}>
                   <a href={`tel:+${telephoneBrut(a.telephone)}`} className="btn-secondaire">
                     <IconeTelephone className="h-4 w-4" /> Appeler
                   </a>
@@ -166,6 +168,11 @@ export default async function PageProfessionnels({ searchParams }: { searchParam
                   >
                     WhatsApp
                   </a>
+                  {peutDevis && (
+                    <Link href={`/professionnels/${a.id}/devis`} className="btn-primaire">
+                      Devis
+                    </Link>
+                  )}
                 </div>
                 <p className="mt-2 text-center text-xs text-slate-400">
                   {a.origine === "candidature"
@@ -173,7 +180,8 @@ export default async function PageProfessionnels({ searchParams }: { searchParam
                     : `Recommandé par ${a.agence_nom}`}
                 </p>
               </div>
-            ))}
+              );
+            })}
           </div>
         )}
       </section>
