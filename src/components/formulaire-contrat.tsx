@@ -7,13 +7,25 @@ import type { Contrat } from "@/lib/types";
 
 type Option = { valeur: string | number; libelle: string };
 
+/**
+ * Valeurs proposees par l'aide a la saisie, a la creation d'un bail.
+ * Elles ne servent que de point de depart : l'agente relit et corrige.
+ */
+export type PreRemplissageBail = Partial<{
+  bien_id: number; locataire_id: number; date_debut: string; date_fin: string;
+  duree_mois: number; loyer: number; charges: number; caution: number;
+  jour_echeance: number; commission_pct: number; notes: string;
+}>;
+
 export function FormulaireContrat({
-  contrat, biens, locataires,
+  contrat, biens, locataires, prerempli,
 }: {
   contrat?: Contrat;
   biens: { id: number; titre: string; reference: string; loyer: number; charges: number; caution_mois: number }[];
   locataires: { id: number; prenom: string; nom: string; telephone: string }[];
+  prerempli?: PreRemplissageBail;
 }) {
+  const p = prerempli ?? {};
   const optionsBiens: Option[] = biens.map((b) => ({
     valeur: b.id,
     libelle: `${b.titre} — ${b.reference} (${fcfa(b.loyer)}/mois)`,
@@ -31,20 +43,22 @@ export function FormulaireContrat({
       <Section titre="Parties du bail">
         <Selection
           label="Bien loué" nom="bien_id" obligatoire vide="— Choisir un bien —"
-          valeur={contrat?.bien_id} options={optionsBiens}
+          valeur={contrat?.bien_id ?? p.bien_id} options={optionsBiens}
         />
         <Selection
           label="Locataire" nom="locataire_id" obligatoire vide="— Choisir un locataire —"
-          valeur={contrat?.locataire_id} options={optionsLocataires}
+          valeur={contrat?.locataire_id ?? p.locataire_id} options={optionsLocataires}
         />
       </Section>
 
       <Section titre="Durée du bail">
         <Champ label="Date de début" nom="date_debut" type="date" obligatoire
-               valeur={contrat?.date_debut ?? aujourdhui()} />
-        <Champ label="Date de fin" nom="date_fin" type="date" valeur={contrat?.date_fin}
+               valeur={contrat?.date_debut ?? p.date_debut ?? aujourdhui()} />
+        <Champ label="Date de fin" nom="date_fin" type="date"
+               valeur={contrat?.date_fin ?? p.date_fin}
                aide="Laissez vide pour un bail reconductible." />
-        <Champ label="Durée (mois)" nom="duree_mois" type="number" min={1} valeur={contrat?.duree_mois ?? 12} />
+        <Champ label="Durée (mois)" nom="duree_mois" type="number" min={1}
+               valeur={contrat?.duree_mois ?? p.duree_mois ?? 12} />
         <Selection
           label="Statut du bail" nom="statut" valeur={contrat?.statut ?? "actif"}
           options={STATUTS_CONTRAT.map((s) => ({ valeur: s.valeur, libelle: s.libelle }))}
@@ -53,23 +67,23 @@ export function FormulaireContrat({
 
       <Section titre="Montants">
         <Champ label="Loyer mensuel (FCFA)" nom="loyer" inputMode="numeric" obligatoire
-               valeur={contrat?.loyer ?? ""} placeholder="450000" />
+               valeur={contrat?.loyer ?? p.loyer ?? ""} placeholder="450000" />
         <Champ label="Charges mensuelles (FCFA)" nom="charges" inputMode="numeric"
-               valeur={contrat?.charges ?? ""} placeholder="25000" />
+               valeur={contrat?.charges ?? p.charges ?? ""} placeholder="25000" />
         <Champ label="Caution versée (FCFA)" nom="caution" inputMode="numeric"
-               valeur={contrat?.caution ?? ""} placeholder="900000"
+               valeur={contrat?.caution ?? p.caution ?? ""} placeholder="900000"
                aide="Généralement 1 à 3 mois de loyer." />
         <Champ label="Jour d'échéance du loyer" nom="jour_echeance" type="number" min={1} max={28}
-               valeur={contrat?.jour_echeance ?? 5}
+               valeur={contrat?.jour_echeance ?? p.jour_echeance ?? 5}
                aide="Jour du mois où le loyer est dû (1 à 28)." />
         <Champ label="Honoraires agence (%)" nom="commission_pct" type="number" min={0} max={100}
-               valeur={contrat?.commission_pct ?? 10}
+               valeur={contrat?.commission_pct ?? p.commission_pct ?? 10}
                aide="Part prélevée sur le loyer pour la gestion." />
       </Section>
 
       <Section titre="Remarques">
         <div className="sm:col-span-2">
-          <ZoneTexte label="Notes sur le bail" nom="notes" valeur={contrat?.notes}
+          <ZoneTexte label="Notes sur le bail" nom="notes" valeur={contrat?.notes ?? p.notes}
                      placeholder="Clauses particulières, état des lieux, inventaire du mobilier…" />
         </div>
       </Section>

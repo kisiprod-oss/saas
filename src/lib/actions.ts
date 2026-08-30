@@ -32,6 +32,7 @@ import { etatQuota, etatQuotaDevis } from "./quota";
 import { refusMotDePasse } from "./mot-de-passe";
 import { accuserReception, envoiDuDocument, messageWhatsApp, noterEnvoi } from "./envois";
 import { codeNormalise, codeVerification } from "./verification";
+import { aideDocumentsConfiguree, preparerBail, preparerFacture } from "./assistant-documents";
 import { METIERS } from "./constantes";
 import { hacherMotDePasse } from "./auth";
 import { exigerAdmin } from "./admin";
@@ -640,6 +641,56 @@ export async function actionStatutDemande(fd: FormData) {
   );
   revalidatePath("/dashboard/demandes");
   redirect("/dashboard/demandes");
+}
+
+// ------------------------------------- aide a la saisie (factures et baux)
+
+/**
+ * Construit l'adresse du formulaire pre-rempli.
+ *
+ * Les valeurs voyagent dans l'adresse plutot que dans un etat cote
+ * navigateur : le formulaire reste une page ordinaire, relisible et
+ * corrigeable, et l'agente peut meme garder le lien sous la main.
+ */
+function urlPreRemplie(
+  base: string,
+  champs: Record<string, string | number | null>,
+  resume: string,
+  manques: string[],
+): string {
+  const params = new URLSearchParams();
+  for (const [cle, valeur] of Object.entries(champs)) {
+    if (valeur !== null && valeur !== "") params.set(cle, String(valeur));
+  }
+  if (resume) params.set("resume", resume);
+  for (const m of manques) params.append("manque", m);
+  return `${base}?${params.toString()}`;
+}
+
+/** L'agente decrit sa facture en une phrase ; le formulaire se pre-remplit. */
+export async function actionPreparerFacture(fd: FormData) {
+  const { agence } = await exigerSession();
+  const retour = "/dashboard/factures/nouvelle";
+
+  if (!aideDocumentsConfiguree()) erreur(retour, "L'aide à la saisie n'est pas configurée.");
+  const description = txt(fd, "description");
+  if (!description) erreur(retour, "Décrivez la facture à préparer.");
+
+  const { champs, resume, manques } = await preparerFacture(agence.id, description);
+  redirect(urlPreRemplie(retour, { ...champs, contrat: champs.contrat_id }, resume, manques));
+}
+
+/** Même principe pour un bail. */
+export async function actionPreparerBail(fd: FormData) {
+  const { agence } = await exigerSession();
+  const retour = "/dashboard/contrats/nouveau";
+
+  if (!aideDocumentsConfiguree()) erreur(retour, "L'aide à la saisie n'est pas configurée.");
+  const description = txt(fd, "description");
+  if (!description) erreur(retour, "Décrivez le bail à préparer.");
+
+  const { champs, resume, manques } = await preparerBail(agence.id, description);
+  redirect(urlPreRemplie(retour, champs, resume, manques));
 }
 
 // ------------------------------------------------------------ verification

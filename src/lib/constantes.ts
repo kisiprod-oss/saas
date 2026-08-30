@@ -83,3 +83,12 @@ export function couleurStatut(
 ): string {
   return liste.find((e) => e.valeur === valeur)?.couleur ?? "bg-slate-100 text-slate-700 ring-slate-600/20";
 }
+
+/**
+ * Longueur maximale d'une description dictee a l'aide a la saisie.
+ *
+ * Declaree ici et non dans assistant-documents.ts parce que le champ de
+ * saisie, cote navigateur, doit l'appliquer : ce module-la est
+ * « server-only ». C'est donc ce fichier qui fait foi, et l'autre l'importe.
+ */
+export const MAX_CARACTERES_DICTEE = 600;

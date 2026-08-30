@@ -1,9 +1,11 @@
 import Link from "next/link";
 import { exigerSession } from "@/lib/auth";
 import { tous } from "@/lib/db";
-import { actionCreerFacture } from "@/lib/actions";
+import { actionCreerFacture, actionPreparerFacture } from "@/lib/actions";
+import { aideDocumentsConfiguree } from "@/lib/assistant-documents";
 import { decalerMois, moisCourant, periodeLisible, fcfa } from "@/lib/format";
 import { Champ, EnTetePage, EtatVide, MessagesUrl, Section, Selection } from "@/components/ui";
+import { DicteeDocument, ResumePreparation } from "@/components/dictee-document";
 import { IconeRetour } from "@/components/icones";
 
 export const metadata = { title: "Nouvelle facture" };
@@ -13,6 +15,10 @@ type Params = { [cle: string]: string | string[] | undefined };
 const lire = (p: Params, c: string) => {
   const v = p[c];
   return (Array.isArray(v) ? v[0] : v) ?? "";
+};
+const lireListe = (p: Params, c: string) => {
+  const v = p[c];
+  return Array.isArray(v) ? v : v ? [v] : [];
 };
 
 export default async function PageNouvelleFacture({ searchParams }: { searchParams: Promise<Params> }) {
@@ -49,6 +55,15 @@ export default async function PageNouvelleFacture({ searchParams }: { searchPara
       />
       <MessagesUrl params={params} />
 
+      {contrats.length > 0 && aideDocumentsConfiguree() && (
+        <DicteeDocument
+          action={actionPreparerFacture}
+          placeholder="Ex : le loyer de mars pour Awa Ndiaye, plus 15 000 de régularisation d'eau"
+          exemple="facture le loyer du mois dernier pour Modou Faye"
+        />
+      )}
+      <ResumePreparation resume={lire(params, "resume")} manques={lireListe(params, "manque")} />
+
       {contrats.length === 0 ? (
         <EtatVide
           titre="Aucun bail actif"
@@ -74,11 +89,15 @@ export default async function PageNouvelleFacture({ searchParams }: { searchPara
 
           <Section titre="Montants">
             <Champ label="Loyer (FCFA)" nom="montant_loyer" inputMode="numeric" placeholder="450000"
+                   valeur={lire(params, "montant_loyer")}
                    aide="Laissez vide pour reprendre le loyer du bail." />
             <Champ label="Charges (FCFA)" nom="montant_charges" inputMode="numeric" placeholder="25000"
+                   valeur={lire(params, "montant_charges")}
                    aide="Laissez vide pour reprendre les charges du bail." />
-            <Champ label="Autre montant (FCFA)" nom="montant_autres" inputMode="numeric" placeholder="0" />
+            <Champ label="Autre montant (FCFA)" nom="montant_autres" inputMode="numeric" placeholder="0"
+                   valeur={lire(params, "montant_autres")} />
             <Champ label="Libellé de l'autre montant" nom="libelle_autres"
+                   valeur={lire(params, "libelle_autres")}
                    placeholder="Régularisation d'eau, réparation…" />
           </Section>
 
