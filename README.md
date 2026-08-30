@@ -338,16 +338,20 @@ visiteurs : ce que fait le logiciel, combien coûtent les formules, comment
 relancer un impayé. Elle travaille la nuit et le week-end, quand vous ne
 pouvez pas répondre.
 
-1. Créez un compte sur [console.anthropic.com](https://console.anthropic.com),
-   puis une clé dans **API keys**.
-2. Ajoutez-la aux variables d'environnement :
+1. Créez un compte sur [platform.claude.com](https://platform.claude.com).
+2. Ajoutez du crédit dans **Settings → Billing** : sans crédit, la clé est
+   créée mais chaque appel est refusé.
+3. Créez la clé dans **Settings → API keys**
+   ([lien direct](https://platform.claude.com/settings/keys)), puis copiez-la
+   immédiatement — elle n'est affichée qu'une seule fois.
+4. Ajoutez-la aux variables d'environnement :
 
    ```
    ANTHROPIC_API_KEY=sk-ant-...
    ```
 
-Sans cette variable, la bulle n'apparaît pas et le reste du site est
-identique.
+Sans cette variable, la bulle n'apparaît pas, l'aide à la saisie des factures
+et des baux ne s'affiche pas, et le reste du site est identique.
 
 **Ce que l'assistant sait et ne sait pas.** Il connaît les fonctionnalités et
 les tarifs — ceux-ci sont lus directement dans le code, ils ne peuvent donc
