@@ -4,6 +4,7 @@ import { exigerSession } from "@/lib/auth";
 import { lireBien } from "@/lib/requetes";
 import { actionSupprimerBien } from "@/lib/actions";
 import { EnTetePage, MessagesUrl } from "@/components/ui";
+import { BoutonConfirmation } from "@/components/bouton-confirmation";
 import { FormulaireBien } from "@/components/formulaire-bien";
 import { IconeCorbeille, IconeRetour } from "@/components/icones";
 
@@ -30,9 +31,12 @@ export default async function PageBien({
         </Link>
         <form action={actionSupprimerBien}>
           <input type="hidden" name="id" value={bien.id} />
-          <button type="submit" className="btn-danger">
+          <BoutonConfirmation
+            message={`Supprimer le bien « ${bien.titre} » ? Cette action est définitive.`}
+            className="btn-danger"
+          >
             <IconeCorbeille className="h-4 w-4" /> Supprimer
-          </button>
+          </BoutonConfirmation>
         </form>
       </EnTetePage>
 

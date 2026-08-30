@@ -7,6 +7,7 @@ import {
 } from "@/lib/actions";
 import { fcfa, periodeLisible, telephoneBrut, telephoneFr } from "@/lib/format";
 import { Carte, EnTetePage, MessagesUrl } from "@/components/ui";
+import { BoutonConfirmation } from "@/components/bouton-confirmation";
 import { FormulaireLocataire } from "@/components/formulaire-locataire";
 import { IconeCorbeille, IconeRetour } from "@/components/icones";
 
@@ -44,9 +45,12 @@ export default async function PageLocataire({
         </a>
         <form action={actionSupprimerLocataire}>
           <input type="hidden" name="id" value={locataire.id} />
-          <button type="submit" className="btn-danger">
+          <BoutonConfirmation
+            message={`Supprimer ${locataire.prenom} ${locataire.nom} ? Cette action est définitive.`}
+            className="btn-danger"
+          >
             <IconeCorbeille className="h-4 w-4" /> Supprimer
-          </button>
+          </BoutonConfirmation>
         </form>
       </EnTetePage>
 

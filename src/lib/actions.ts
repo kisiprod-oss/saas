@@ -31,7 +31,7 @@ import { peutAjouterBien, plan, planArtisan, planSuivant, PLANS, PLANS_ARTISAN }
 import { etatQuota, etatQuotaDevis } from "./quota";
 import { refusMotDePasse } from "./mot-de-passe";
 import { accuserReception, envoiDuDocument, messageWhatsApp, noterEnvoi } from "./envois";
-import { codeVerification } from "./verification";
+import { codeNormalise, codeVerification } from "./verification";
 import { METIERS } from "./constantes";
 import { hacherMotDePasse } from "./auth";
 import { exigerAdmin } from "./admin";
@@ -640,6 +640,15 @@ export async function actionStatutDemande(fd: FormData) {
   );
   revalidatePath("/dashboard/demandes");
   redirect("/dashboard/demandes");
+}
+
+// ------------------------------------------------------------ verification
+
+/** Point d'entree de /verifier : normalise le code saisi et ouvre sa fiche. */
+export async function actionRechercherVerification(fd: FormData) {
+  const code = codeNormalise(txt(fd, "code"));
+  if (!code) erreur("/verifier", "Saisissez le code imprimé sur le document.");
+  redirect(`/verifier/${code}`);
 }
 
 // ---------------------------------------------------------------- relances
@@ -1513,7 +1522,12 @@ export async function actionDeclarerIntervention(fd: FormData) {
   const { agence } = await exigerSession();
   const artisanId = entier(fd, "artisan_id");
 
-  const artisan = un<{ id: number }>("SELECT id FROM artisans WHERE id = ?", artisanId);
+  // Uniquement les artisans que CETTE agence gere elle-meme : sans ce
+  // controle, n'importe quelle agence pourrait declarer une intervention
+  // pour l'artisan d'une autre et lui fabriquer un faux avis.
+  const artisan = un<{ id: number }>(
+    "SELECT id FROM artisans WHERE id = ? AND agence_id = ?", artisanId, agence.id,
+  );
   if (!artisan) erreur("/dashboard/artisans", "Artisan introuvable.");
 
   const jeton = crypto.randomBytes(24).toString("hex");

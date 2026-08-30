@@ -43,7 +43,11 @@ function tirerCode(): string {
 
 /** Presentation lisible : XXXX-XXXX-XXXX. */
 export function codeLisible(code: string): string {
-  return code.replace(/(.{4})(?=.)/g, "$1-");
+  // Retire d'abord toute mise en forme deja presente : sans ca, un code
+  // qui arrive avec ses tirets (ex. copie depuis l'URL /verifier/XXXX-XXXX)
+  // en recevrait une seconde couche, mal placee.
+  const propre = code.toUpperCase().replace(/[^A-Z0-9]/g, "");
+  return propre.replace(/(.{4})(?=.)/g, "$1-");
 }
 
 /** Enleve la mise en forme d'un code saisi a la main. */

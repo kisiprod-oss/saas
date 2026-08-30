@@ -66,7 +66,7 @@ export function CarteBien({ bien, agenceNom }: Props) {
       </div>
 
       <div className="p-4">
-        <h3 className="line-clamp-1 font-semibold text-slate-900 group-hover:text-brand-700">
+        <h3 title={bien.titre} className="line-clamp-1 font-semibold text-slate-900 group-hover:text-brand-700">
           {bien.titre}
         </h3>
 

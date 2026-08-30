@@ -2,10 +2,12 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { devisParJeton } from "@/lib/requetes";
 import { actionAccepterDevis, actionRefuserDevis } from "@/lib/actions";
+import { adresseDuSite } from "@/lib/email";
 import { libelle, METIERS } from "@/lib/constantes";
 import { fcfa, telephoneBrut, telephoneFr } from "@/lib/format";
 import { Alerte, Carte } from "@/components/ui";
 import { LogoSenComplet } from "@/components/entete-public";
+import { BoutonCopier } from "@/components/bouton-copier";
 import { IconeCheck, IconeTelephone } from "@/components/icones";
 
 export const metadata = { title: "Suivi de mon devis" };
@@ -15,6 +17,7 @@ export default async function PageDevis({ params }: { params: Promise<{ jeton: s
   const { jeton } = await params;
   const devis = devisParJeton(jeton);
   if (!devis) notFound();
+  const lienDevis = `${await adresseDuSite()}/devis/${jeton}`;
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-slate-50 px-4 py-10">
@@ -40,6 +43,7 @@ export default async function PageDevis({ params }: { params: Promise<{ jeton: s
                 <p className="mt-3 text-xs text-slate-500">
                   Conservez ce lien : c&apos;est le seul moyen de suivre votre demande.
                 </p>
+                <BoutonCopier texte={lienDevis} className="btn-secondaire mt-3 w-full" />
               </>
             )}
 

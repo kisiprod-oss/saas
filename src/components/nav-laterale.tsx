@@ -36,7 +36,8 @@ export function NavLaterale({
     href === "/dashboard" ? chemin === "/dashboard" : chemin.startsWith(href);
 
   return (
-    <nav className="flex gap-1 overflow-x-auto lg:flex-col lg:overflow-visible">
+    <div className="relative">
+      <nav className="flex gap-1 overflow-x-auto lg:flex-col lg:overflow-visible">
       {LIENS.map(({ href, libelle, Icone }) => (
         <Link
           key={href}
@@ -67,6 +68,14 @@ export function NavLaterale({
           )}
         </Link>
       ))}
-    </nav>
+      </nav>
+      {/* Signale qu'il reste des sections a droite quand la barre defile
+          horizontalement sur mobile ; sans JS, disparait dans la colonne
+          fixe du bureau ou tout est deja visible. */}
+      <div
+        aria-hidden="true"
+        className="pointer-events-none absolute inset-y-0 right-0 w-8 bg-gradient-to-l from-white to-transparent lg:hidden"
+      />
+    </div>
   );
 }

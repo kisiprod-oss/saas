@@ -7,6 +7,7 @@ import {
 } from "@/lib/actions";
 import { dateFr, fcfa, periodeSejour, telephoneBrut, telephoneFr } from "@/lib/format";
 import { Carte, MessagesUrl } from "@/components/ui";
+import { BoutonConfirmation } from "@/components/bouton-confirmation";
 import { IconeRetour, IconeTelephone } from "@/components/icones";
 import { BadgeReservation } from "@/components/badge-reservation";
 
@@ -198,7 +199,12 @@ export default async function PageReservation({
 
           <form action={actionSupprimerReservation}>
             <input type="hidden" name="id" value={r.id} />
-            <button type="submit" className="btn-danger w-full">Supprimer cette réservation</button>
+            <BoutonConfirmation
+              message="Supprimer cette réservation ? Cette action est définitive."
+              className="btn-danger w-full"
+            >
+              Supprimer cette réservation
+            </BoutonConfirmation>
           </form>
         </aside>
       </div>

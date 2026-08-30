@@ -9,6 +9,7 @@ import {
 import { aujourdhui, dateFr, fcfa, periodeLisible, telephoneFr } from "@/lib/format";
 import { libelle, MODES_PAIEMENT } from "@/lib/constantes";
 import { Carte, EnTetePage, MessagesUrl } from "@/components/ui";
+import { BoutonConfirmation } from "@/components/bouton-confirmation";
 import { RemiseDocument } from "@/components/remise-document";
 import { envoiDuDocumentSiExiste } from "@/lib/envois";
 import { un } from "@/lib/db";
@@ -55,9 +56,12 @@ export default async function PageFacture({
         )}
         <form action={actionSupprimerFacture}>
           <input type="hidden" name="id" value={facture.id} />
-          <button type="submit" className="btn-danger">
+          <BoutonConfirmation
+            message={`Supprimer la facture ${facture.numero} ? Cette action est définitive.`}
+            className="btn-danger"
+          >
             <IconeCorbeille className="h-4 w-4" /> Supprimer
-          </button>
+          </BoutonConfirmation>
         </form>
       </EnTetePage>
 
@@ -176,9 +180,12 @@ export default async function PageFacture({
                           <form action={actionSupprimerPaiement}>
                             <input type="hidden" name="id" value={p.id} />
                             <input type="hidden" name="facture_id" value={facture.id} />
-                            <button type="submit" className="text-xs font-semibold text-rose-600 hover:underline">
+                            <BoutonConfirmation
+                              message="Supprimer ce paiement ? Cette action est définitive."
+                              className="text-xs font-semibold text-rose-600 hover:underline"
+                            >
                               Supprimer
-                            </button>
+                            </BoutonConfirmation>
                           </form>
                         )}
                       </td>

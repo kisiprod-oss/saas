@@ -485,6 +485,22 @@ for (const [nom, metier, telephone, quartier, ville, description, tarif] of ARTI
   insererArtisan.run(agenceId, nom, metier, telephone, ville, quartier, description, tarif);
 }
 
+// Un artisan "candidature" deja valide : sans lui, le parcours de devis
+// n'est visible par personne dans les donnees de demonstration, puisque
+// seuls les artisans inscrits eux-memes et valides par un administrateur
+// peuvent en recevoir (ils sont les seuls a avoir un espace pour y repondre).
+const ARTISAN_CANDIDATURE_MDP = "Artisan#2026";
+db.prepare(`
+  INSERT INTO artisans
+    (agence_id, origine, nom, metier, telephone, ville, quartier, description,
+     tarif_indicatif, email, mot_de_passe_hash, experience_annees, statut_candidature, publie)
+  VALUES (NULL, 'candidature', ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'valide', 1)
+`).run(
+  "Ousmane Fall", "electricien", "778990011", "Dakar", "Mermoz",
+  "Électricien indépendant, disponible pour un devis sous 24h à Dakar et environs.",
+  "Devis gratuit", "ousmane.fall@exemple.sn", hacher(ARTISAN_CANDIDATURE_MDP), 6,
+);
+
 // ------------------------------------------------------------------ bilan
 const compter = (t) => db.prepare(`SELECT COUNT(*) AS n FROM ${t}`).get().n;
 
@@ -506,6 +522,10 @@ Base de demonstration creee : ${cheminBase}
   Relances    : ${compter("relances")}
 
 Connexion :  demo@sengestion.sn  /  demo1234
+
+  Espace artisan de demonstration (parcours devis) :
+    Artisan     : Ousmane Fall (electricien, deja valide)
+    Connexion :  ousmane.fall@exemple.sn  /  ${ARTISAN_CANDIDATURE_MDP}
 `);
 
 db.close();

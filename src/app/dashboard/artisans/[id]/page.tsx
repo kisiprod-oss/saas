@@ -5,6 +5,7 @@ import { lireArtisan } from "@/lib/requetes";
 import { actionDeclarerIntervention, actionSupprimerArtisan } from "@/lib/actions";
 import { aujourdhui, telephoneBrut } from "@/lib/format";
 import { Carte, MessagesUrl } from "@/components/ui";
+import { BoutonConfirmation } from "@/components/bouton-confirmation";
 import { FormulaireArtisan } from "@/components/formulaire-artisan";
 import { IconeCorbeille, IconeRetour } from "@/components/icones";
 
@@ -36,9 +37,12 @@ export default async function PageArtisan({
           </a>
           <form action={actionSupprimerArtisan}>
             <input type="hidden" name="id" value={artisan.id} />
-            <button type="submit" className="btn-danger">
+            <BoutonConfirmation
+              message={`Supprimer « ${artisan.nom} » de vos artisans ? Cette action est définitive.`}
+              className="btn-danger"
+            >
               <IconeCorbeille className="h-4 w-4" /> Supprimer
-            </button>
+            </BoutonConfirmation>
           </form>
         </div>
       </div>

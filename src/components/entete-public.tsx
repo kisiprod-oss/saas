@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { IconeMenu } from "./icones";
 
 /**
  * La marque de l'application, sous deux formes tirees du meme fichier.
@@ -65,6 +66,35 @@ export function EntetePublic() {
           </Link>
           <Link href="/connexion" className="btn-secondaire">Espace agence</Link>
           <Link href="/inscription" className="btn-primaire hidden sm:inline-flex">Créer mon agence</Link>
+
+          {/* Sous sm, les liens ci-dessus disparaissent : ce menu les reprend
+              tous, sans JavaScript (details/summary), pour qu'ils restent
+              atteignables sur mobile — l'essentiel du trafic visé. */}
+          <details className="relative sm:hidden">
+            <summary
+              className="flex h-9 w-9 cursor-pointer list-none items-center justify-center rounded-lg text-slate-600 hover:bg-slate-100 [&::-webkit-details-marker]:hidden"
+              aria-label="Menu"
+            >
+              <IconeMenu className="h-5 w-5" />
+            </summary>
+            <nav className="absolute right-0 top-full z-50 mt-2 w-56 rounded-xl border border-slate-200 bg-white p-1.5 shadow-lg">
+              <Link href="/#annonces" className="block rounded-lg px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50">
+                Les annonces
+              </Link>
+              <Link href="/tarifs" className="block rounded-lg px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50">
+                Tarifs
+              </Link>
+              <Link href="/professionnels" className="block rounded-lg px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50">
+                Professionnels
+              </Link>
+              <Link href="/espace-locataire/connexion" className="block rounded-lg px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50">
+                Espace locataire
+              </Link>
+              <Link href="/inscription" className="block rounded-lg px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50">
+                Créer mon agence
+              </Link>
+            </nav>
+          </details>
         </nav>
       </div>
     </header>

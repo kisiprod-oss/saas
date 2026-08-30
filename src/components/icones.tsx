@@ -97,3 +97,6 @@ export const IconeCarte = (p: Props) => (
 export const IconeOutils = (p: Props) => (
   <Svg {...p}><path d="M14.5 6.5a4 4 0 0 0-5.4 4.9L3.5 17l2 2 5.6-5.6a4 4 0 0 0 4.9-5.4l-2.6 2.6-2-2z" /></Svg>
 );
+export const IconeMenu = (p: Props) => (
+  <Svg {...p}><path d="M4 6h16" /><path d="M4 12h16" /><path d="M4 18h16" /></Svg>
+);

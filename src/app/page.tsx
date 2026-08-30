@@ -230,9 +230,12 @@ export default async function PageVitrine({ searchParams }: { searchParams: Prom
               Chaque quittance et chaque facture générée porte un code unique,
               imprimé sur le document. N&apos;importe qui — un locataire, un
               propriétaire, un tribunal — peut vérifier son authenticité sans
-              avoir de compte, simplement en saisissant ce code sur le lien
-              indiqué sur le document.
+              avoir de compte, simplement en saisissant ce code sur la page de
+              vérification.
             </p>
+            <Link href="/verifier" className="btn-secondaire mt-5 inline-flex">
+              Vérifier un document
+            </Link>
           </div>
           <div className="order-1 justify-self-center lg:order-2">
             {/* eslint-disable-next-line @next/next/no-img-element */}

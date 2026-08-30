@@ -45,6 +45,10 @@ export default async function PageTableauBord({ searchParams }: { searchParams: 
   const quota = etatQuota(agence, facturesEmisesCeMois(agence.id));
   const periode = moisCourant();
   const maximum = Math.max(1, ...s.historique.flatMap((h) => [h.attendu, h.encaisse]));
+  // Un minimum decoratif rend les petits montants visibles, mais un mois
+  // reellement a 0 FCFA ne doit montrer aucune barre : sinon il ressemble
+  // a un mois avec un peu d'activite.
+  const hauteurBarre = (valeur: number) => (valeur > 0 ? Math.max(2, (valeur / maximum) * 100) : 0);
   const tauxRecouvrement = s.loyersAttendusMois > 0
     ? Math.round((s.encaisseMois / s.loyersAttendusMois) * 100)
     : 0;
@@ -173,12 +177,12 @@ export default async function PageTableauBord({ searchParams }: { searchParams: 
                 <div className="flex w-full flex-1 items-end justify-center gap-1">
                   <div
                     className="w-1/2 rounded-t bg-slate-200"
-                    style={{ height: `${Math.max(2, (h.attendu / maximum) * 100)}%` }}
+                    style={{ height: `${hauteurBarre(h.attendu)}%` }}
                     title={`Facturé : ${fcfa(h.attendu)}`}
                   />
                   <div
                     className="w-1/2 rounded-t bg-brand-500"
-                    style={{ height: `${Math.max(2, (h.encaisse / maximum) * 100)}%` }}
+                    style={{ height: `${hauteurBarre(h.encaisse)}%` }}
                     title={`Encaissé : ${fcfa(h.encaisse)}`}
                   />
                 </div>

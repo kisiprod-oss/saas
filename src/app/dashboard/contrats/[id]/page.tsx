@@ -6,6 +6,7 @@ import { lireContrat, listerFactures } from "@/lib/requetes";
 import { actionSupprimerContrat, actionTerminerContrat } from "@/lib/actions";
 import { dateFr, fcfa, moisCourant, periodeLisible, telephoneFr } from "@/lib/format";
 import { Carte, EnTetePage, MessagesUrl } from "@/components/ui";
+import { BoutonConfirmation } from "@/components/bouton-confirmation";
 import { FormulaireContrat } from "@/components/formulaire-contrat";
 import { IconeCorbeille, IconeFacture, IconeRetour } from "@/components/icones";
 
@@ -64,9 +65,12 @@ export default async function PageContrat({
         )}
         <form action={actionSupprimerContrat}>
           <input type="hidden" name="id" value={contrat.id} />
-          <button type="submit" className="btn-danger">
+          <BoutonConfirmation
+            message={`Supprimer le bail ${contrat.reference} ? Cette action est définitive.`}
+            className="btn-danger"
+          >
             <IconeCorbeille className="h-4 w-4" /> Supprimer
-          </button>
+          </BoutonConfirmation>
         </form>
       </EnTetePage>
 
