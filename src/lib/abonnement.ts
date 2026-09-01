@@ -98,16 +98,6 @@ export function reglementsAgence(agenceId: number): LigneAbonnement[] {
   );
 }
 
-/** Tous les reglements confirmes, pour la vue d'ensemble de l'editeur. */
-export function reglementsConfirmes(): (LigneAbonnement & { agence_nom: string })[] {
-  return tous<LigneAbonnement & { agence_nom: string }>(
-    `SELECT a.*, ag.nom AS agence_nom
-       FROM abonnements a JOIN agences ag ON ag.id = a.agence_id
-      WHERE a.statut = 'payee'
-      ORDER BY a.confirme_le DESC`,
-  );
-}
-
 /**
  * Ouvre un paiement d'abonnement et renvoie l'adresse ou l'agence doit payer.
  * Rien n'est accorde a ce stade : la ligne reste « initiee ».
