@@ -62,7 +62,13 @@ export function GraphiqueBarres({
   const largeurBarre = Math.max(3, (largeurGroupe - 8) / series.length - 2);
 
   const y = (v: number) => margeH + zoneH - (v / plafond) * zoneH;
-  const lignes = [0, 0.25, 0.5, 0.75, 1].map((f) => plafond * f);
+
+  // Sur de petites quantites (« 3 nouvelles agences »), les quarts tombent sur
+  // des fractions : l'axe afficherait « 1, 1, 1, 0 » apres arrondi. On passe
+  // alors par les entiers, seules valeurs qui aient un sens a compter.
+  const lignes = plafond <= 4
+    ? Array.from({ length: plafond + 1 }, (_, i) => i)
+    : [0, 0.25, 0.5, 0.75, 1].map((f) => plafond * f);
 
   return (
     <figure className="m-0">

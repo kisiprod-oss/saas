@@ -31,6 +31,15 @@ export function administrationConfiguree(): boolean {
   return adressesAdmin().length > 0;
 }
 
+/**
+ * Liste des administrateurs, pour l'afficher dans l'espace d'administration.
+ * Ce ne sont pas des secrets — ce sont des adresses de contact — mais la
+ * fonction reste reservee aux pages derriere `exigerAdmin()`.
+ */
+export function adressesAdminVisibles(): string[] {
+  return adressesAdmin();
+}
+
 export function estAdmin(email: string | null | undefined): boolean {
   if (!email) return false;
   return adressesAdmin().includes(email.trim().toLowerCase());
