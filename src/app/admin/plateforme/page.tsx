@@ -38,18 +38,32 @@ export default async function PagePlateforme() {
       </div>
 
       {/* ------------------------------ Abonnements ------------------------------ */}
-      <Carte className="mt-6 p-5">
-        <h2 className="font-semibold text-slate-900">Abonnements en cours</h2>
-        <p className="mt-1 text-3xl font-bold text-brand-800">{fcfa(p.abonnementTheorique)}<span className="text-base font-medium text-slate-500"> / mois</span></p>
+      <div className="mt-6 grid gap-4 sm:grid-cols-2">
+        <Carte className="border-brand-300 bg-brand-50/50 p-5">
+          <p className="text-sm font-medium text-brand-800">Réellement encaissé</p>
+          <p className="mt-1 text-3xl font-bold text-brand-900">{fcfa(p.encaisseTotal)}</p>
+          <p className="mt-1 text-xs text-brand-800">
+            {p.nbReglements} règlement(s) confirmé(s) · {fcfa(p.encaisseCeMois)} ce mois-ci
+          </p>
+          <p className="mt-2 text-xs text-brand-800">
+            C&apos;est votre chiffre d&apos;affaires : de l&apos;argent arrivé sur
+            votre compte marchand, vérifié auprès de l&apos;opérateur.
+          </p>
+        </Carte>
 
-        <div className="mt-3 rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900">
-          <strong>Ce chiffre est théorique, pas encaissé.</strong> Il additionne le
-          prix des formules sur lesquelles vos agences sont inscrites. Rien dans
-          le logiciel n&apos;enregistre aujourd&apos;hui qu&apos;une agence a
-          <em> réellement payé</em> son abonnement : pour connaître votre vrai
-          chiffre d&apos;affaires, il faut d&apos;abord brancher le suivi des
-          règlements d&apos;abonnement.
-        </div>
+        <Carte className="p-5">
+          <p className="text-sm text-slate-500">Attendu si tous payaient</p>
+          <p className="mt-1 text-3xl font-bold text-slate-900">{fcfa(p.abonnementTheorique)}<span className="text-base font-medium text-slate-500"> / mois</span></p>
+          <p className="mt-2 text-xs text-slate-500">
+            Somme des formules en cours. <strong>Théorique</strong> : une agence
+            peut être inscrite sur une formule sans l&apos;avoir réglée. L&apos;écart
+            avec la case verte, c&apos;est ce qu&apos;il reste à recouvrer.
+          </p>
+        </Carte>
+      </div>
+
+      <Carte className="mt-4 p-5">
+        <h2 className="font-semibold text-slate-900">Répartition des formules</h2>
 
         <div className="mt-4 overflow-x-auto">
           <table className="tableau">

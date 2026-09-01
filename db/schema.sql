@@ -108,6 +108,8 @@ CREATE TABLE IF NOT EXISTS agences (
   encaissement_jeton      TEXT,
   -- Formule d'abonnement : decouverte | bailleur | agence | pro
   plan          TEXT NOT NULL DEFAULT 'decouverte',
+  -- Fin de la periode payee. NULL = aucun reglement a ce jour.
+  plan_expire_le TEXT,
   -- 1 si la boite aux lettres de ce compte avait deja ouvert un compte
   -- gratuit. Ce compte-la n'a alors droit a aucune facture gratuite : sans
   -- quoi la limite mensuelle se contourne en changeant d'alias.
@@ -541,3 +543,27 @@ CREATE TABLE IF NOT EXISTS tentatives_connexion (
   le      TEXT NOT NULL DEFAULT (datetime('now'))
 );
 CREATE INDEX IF NOT EXISTS idx_tentatives ON tentatives_connexion(cle, le);
+
+-- ---------- Abonnements a Sen Gestion ----------
+-- Reglements des agences vers l'EDITEUR (et non des locataires vers l'agence,
+-- qui vivent dans `transactions`). L'argent va ici sur le compte marchand de
+-- l'editeur : ce sont deux flux distincts, deux tables distinctes.
+CREATE TABLE IF NOT EXISTS abonnements (
+  id            INTEGER PRIMARY KEY AUTOINCREMENT,
+  agence_id     INTEGER NOT NULL REFERENCES agences(id) ON DELETE CASCADE,
+  plan          TEXT NOT NULL,              -- bailleur | agence | pro
+  periodicite   TEXT NOT NULL DEFAULT 'mois',  -- mois | an
+  montant       INTEGER NOT NULL,
+  statut        TEXT NOT NULL DEFAULT 'initiee',
+                -- initiee | payee | echouee | annulee
+  fournisseur   TEXT NOT NULL DEFAULT 'paydunya',
+  jeton         TEXT NOT NULL,              -- jeton de facture chez le fournisseur
+  -- Periode couverte, remplie seulement une fois le reglement confirme.
+  couvre_du     TEXT,
+  couvre_au     TEXT,
+  detail        TEXT,                       -- message du fournisseur, pour le journal
+  cree_le       TEXT NOT NULL DEFAULT (datetime('now')),
+  confirme_le   TEXT
+);
+CREATE INDEX IF NOT EXISTS idx_abonnements_agence ON abonnements(agence_id, cree_le);
+CREATE UNIQUE INDEX IF NOT EXISTS idx_abonnements_jeton ON abonnements(fournisseur, jeton);

@@ -24,6 +24,7 @@ import { chiffrementConfigure, chiffrer } from "./chiffrement";
 import {
   clesAgence, creerPaiement, FOURNISSEURS, testerCles,
 } from "./encaissement";
+import { ouvrirReglement } from "./abonnement";
 import {
   enregistrerLogo, enregistrerPhotoProfil, enregistrerPhotos, supprimerPhoto,
 } from "./photos";
@@ -1306,6 +1307,25 @@ export async function actionTesterEncaissement() {
   if (!essai.ok) erreur(retour, `Échec du test : ${essai.erreur}`);
 
   redirect(`${retour}?teste=1`);
+}
+
+/** L'agence lance le règlement de son propre abonnement à Sen Gestion. */
+export async function actionPayerAbonnement(fd: FormData) {
+  const { agence } = await exigerSession();
+  const retour = "/dashboard/abonnement";
+
+  const codePlan = txt(fd, "plan");
+  const periodicite = txt(fd, "periodicite") === "an" ? "an" : "mois";
+
+  const ouverture = await ouvrirReglement(
+    { id: agence.id, nom: agence.nom, telephone: agence.telephone },
+    codePlan, periodicite, await adresseDuSite(),
+  );
+  if (!ouverture.ok) erreur(retour, ouverture.erreur);
+
+  // On quitte le site pour la page du fournisseur : c'est chez lui, et jamais
+  // ici, que le numero Orange Money ou Wave est saisi.
+  redirect(ouverture.url);
 }
 
 /** Le locataire lance le paiement en ligne d'une de ses factures. */

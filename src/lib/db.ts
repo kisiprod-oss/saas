@@ -67,6 +67,9 @@ function migrer(base: Database.Database) {
     ["agences", "encaissement_cle_maitre", "TEXT"],
     ["agences", "encaissement_cle_privee", "TEXT"],
     ["agences", "encaissement_jeton", "TEXT"],
+    // Fin de la periode payee. NULL = aucun abonnement regle a ce jour ;
+    // la formule vaut alors ce que dit `plan`, sans echeance.
+    ["agences", "plan_expire_le", "TEXT"],
     ["artisans", "origine", "TEXT NOT NULL DEFAULT 'agence'"],
     ["artisans", "email", "TEXT"],
     ["artisans", "mot_de_passe_hash", "TEXT"],

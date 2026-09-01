@@ -54,6 +54,11 @@ export type Plateforme = {
   nbUtilisateurs: number;
   nbArtisans: number;
   nbLocataires: number;
+
+  /** Abonnements REELLEMENT encaisses. Zero tant que rien n'a ete regle. */
+  encaisseTotal: number;
+  encaisseCeMois: number;
+  nbReglements: number;
 };
 
 export function plateforme(): Plateforme {
@@ -86,6 +91,17 @@ export function plateforme(): Plateforme {
 
   const compte = (sql: string) => un<{ n: number }>(sql)!.n;
 
+  // Ce qui est reellement arrive sur le compte de l'editeur, par opposition
+  // au montant theorique des formules en cours.
+  const encaisse = un<{ total: number; nb: number }>(
+    "SELECT COALESCE(SUM(montant), 0) AS total, COUNT(*) AS nb FROM abonnements WHERE statut = 'payee'",
+  )!;
+  const encaisseMois = un<{ total: number }>(
+    `SELECT COALESCE(SUM(montant), 0) AS total FROM abonnements
+      WHERE statut = 'payee' AND strftime('%Y-%m', confirme_le) = ?`,
+    courant,
+  )!;
+
   return {
     nbAgences: adherents.length,
     nbPayantes: adherents.filter((a) => plan(a.plan).prixMois > 0).length,
@@ -100,6 +116,9 @@ export function plateforme(): Plateforme {
     nbUtilisateurs: compte("SELECT COUNT(*) AS n FROM utilisateurs"),
     nbArtisans: compte("SELECT COUNT(*) AS n FROM artisans"),
     nbLocataires: compte("SELECT COUNT(*) AS n FROM locataires"),
+    encaisseTotal: encaisse.total,
+    encaisseCeMois: encaisseMois.total,
+    nbReglements: encaisse.nb,
   };
 }
 

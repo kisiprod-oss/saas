@@ -23,6 +23,7 @@ const LIENS = [
   { href: "/dashboard/demandes",    libelle: "Demandes",        Icone: IconeBoiteReception },
   { href: "/dashboard/artisans",    libelle: "Artisans",        Icone: IconeOutils },
   { href: "/dashboard/agence",      libelle: "Mon agence",      Icone: IconeAgence },
+  { href: "/dashboard/abonnement",  libelle: "Mon abonnement",  Icone: IconeCarte },
 ];
 
 export function NavLaterale({
