@@ -9,7 +9,7 @@ import { fcfa, periodeLisible, telephoneBrut, telephoneFr } from "@/lib/format";
 import { Carte, EnTetePage, MessagesUrl } from "@/components/ui";
 import { BoutonConfirmation } from "@/components/bouton-confirmation";
 import { FormulaireLocataire } from "@/components/formulaire-locataire";
-import { IconeCorbeille, IconeRetour } from "@/components/icones";
+import { IconeArgent, IconeCorbeille, IconeRetour } from "@/components/icones";
 
 type Params = { [cle: string]: string | string[] | undefined };
 
@@ -40,6 +40,9 @@ export default async function PageLocataire({
       </Link>
 
       <EnTetePage titre={`${locataire.prenom} ${locataire.nom}`} sousTitre={locataire.profession ?? "Fiche locataire"}>
+        <Link href={`/dashboard/locataires/${locataire.id}/acompte`} className="btn-primaire">
+          <IconeArgent className="h-4 w-4" /> Encaisser un acompte
+        </Link>
         <a href={`https://wa.me/${telephoneBrut(locataire.telephone)}`} target="_blank" rel="noopener noreferrer" className="btn-sable">
           WhatsApp
         </a>

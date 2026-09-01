@@ -510,6 +510,24 @@ export function listerFacturesLocataire(locataireId: number) {
   );
 }
 
+/**
+ * Factures non soldees d'un locataire, la plus ancienne d'abord.
+ *
+ * L'ordre n'est pas cosmetique : un acompte s'impute d'abord sur la dette la
+ * plus ancienne. C'est l'usage, et c'est ce qui protege le locataire — sinon
+ * une vieille dette resterait indefiniment ouverte pendant que les mois
+ * recents se soldent.
+ */
+export function arrieresLocataire(agenceId: number, locataireId: number) {
+  return tous<FactureDetaillee>(
+    `${SELECT_FACTURE}
+      WHERE c.locataire_id = ? AND f.agence_id = ? AND f.statut != 'annulee'
+        AND f.montant_total > COALESCE(p.paye, 0)
+      ORDER BY f.periode ASC, f.date_echeance ASC`,
+    locataireId, agenceId,
+  );
+}
+
 // --------------------------------------------------------------- Relances
 
 export type LigneRelance = {

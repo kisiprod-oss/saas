@@ -15,9 +15,9 @@ import {
   fermerSessionLocataire, ouvrirSessionLocataire, verifierIdentifiantsLocataire,
 } from "./auth-locataire";
 import {
-  artisanPourDevis, bienDisponible, devisReponduesCeMois, facturesEmisesCeMois,
-  genererFacturesDuMois, lireDevisArtisan, lireFacture, numeroFactureSuivant,
-  referenceReservation, referenceSuivante,
+  arrieresLocataire, artisanPourDevis, bienDisponible, devisReponduesCeMois,
+  facturesEmisesCeMois, genererFacturesDuMois, lireDevisArtisan, lireFacture,
+  numeroFactureSuivant, referenceReservation, referenceSuivante,
 } from "./requetes";
 import { aujourdhui, dateValide, nuitsEntre, periodeLisible, telephoneBrut } from "./format";
 import { chiffrementConfigure, chiffrer } from "./chiffrement";
@@ -607,6 +607,65 @@ export async function actionSupprimerPaiement(fd: FormData) {
   revalidatePath("/dashboard/factures");
   revalidatePath("/dashboard/paiements");
   redirect(factureId ? `/dashboard/factures/${factureId}` : "/dashboard/paiements");
+}
+
+/**
+ * Encaisse un acompte reparti sur plusieurs factures en retard.
+ *
+ * Le cas reel : un locataire doit trois mois et apporte 100 000 FCFA. Plutot
+ * que d'obliger l'agence a ouvrir chaque facture et a faire la division de
+ * tete, elle saisit une repartition et le logiciel ecrit un reglement par
+ * facture concernee.
+ *
+ * La repartition reste ENTRE LES MAINS DE L'AGENCE : l'ecran en propose une
+ * (la plus ancienne d'abord), elle la corrige si le locataire a demande que
+ * son versement aille sur un mois precis.
+ */
+export async function actionEncaisserAcompte(fd: FormData) {
+  const { agence } = await exigerSession();
+  const locataireId = entier(fd, "locataire_id");
+  const retour = `/dashboard/locataires/${locataireId}/acompte`;
+
+  const locataire = un<{ id: number }>(
+    "SELECT id FROM locataires WHERE id = ? AND agence_id = ?", locataireId, agence.id,
+  );
+  if (!locataire) erreur("/dashboard/locataires", "Locataire introuvable.");
+
+  // On repart des arrieres reels plutot que des montants soumis : une facture
+  // soldee entre l'affichage et la validation ne peut pas etre surpayee.
+  const arrieres = arrieresLocataire(agence.id, locataireId);
+
+  const lignes: { factureId: number; montant: number }[] = [];
+  for (const facture of arrieres) {
+    const somme = montant(fd, `montant_${facture.id}`);
+    if (somme <= 0) continue;
+    if (somme > facture.reste) {
+      erreur(retour, `Le montant affecté à la facture ${facture.numero} dépasse ce qu'il reste à payer (${facture.reste} FCFA).`);
+    }
+    lignes.push({ factureId: facture.id, montant: somme });
+  }
+
+  if (lignes.length === 0) {
+    erreur(retour, "Indiquez au moins un montant à imputer sur une facture.");
+  }
+
+  const date = txt(fd, "date_paiement") || aujourdhui();
+  const mode = txt(fd, "mode") || "especes";
+  const reference = vide(txt(fd, "reference"));
+  const note = vide(txt(fd, "note"));
+
+  for (const ligne of lignes) {
+    ecrire(
+      `INSERT INTO paiements (agence_id, facture_id, montant, date_paiement, mode, reference, note)
+       VALUES (?, ?, ?, ?, ?, ?, ?)`,
+      agence.id, ligne.factureId, ligne.montant, date, mode, reference, note,
+    );
+  }
+
+  revalidatePath("/dashboard/factures");
+  revalidatePath("/dashboard/paiements");
+  revalidatePath("/dashboard/relances");
+  redirect(`/dashboard/locataires/${locataireId}?ok=1`);
 }
 
 // ---------------------------------------------------------------- demandes

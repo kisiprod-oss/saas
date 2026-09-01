@@ -154,6 +154,39 @@ Vous pouvez donc encaisser en plusieurs fois, ce qui est fréquent.
 
 ---
 
+## 7 bis. Un acompte sur plusieurs mois de retard
+
+Le cas classique : un locataire doit **trois mois** et vient déposer
+**100 000 FCFA**. Vous n'avez pas à ouvrir chaque facture ni à faire la
+division vous-même.
+
+Menu **« Locataires »** → ouvrez sa fiche → bouton
+**« Encaisser un acompte »**.
+
+L'écran liste toutes ses factures non soldées, **de la plus ancienne à la plus
+récente**, avec ce qu'il reste à payer sur chacune.
+
+1. Tapez le **montant remis par le locataire**.
+2. Cliquez sur **« Répartir automatiquement »** : le logiciel impute d'abord
+   sur le mois le plus ancien, puis sur le suivant, et ainsi de suite.
+3. **Corrigez les lignes à la main si besoin.** C'est vous qui décidez : si le
+   locataire a demandé que son versement aille sur un mois précis, changez
+   simplement les chiffres.
+4. Indiquez la date, le moyen de paiement et la référence, puis enregistrez.
+
+Un règlement est écrit pour **chaque facture concernée**. Celles qui deviennent
+entièrement payées passent automatiquement en quittance imprimable.
+
+> **Pourquoi le plus ancien d'abord ?** C'est l'usage, et cela protège le
+> locataire : sinon une vieille dette resterait ouverte indéfiniment pendant
+> que les mois récents se soldent.
+
+En bas de l'écran, un message vous indique en permanence ce qu'il reste à
+placer — impossible d'enregistrer un total qui ne tombe pas juste, ou
+d'imputer sur une facture plus que ce qu'elle doit.
+
+---
+
 ## 8. Imprimer la quittance
 
 Sur la facture, cliquez sur **« Imprimer / PDF »**.
