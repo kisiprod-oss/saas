@@ -1,11 +1,13 @@
 import Link from "next/link";
 import { exigerAdmin } from "@/lib/admin";
 import { compterCandidaturesEnAttente } from "@/lib/requetes";
+import { compterProspectsNouveaux } from "@/lib/vitrine";
 import { LogoSen } from "@/components/entete-public";
 
 export default async function LayoutAdmin({ children }: { children: React.ReactNode }) {
   const { utilisateur } = await exigerAdmin();
   const enAttente = compterCandidaturesEnAttente();
+  const aRappeler = compterProspectsNouveaux();
 
   return (
     <div className="min-h-screen bg-slate-50">
@@ -20,6 +22,14 @@ export default async function LayoutAdmin({ children }: { children: React.ReactN
           <div className="flex items-center gap-2">
             <Link href="/admin/plateforme" className="rounded-lg px-3 py-2 text-sm font-medium text-slate-300 hover:bg-slate-800 hover:text-white">
               Vue d&apos;ensemble
+            </Link>
+            <Link href="/admin/courte-duree" className="rounded-lg px-3 py-2 text-sm font-medium text-slate-300 hover:bg-slate-800 hover:text-white">
+              Courte durée
+              {aRappeler > 0 && (
+                <span className="ml-1.5 rounded-full bg-rose-500 px-1.5 text-xs font-bold text-white">
+                  {aRappeler}
+                </span>
+              )}
             </Link>
             <Link href="/admin/candidatures" className="rounded-lg px-3 py-2 text-sm font-medium text-slate-300 hover:bg-slate-800 hover:text-white">
               Candidatures

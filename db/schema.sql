@@ -575,3 +575,32 @@ CREATE TABLE IF NOT EXISTS abonnements (
 );
 CREATE INDEX IF NOT EXISTS idx_abonnements_agence ON abonnements(agence_id, cree_le);
 CREATE UNIQUE INDEX IF NOT EXISTS idx_abonnements_jeton ON abonnements(fournisseur, jeton);
+
+-- ---------- Reglages de la vitrine (cle/valeur) ----------
+-- Petits choix de l'editeur qui n'ont pas leur place dans une variable
+-- d'environnement : ils changent souvent et se modifient depuis l'ecran.
+CREATE TABLE IF NOT EXISTS reglages (
+  cle     TEXT PRIMARY KEY,
+  valeur  TEXT NOT NULL,
+  maj_le  TEXT NOT NULL DEFAULT (datetime('now'))
+);
+
+-- ---------- Prospects (demandes recues par l'EDITEUR) ----------
+-- A ne pas confondre avec `demandes`, qui sont les visites demandees a UNE
+-- AGENCE pour UN BIEN. Ici, c'est quelqu'un qui veut utiliser Sen Gestion et
+-- qui demande a etre rappele : le contact appartient a l'editeur, pas a une
+-- agence, et n'a donc pas d'agence_id.
+CREATE TABLE IF NOT EXISTS prospects (
+  id           INTEGER PRIMARY KEY AUTOINCREMENT,
+  nom          TEXT NOT NULL,
+  telephone    TEXT NOT NULL,
+  email        TEXT,
+  ville        TEXT,
+  nb_logements TEXT,                        -- tranche libre : « 1 », « 2 a 5 »...
+  message      TEXT,
+  source       TEXT NOT NULL DEFAULT 'courte-duree',
+  statut       TEXT NOT NULL DEFAULT 'nouveau',
+               -- nouveau | rappele | client | perdu
+  cree_le      TEXT NOT NULL DEFAULT (datetime('now'))
+);
+CREATE INDEX IF NOT EXISTS idx_prospects_statut ON prospects(statut, cree_le);

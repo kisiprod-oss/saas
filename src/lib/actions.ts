@@ -26,8 +26,12 @@ import {
 } from "./encaissement";
 import { ouvrirReglement, ouvrirReglementStripe } from "./abonnement";
 import {
-  enregistrerLogo, enregistrerPhotoProfil, enregistrerPhotos, supprimerPhoto,
+  enregistrerLogo, enregistrerPhotoProfil, enregistrerPhotos, estPhotoTeleversee,
+  supprimerPhoto,
 } from "./photos";
+import {
+  creerProspect, enregistrerImagesCourteDuree, imagesCourteDuree,
+} from "./vitrine";
 import { peutAjouterBien, plan, planArtisan, planSuivant, PLANS, PLANS_ARTISAN } from "./tarifs";
 import { etatQuota, etatQuotaDevis } from "./quota";
 import { refusMotDePasse } from "./mot-de-passe";
@@ -691,6 +695,74 @@ export async function actionEnvoyerDemande(fd: FormData) {
 
   revalidatePath("/dashboard/demandes");
   redirect(`/biens/${bienId}?envoye=1`);
+}
+
+// ------------------------------------------------- prospects de l'editeur
+
+/**
+ * Formulaire « être rappelé » de la page Courte durée (public, sans compte).
+ *
+ * Ce contact appartient a l'EDITEUR, pas a une agence : il atterrit dans
+ * l'espace d'administration, jamais dans le tableau de bord d'une agence.
+ */
+export async function actionEtreRappele(fd: FormData) {
+  const retour = "/courte-duree";
+  const nom = txt(fd, "nom");
+  const telephone = txt(fd, "telephone");
+
+  if (!nom || !telephone) {
+    erreur(retour, "Votre nom et votre téléphone sont obligatoires.");
+  }
+
+  creerProspect({
+    nom,
+    telephone,
+    email: vide(txt(fd, "email")),
+    ville: vide(txt(fd, "ville")),
+    nbLogements: vide(txt(fd, "nb_logements")),
+    message: vide(txt(fd, "message")),
+    source: "courte-duree",
+  });
+
+  revalidatePath("/admin/courte-duree");
+  redirect(`${retour}?rappel=1`);
+}
+
+/** L'administrateur classe un prospect (rappelé, devenu client, perdu). */
+export async function actionStatutProspect(fd: FormData) {
+  await exigerAdmin();
+  const statuts = ["nouveau", "rappele", "client", "perdu"];
+  const statut = txt(fd, "statut");
+  if (!statuts.includes(statut)) erreur("/admin/courte-duree", "Statut inconnu.");
+
+  ecrire("UPDATE prospects SET statut = ? WHERE id = ?", statut, entier(fd, "id"));
+  revalidatePath("/admin/courte-duree");
+  redirect("/admin/courte-duree");
+}
+
+/** L'administrateur remplace les photos de la page Courte durée. */
+export async function actionImagesCourteDuree(fd: FormData) {
+  await exigerAdmin();
+  const retour = "/admin/courte-duree";
+
+  const fichiers = fd.getAll("images").filter((f): f is File => f instanceof File && f.size > 0);
+  if (fichiers.length === 0) erreur(retour, "Choisissez au moins une photo.");
+
+  const resultat = await enregistrerPhotos(fichiers);
+  if (resultat.urls.length === 0) {
+    erreur(retour, resultat.erreurs[0] ?? "Aucune photo n'a pu être enregistrée.");
+  }
+
+  // Les nouvelles remplacent les anciennes : la page en montre trois au plus,
+  // et garder les precedentes ne ferait qu'encombrer le dossier de donnees.
+  for (const ancienne of imagesCourteDuree()) {
+    if (estPhotoTeleversee(ancienne)) await supprimerPhoto(ancienne);
+  }
+  enregistrerImagesCourteDuree(resultat.urls);
+
+  revalidatePath("/courte-duree");
+  revalidatePath(retour);
+  redirect(`${retour}?ok=1`);
 }
 
 export async function actionStatutDemande(fd: FormData) {
