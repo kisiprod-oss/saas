@@ -1,9 +1,9 @@
 import { exigerSession } from "@/lib/auth";
 import {
   abonnementAgence, abonnementConfigure, modeAbonnement, obstacleAbonnement,
-  plansPayants, prixDe, reglementsAgence,
+  paydunyaDisponible, plansPayants, prixDe, prixEurDe, reglementsAgence, stripeDisponible,
 } from "@/lib/abonnement";
-import { actionPayerAbonnement } from "@/lib/actions";
+import { actionPayerAbonnement, actionPayerAbonnementStripe } from "@/lib/actions";
 import { dateFr, fcfa } from "@/lib/format";
 import { economieAnnuelle, plan } from "@/lib/tarifs";
 import { Carte, EnTetePage, MessagesUrl } from "@/components/ui";
@@ -21,6 +21,8 @@ export default async function PageAbonnement({ searchParams }: { searchParams: P
   const ouvert = abonnementConfigure();
   const obstacle = obstacleAbonnement();
   const mode = modeAbonnement();
+  const paydunyaOk = paydunyaDisponible();
+  const stripeOk = stripeDisponible();
 
   const lire = (c: string) => {
     const v = requete[c];
@@ -85,11 +87,12 @@ export default async function PageAbonnement({ searchParams }: { searchParams: P
       {/* -------------------------------- Les formules -------------------------------- */}
       {ouvert && (
         <>
-          {mode === "test" && (
+          {paydunyaOk && mode === "test" && (
             <Carte className="mt-4 border-slate-300 bg-slate-50 p-4">
               <p className="text-sm text-slate-700">
-                <strong>Mode essai.</strong> Les paiements passent par le bac à sable
-                de l&apos;opérateur : aucun argent réel n&apos;est débité.
+                <strong>Mode essai (PayDunya).</strong> Les paiements Orange Money, Wave
+                et Free Money passent par le bac à sable de l&apos;opérateur : aucun
+                argent réel n&apos;est débité.
               </p>
             </Carte>
           )}
@@ -118,29 +121,55 @@ export default async function PageAbonnement({ searchParams }: { searchParams: P
                     {p.atouts.slice(0, 4).map((a) => <li key={a}>• {a}</li>)}
                   </ul>
 
-                  <div className="mt-4 space-y-2">
-                    {(["mois", "an"] as const).map((periodicite) => (
-                      <form key={periodicite} action={actionPayerAbonnement}>
-                        <input type="hidden" name="plan" value={p.code} />
-                        <input type="hidden" name="periodicite" value={periodicite} />
-                        <button
-                          type="submit"
-                          className={periodicite === "an" ? "btn-primaire w-full" : "btn-secondaire w-full"}
-                        >
-                          Payer {fcfa(prixDe(p, periodicite))} — {periodicite === "an" ? "1 an" : "1 mois"}
-                        </button>
-                      </form>
-                    ))}
-                  </div>
+                  {paydunyaOk && (
+                    <div className="mt-4 space-y-2">
+                      <p className="text-[11px] font-semibold uppercase tracking-wide text-slate-400">
+                        Orange Money, Wave, Free Money, carte locale
+                      </p>
+                      {(["mois", "an"] as const).map((periodicite) => (
+                        <form key={`pd-${periodicite}`} action={actionPayerAbonnement}>
+                          <input type="hidden" name="plan" value={p.code} />
+                          <input type="hidden" name="periodicite" value={periodicite} />
+                          <button
+                            type="submit"
+                            className={periodicite === "an" ? "btn-primaire w-full" : "btn-secondaire w-full"}
+                          >
+                            Payer {fcfa(prixDe(p, periodicite))} — {periodicite === "an" ? "1 an" : "1 mois"}
+                          </button>
+                        </form>
+                      ))}
+                    </div>
+                  )}
+
+                  {stripeOk && (
+                    <div className="mt-4 space-y-2">
+                      <p className="text-[11px] font-semibold uppercase tracking-wide text-slate-400">
+                        Carte bancaire internationale
+                      </p>
+                      {(["mois", "an"] as const).map((periodicite) => (
+                        <form key={`st-${periodicite}`} action={actionPayerAbonnementStripe}>
+                          <input type="hidden" name="plan" value={p.code} />
+                          <input type="hidden" name="periodicite" value={periodicite} />
+                          <button type="submit" className="btn-secondaire w-full">
+                            Carte (Stripe) — {prixEurDe(p, periodicite)} — {periodicite === "an" ? "1 an" : "1 mois"}
+                          </button>
+                        </form>
+                      ))}
+                    </div>
+                  )}
                 </Carte>
               );
             })}
           </div>
 
           <p className="mt-3 text-xs text-slate-500">
-            Le paiement se fait sur la page sécurisée de l&apos;opérateur (Orange Money,
-            Wave, Free Money, carte bancaire). Sen Gestion ne voit jamais votre
-            numéro ni votre code.
+            Le paiement se fait toujours sur la page sécurisée du fournisseur choisi
+            {paydunyaOk && stripeOk ? " (PayDunya ou Stripe)" : paydunyaOk ? " (PayDunya)" : " (Stripe)"}.
+            Sen Gestion ne voit jamais votre numéro ni votre code.
+            {stripeOk && (
+              <> Les montants en euros correspondent aux prix FCFA ci-dessus, convertis
+              au taux fixe du franc CFA (655,957 XOF = 1 €).</>
+            )}
           </p>
         </>
       )}
@@ -157,6 +186,7 @@ export default async function PageAbonnement({ searchParams }: { searchParams: P
                   <th>Formule</th>
                   <th>Durée</th>
                   <th className="text-right">Montant</th>
+                  <th>Moyen</th>
                   <th>État</th>
                   <th>Période couverte</th>
                 </tr>
@@ -167,7 +197,24 @@ export default async function PageAbonnement({ searchParams }: { searchParams: P
                     <td className="whitespace-nowrap text-slate-600">{dateFr(r.cree_le)}</td>
                     <td>{plan(r.plan).nom}</td>
                     <td className="text-slate-600">{r.periodicite === "an" ? "1 an" : "1 mois"}</td>
-                    <td className="text-right tabular-nums">{fcfa(r.montant)}</td>
+                    <td className="text-right tabular-nums">
+                      {/* Ce qui a réellement été débité : en euros pour un paiement
+                          par carte, en FCFA sinon. L'équivalent FCFA reste dessous
+                          pour que l'agence retrouve le prix annoncé. */}
+                      {r.devise === "EUR" && r.montant_devise !== null ? (
+                        <>
+                          {(r.montant_devise / 100).toLocaleString("fr-FR", {
+                            minimumFractionDigits: 2, maximumFractionDigits: 2,
+                          })} €
+                          <span className="block text-xs font-normal text-slate-400">
+                            soit {fcfa(r.montant)}
+                          </span>
+                        </>
+                      ) : fcfa(r.montant)}
+                    </td>
+                    <td className="text-slate-600">
+                      {r.fournisseur === "stripe" ? "Carte (Stripe)" : "PayDunya"}
+                    </td>
                     <td>
                       {r.statut === "payee" ? (
                         <span className="badge bg-emerald-100 text-emerald-800 ring-emerald-600/20">Réglé</span>

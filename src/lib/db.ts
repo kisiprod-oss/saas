@@ -70,6 +70,8 @@ function migrer(base: Database.Database) {
     // Fin de la periode payee. NULL = aucun abonnement regle a ce jour ;
     // la formule vaut alors ce que dit `plan`, sans echeance.
     ["agences", "plan_expire_le", "TEXT"],
+    ["abonnements", "devise", "TEXT NOT NULL DEFAULT 'XOF'"],
+    ["abonnements", "montant_devise", "INTEGER"],
     ["artisans", "origine", "TEXT NOT NULL DEFAULT 'agence'"],
     ["artisans", "email", "TEXT"],
     ["artisans", "mot_de_passe_hash", "TEXT"],

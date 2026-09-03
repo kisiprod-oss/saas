@@ -553,11 +553,19 @@ CREATE TABLE IF NOT EXISTS abonnements (
   agence_id     INTEGER NOT NULL REFERENCES agences(id) ON DELETE CASCADE,
   plan          TEXT NOT NULL,              -- bailleur | agence | pro
   periodicite   TEXT NOT NULL DEFAULT 'mois',  -- mois | an
+  -- Montant en FCFA, TOUJOURS - y compris pour un reglement Stripe en euros.
+  -- Le XOF est arrime a taux FIXE a l'euro (655,957 XOF = 1 EUR) : ce n'est
+  -- donc jamais une conversion approximative qui pourrait se demoder, et cela
+  -- garde une addition possible entre fournisseurs (voir plateforme.ts).
   montant       INTEGER NOT NULL,
+  -- Devise et montant REELLEMENT factures au payeur - pour son propre relevé.
+  -- 'XOF' et NULL (= identique a `montant`) pour un reglement PayDunya.
+  devise        TEXT NOT NULL DEFAULT 'XOF',
+  montant_devise INTEGER,
   statut        TEXT NOT NULL DEFAULT 'initiee',
                 -- initiee | payee | echouee | annulee
-  fournisseur   TEXT NOT NULL DEFAULT 'paydunya',
-  jeton         TEXT NOT NULL,              -- jeton de facture chez le fournisseur
+  fournisseur   TEXT NOT NULL DEFAULT 'paydunya',  -- paydunya | stripe
+  jeton         TEXT NOT NULL,              -- jeton PayDunya, ou id de session Stripe
   -- Periode couverte, remplie seulement une fois le reglement confirme.
   couvre_du     TEXT,
   couvre_au     TEXT,
