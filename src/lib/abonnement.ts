@@ -216,11 +216,27 @@ export async function ouvrirReglementStripe(
   return { ok: true, url: ouverture.url };
 }
 
-/** Ajoute un mois ou un an a une date ISO, en restant sur une date valide. */
+/**
+ * Ajoute un mois ou un an, en bornant au dernier jour reel du mois d'arrivee.
+ *
+ * Sans ce bornage, JavaScript deborde : le 31 janvier + 1 mois donne le
+ * 3 mars, parce que « 31 fevrier » se reporte sur mars. Une agence qui
+ * reglait un 31 recevait ainsi jusqu'a 31 jours gratuits, et le mois de
+ * fevrier faisait deraper toutes les echeances suivantes. On vise donc le
+ * 1er du mois cible, puis on repose le jour d'origine sans depasser la fin
+ * de ce mois : le 31 janvier + 1 mois donne le 28 fevrier.
+ */
 function decaler(depuis: Date, periodicite: Periodicite): string {
   const d = new Date(depuis);
-  if (periodicite === "an") d.setUTCFullYear(d.getUTCFullYear() + 1);
-  else d.setUTCMonth(d.getUTCMonth() + 1);
+  const jour = d.getUTCDate();
+
+  if (periodicite === "an") d.setUTCFullYear(d.getUTCFullYear() + 1, d.getUTCMonth(), 1);
+  else d.setUTCMonth(d.getUTCMonth() + 1, 1);
+
+  // Le jour 0 du mois suivant EST le dernier jour du mois vise.
+  const dernierJour = new Date(Date.UTC(d.getUTCFullYear(), d.getUTCMonth() + 1, 0)).getUTCDate();
+  d.setUTCDate(Math.min(jour, dernierJour));
+
   return d.toISOString().slice(0, 10);
 }
 
@@ -234,21 +250,39 @@ function decaler(depuis: Date, periodicite: Periodicite): string {
  * les jours qu'elle a deja payes.
  */
 function accorderPeriode(ligne: LigneAbonnement, detail: string): void {
-  const agence = un<{ plan_expire_le: string | null }>(
-    "SELECT plan_expire_le FROM agences WHERE id = ?", ligne.agence_id,
+  const agence = un<{ plan: string; plan_expire_le: string | null }>(
+    "SELECT plan, plan_expire_le FROM agences WHERE id = ?", ligne.agence_id,
   );
   const aujourdhui = new Date();
-  const finActuelle = agence?.plan_expire_le ? new Date(agence.plan_expire_le) : null;
+
+  // Le report du temps restant ne vaut que pour un RENOUVELLEMENT de la meme
+  // formule. Sur un changement de formule, il partait de l'ancienne echeance :
+  // une agence qui avait un an de Bailleur devant elle obtenait cette annee
+  // entiere en Pro pour le prix d'un mois. Un changement repart donc
+  // d'aujourd'hui, et le temps deja paye sur l'ancienne formule est perdu —
+  // c'est la regle habituelle, et l'ecran devra le dire avant de facturer.
+  const memeFormule = agence?.plan === ligne.plan;
+  const finActuelle = memeFormule && agence?.plan_expire_le
+    ? new Date(agence.plan_expire_le)
+    : null;
   const depart = finActuelle && finActuelle > aujourdhui ? finActuelle : aujourdhui;
   const fin = decaler(depart, ligne.periodicite === "an" ? "an" : "mois");
 
-  ecrire(
+  // `statut != 'payee'` dans le WHERE fait office de verrou : deux
+  // notifications simultanees pour le meme reglement passent toutes les deux
+  // la verification de statut faite plus haut (elle est separee de l'ecriture
+  // par un appel reseau), mais une seule modifiera la ligne. La seconde voit
+  // zero ligne touchee et n'accorde rien — sans cela, la periode etait
+  // creditee deux fois.
+  const verrou = ecrire(
     `UPDATE abonnements
         SET statut = 'payee', detail = ?, confirme_le = datetime('now'),
             couvre_du = ?, couvre_au = ?
-      WHERE id = ?`,
+      WHERE id = ? AND statut != 'payee'`,
     detail, depart.toISOString().slice(0, 10), fin, ligne.id,
   );
+  if (verrou.changes === 0) return;
+
   ecrire(
     "UPDATE agences SET plan = ?, plan_expire_le = ? WHERE id = ?",
     ligne.plan, fin, ligne.agence_id,
@@ -298,7 +332,14 @@ export async function confirmerAbonnement(
     return { ok: false, erreur: "Montant insuffisant." };
   }
 
-  accorderPeriode(ligne, detail);
+  // PayDunya n'accompagne pas toujours son statut du montant. Refuser
+  // bloquerait un reglement authentique ; on accorde donc la periode — le
+  // statut vient de notre propre appel authentifie — mais on ecrit noir sur
+  // blanc que le montant n'a pas pu etre recoupe.
+  accorderPeriode(
+    ligne,
+    montant === null ? `${detail} (montant non communiqué par le fournisseur)` : detail,
+  );
   return { ok: true, statut: "payee" };
 }
 
@@ -332,13 +373,17 @@ export async function confirmerAbonnementStripe(
     return { ok: true, statut: statutPaiement };
   }
 
-  const attendu = ligne.montant_devise ?? 0;
-  if (montantCentimes !== null && montantCentimes < attendu) {
+  // On refuse par defaut : un montant attendu absent ou un montant recu que
+  // Stripe ne nous donne pas sont des anomalies, pas des feux verts. Accorder
+  // la formule « dans le doute » reviendrait a l'offrir.
+  const attendu = ligne.montant_devise;
+  if (attendu === null || montantCentimes === null || montantCentimes < attendu) {
     ecrire(
       "UPDATE abonnements SET statut = 'echouee', detail = ? WHERE id = ?",
-      `Montant reçu (${montantCentimes} centimes) inférieur au montant attendu (${attendu}).`, ligne.id,
+      `Montant reçu (${montantCentimes ?? "inconnu"}) contre ${attendu ?? "inconnu"} attendu, en centimes.`,
+      ligne.id,
     );
-    return { ok: false, erreur: "Montant insuffisant." };
+    return { ok: false, erreur: "Montant non vérifiable ou insuffisant." };
   }
 
   accorderPeriode(ligne, "Payé par carte via Stripe.");

@@ -30,6 +30,8 @@ export type Agence = {
   logo_url: string | null;
   commission_pct: number;
   plan: string;
+  /** Fin de la periode reglee. NULL = aucun reglement (formule d'essai). */
+  plan_expire_le: string | null;
   /** 1 si cette boite avait deja un compte gratuit. Voir src/lib/quota.ts. */
   compte_gratuit_reutilise: number;
   modele_rappel: string | null;

@@ -1,5 +1,7 @@
 import "server-only";
-import { DEVIS_REPONSES_GRATUITES_PAR_MOIS, FACTURES_GRATUITES_PAR_MOIS } from "./tarifs";
+import {
+  DEVIS_REPONSES_GRATUITES_PAR_MOIS, FACTURES_GRATUITES_PAR_MOIS, planEffectif,
+} from "./tarifs";
 
 /**
  * Ce que la formule gratuite permet, et ce qu'elle ne permet pas.
@@ -55,6 +57,8 @@ export function normaliserEmail(email: string): string {
 
 type AgenceQuota = {
   plan: string | null;
+  /** Fin de la periode reglee : une formule echue ne donne plus de droits. */
+  plan_expire_le?: string | null;
   /** 1 si la boite avait deja ouvert un compte gratuit ailleurs. */
   compte_gratuit_reutilise: number;
 };
@@ -77,7 +81,9 @@ export type EtatQuota = {
  * la limite se contourne en changeant d'alias.
  */
 export function quotaFactures(agence: AgenceQuota): number | null {
-  const abonnee = Boolean(agence.plan) && agence.plan !== "decouverte";
+  // planEffectif, et non agence.plan : un abonnement dont la periode est
+  // terminee retombe sur la formule gratuite et ses limites.
+  const abonnee = planEffectif(agence).prixMois > 0;
   if (abonnee) return null;
   return agence.compte_gratuit_reutilise ? 0 : FACTURES_GRATUITES_PAR_MOIS;
 }

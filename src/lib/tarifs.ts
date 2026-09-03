@@ -162,6 +162,31 @@ export function plan(code: string | null | undefined): Plan {
   return PLANS.find((p) => p.code === code) ?? PLANS[0];
 }
 
+/**
+ * Formule REELLEMENT en vigueur, echeance comprise.
+ *
+ * `agences.plan` dit ce qui a ete souscrit ; il ne dit pas si c'est encore
+ * paye. Une periode terminee ramene donc a la formule gratuite, faute de
+ * quoi un abonnement regle une seule fois donnerait des avantages a vie.
+ *
+ * Toute decision d'autorisation (quotas, limites de biens) doit passer par
+ * ici, jamais par `agence.plan` en direct — l'affichage, lui, peut montrer
+ * la formule souscrite et signaler separement qu'elle est echue.
+ */
+export function planEffectif(
+  agence: { plan: string | null; plan_expire_le?: string | null },
+): Plan {
+  const souscrit = plan(agence.plan);
+  if (souscrit.prixMois === 0) return souscrit;
+
+  // Sans echeance, la formule a ete posee a la main (phase gratuite, geste
+  // commercial) : on la respecte. Avec une echeance, elle doit tenir.
+  const fin = agence.plan_expire_le;
+  if (fin && new Date(`${fin}T23:59:59Z`) < new Date()) return PLANS[0];
+
+  return souscrit;
+}
+
 /** Vrai si l'agence peut encore ajouter un bien. */
 export function peutAjouterBien(codePlan: string | null, biensActuels: number): boolean {
   const max = plan(codePlan).maxBiens;

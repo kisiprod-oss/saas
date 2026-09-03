@@ -24,7 +24,7 @@ import { chiffrementConfigure, chiffrer } from "./chiffrement";
 import {
   clesAgence, creerPaiement, FOURNISSEURS, testerCles,
 } from "./encaissement";
-import { ouvrirReglement, ouvrirReglementStripe } from "./abonnement";
+import { abonnementConfigure, ouvrirReglement, ouvrirReglementStripe } from "./abonnement";
 import {
   enregistrerLogo, enregistrerPhotoProfil, enregistrerPhotos, estPhotoTeleversee,
   supprimerPhoto,
@@ -32,7 +32,9 @@ import {
 import {
   creerProspect, enregistrerImagesCourteDuree, imagesCourteDuree,
 } from "./vitrine";
-import { peutAjouterBien, plan, planArtisan, planSuivant, PLANS, PLANS_ARTISAN } from "./tarifs";
+import {
+  peutAjouterBien, plan, planArtisan, planEffectif, planSuivant, PLANS, PLANS_ARTISAN,
+} from "./tarifs";
 import { etatQuota, etatQuotaDevis } from "./quota";
 import { refusMotDePasse } from "./mot-de-passe";
 import { accuserReception, envoiDuDocument, messageWhatsApp, noterEnvoi } from "./envois";
@@ -208,9 +210,11 @@ export async function actionEnregistrerBien(fd: FormData) {
     const compte = un<{ n: number }>(
       "SELECT COUNT(*) AS n FROM biens WHERE agence_id = ?", agence.id,
     );
-    if (!peutAjouterBien(agence.plan, compte?.n ?? 0)) {
-      const actuelle = plan(agence.plan);
-      const suivante = planSuivant(agence.plan);
+    // La formule EFFECTIVE : une periode terminee ne donne plus droit a
+    // la limite superieure qu'elle ouvrait.
+    const actuelle = planEffectif(agence);
+    if (!peutAjouterBien(actuelle.code, compte?.n ?? 0)) {
+      const suivante = planSuivant(actuelle.code);
       erreur(
         "/dashboard/biens",
         `Votre formule ${actuelle.nom} est limitée à ${actuelle.maxBiens} biens.`
@@ -745,7 +749,12 @@ export async function actionImagesCourteDuree(fd: FormData) {
   await exigerAdmin();
   const retour = "/admin/courte-duree";
 
-  const fichiers = fd.getAll("images").filter((f): f is File => f instanceof File && f.size > 0);
+  // On coupe a trois AVANT d'ecrire sur le disque : la page n'en montre que
+  // trois, et enregistrer les suivantes pour les jeter ensuite laisserait des
+  // fichiers que plus rien ne reference, impossibles a retrouver.
+  const fichiers = fd.getAll("images")
+    .filter((f): f is File => f instanceof File && f.size > 0)
+    .slice(0, 3);
   if (fichiers.length === 0) erreur(retour, "Choisissez au moins une photo.");
 
   const resultat = await enregistrerPhotos(fichiers);
@@ -887,6 +896,19 @@ export async function actionChangerPlan(fd: FormData) {
   }
 
   const nouvelle = plan(code);
+
+  // Tant que l'encaissement n'est pas ouvert, l'agence choisit librement :
+  // les CGU annoncent la gratuite, et il faut bien pouvoir essayer les
+  // formules. Des que le paiement fonctionne, seules les BAISSES restent
+  // libres — sans ce garde-fou, n'importe quel compte se donnerait la
+  // formule Pro d'un clic et tout le module d'abonnement ne servirait a rien.
+  if (abonnementConfigure() && nouvelle.prixMois > planEffectif(agence).prixMois) {
+    erreur(
+      "/dashboard/abonnement",
+      `Pour passer à la formule ${nouvelle.nom}, réglez votre abonnement ci-dessous.`,
+    );
+  }
+
   if (nouvelle.maxBiens !== null) {
     const compte = un<{ n: number }>(
       "SELECT COUNT(*) AS n FROM biens WHERE agence_id = ?", agence.id,

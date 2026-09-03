@@ -143,7 +143,7 @@ export function bilan(agenceId: number, periode: Periode): Bilan {
        FROM paiements p
        JOIN factures f ON f.id = p.facture_id
        JOIN contrats c ON c.id = f.contrat_id
-      WHERE p.agence_id = ? AND p.confirme = 1
+      WHERE p.agence_id = ? AND p.confirme = 1 AND f.statut != 'annulee'
         AND date(p.date_paiement) BETWEEN date(?) AND date(?)`,
     agenceId, debut, fin,
   )!;
@@ -189,7 +189,7 @@ export function bilan(agenceId: number, periode: Periode): Bilan {
          FROM paiements p
          JOIN factures f ON f.id = p.facture_id
          JOIN contrats c ON c.id = f.contrat_id
-        WHERE p.agence_id = ? AND p.confirme = 1
+        WHERE p.agence_id = ? AND p.confirme = 1 AND f.statut != 'annulee'
           AND strftime('%Y-%m', p.date_paiement) = ?`,
       agenceId, m,
     )!;
@@ -227,6 +227,7 @@ export function bilan(agenceId: number, periode: Periode): Bilan {
          JOIN factures f ON f.id = p.facture_id
          JOIN contrats c ON c.id = f.contrat_id
         WHERE c.bien_id = ? AND p.agence_id = ? AND p.confirme = 1
+          AND f.statut != 'annulee'
           AND date(p.date_paiement) BETWEEN date(?) AND date(?)`,
       ligne.id, agenceId, debut, fin,
     )!;
@@ -244,7 +245,13 @@ export function bilan(agenceId: number, periode: Periode): Bilan {
     aReverser: Math.max(0, encaisse - honoraires),
     facture: Math.round(fac.total),
     impayes: Math.round(imp.total),
-    tauxRecouvrement: fac.total > 0 ? Math.round((enc.total / fac.total) * 100) : 0,
+    // Borne a 100 %. Le numerateur compte TOUT ce qui est rentre pendant la
+    // periode, y compris le reglement d'arrieres anciens ; sans bornage, une
+    // agence qui rattrape ses impayes affiche « 130 % », ce qui ne veut rien
+    // dire et fait douter du reste de l'ecran.
+    tauxRecouvrement: fac.total > 0
+      ? Math.min(100, Math.round((enc.total / fac.total) * 100))
+      : 0,
     nbFactures: fac.nb,
     nbBaux: baux.n,
     encaisseLoyer: Math.round(enc.loyer),
