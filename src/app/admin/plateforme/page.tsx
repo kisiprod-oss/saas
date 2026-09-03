@@ -39,13 +39,13 @@ export default async function PagePlateforme() {
 
       {/* ------------------------------ Abonnements ------------------------------ */}
       <div className="mt-6 grid gap-4 sm:grid-cols-2">
-        <Carte className="border-brand-300 bg-brand-50/50 p-5">
-          <p className="text-sm font-medium text-brand-800">Réellement encaissé</p>
-          <p className="mt-1 text-3xl font-bold text-brand-900">{fcfa(p.encaisseTotal)}</p>
-          <p className="mt-1 text-xs text-brand-800">
+        <Carte className="border-succes-300 bg-succes-50/50 p-5">
+          <p className="text-sm font-medium text-succes-800">Réellement encaissé</p>
+          <p className="mt-1 text-3xl font-bold text-succes-900">{fcfa(p.encaisseTotal)}</p>
+          <p className="mt-1 text-xs text-succes-800">
             {p.nbReglements} règlement(s) confirmé(s) · {fcfa(p.encaisseCeMois)} ce mois-ci
           </p>
-          <p className="mt-2 text-xs text-brand-800">
+          <p className="mt-2 text-xs text-succes-800">
             C&apos;est votre chiffre d&apos;affaires : de l&apos;argent arrivé sur
             votre compte marchand, vérifié auprès de l&apos;opérateur.
           </p>

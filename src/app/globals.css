@@ -1,26 +1,59 @@
 @import "tailwindcss";
 
 /* ================================================================
-   Palette : vert "teranga" (drapeau senegalais) + sable et ocre.
+   Palette : les trois encres du logo, chacune avec UN role.
+
+     marine (brand)  la structure — en-tetes, navigation, cadres
+     or              l'action      — le bouton qu'il ne faut pas manquer
+     vert (succes)   l'argent      — encaisse, solde, confirme
+
+   Les trois viennent du fichier du logo, relevees au pixel : rien n'a ete
+   invente. Le marine plutot que le vert en couleur dominante est un choix
+   de fond — un logiciel qui manipule des loyers et des baux doit inspirer
+   ce qu'inspirent une banque ou un notaire, la ou le vert du drapeau, que
+   presque toute marque senegalaise emploie, ne distingue de personne.
+
+   Le vert n'a pas disparu : il a repris le seul travail qu'il fait mieux
+   que les autres, dire « cet argent est entre ».
    ================================================================ */
 @theme {
-  /* Gamme construite sur la teinte exacte du vert du logo (137°).
-     brand-500 EST ce vert. Les tons 600 et au-dela sont volontairement plus
-     sombres : le vert du logo sous du texte blanc ne donne que 3,1:1 de
-     contraste, en dessous du minimum lisible ; assombri, le meme vert
-     remonte au-dessus de 4,5:1. D'ou la regle : 500 pour la marque et les
-     accents, 600 et 700 pour tout ce qui porte du texte blanc. */
-  --color-brand-50:  #effbf2;
-  --color-brand-100: #d6f5df;
-  --color-brand-200: #acecbe;
-  --color-brand-300: #7cde98;
-  --color-brand-400: #39d064;
-  --color-brand-500: #18a840;
-  --color-brand-600: #108130;
-  --color-brand-700: #0c6e28;
-  --color-brand-800: #0b5921;
-  --color-brand-900: #0a451b;
-  --color-brand-950: #06280f;
+  /* Marine du logo (#002858) etendu en gamme. Le blanc passe des le ton 500
+     (5,8:1) ; les tons 600 et au-dela sont largement au-dessus. */
+  --color-brand-50:  #eef4fb;
+  --color-brand-100: #d8e6f6;
+  --color-brand-200: #b5cfed;
+  --color-brand-300: #85b0e0;
+  --color-brand-400: #4d8bd0;
+  --color-brand-500: #1f66b5;
+  --color-brand-600: #14508f;
+  --color-brand-700: #0d3d70;
+  --color-brand-800: #082f57;
+  --color-brand-900: #002858;
+  --color-brand-950: #001c3e;
+
+  /* Or du logo. REGLE ABSOLUE : le texte pose dessus est toujours marine
+     (8,2:1), jamais blanc — le blanc sur cet or tombe a 1,8:1, soit
+     illisible. C'est pourquoi .btn-or impose sa propre couleur de texte. */
+  --color-or-50:  #fff9e6;
+  --color-or-100: #fdefc0;
+  --color-or-200: #fbdf85;
+  --color-or-300: #f9cc45;
+  --color-or-400: #f8b810;
+  --color-or-500: #d99a06;
+  --color-or-600: #b07c08;
+
+  /* Vert du logo, reserve a l'argent. Meme regle qu'avant : le ton 500 ne
+     tient pas sous du texte blanc (3,1:1), d'ou le 700 des que le vert
+     porte du texte. */
+  --color-succes-50:  #effbf2;
+  --color-succes-100: #d6f5df;
+  --color-succes-200: #acecbe;
+  --color-succes-300: #7cde98;
+  --color-succes-500: #18a840;
+  --color-succes-600: #108130;
+  --color-succes-700: #0c6e28;
+  --color-succes-800: #0b5921;
+  --color-succes-900: #0a451b;
 
   /* Sable : la couleur de l'espace locataire, ce qui le distingue au premier
      coup d'oeil de celui de l'agence. Meme regle que pour le vert — l'ocre
@@ -77,6 +110,10 @@ body {
   .btn-secondaire { @apply border border-slate-300 bg-white text-slate-700 hover:bg-slate-50; }
   .btn-danger     { @apply border border-rose-200 bg-white text-rose-700 hover:bg-rose-50; }
   .btn-sable      { @apply bg-sable-500 text-white hover:bg-sable-600; }
+  /* Le seul element dore d'une page, donc le seul que l'oeil ne peut pas
+     manquer : reserve a l'action qu'on veut voir declenchee. Le texte marine
+     n'est pas negociable (voir la regle de l'or, plus haut). */
+  .btn-or         { @apply bg-or-400 text-brand-900 hover:bg-or-300; }
 
   .champ {
     @apply w-full rounded-lg border border-slate-300 bg-white px-3 py-2.5 text-sm text-slate-900

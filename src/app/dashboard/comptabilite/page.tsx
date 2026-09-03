@@ -52,10 +52,10 @@ export default async function PageComptabilite({ searchParams }: { searchParams:
           </p>
         </Carte>
 
-        <Carte className="border-brand-300 bg-brand-50/50 p-5">
-          <p className="text-sm font-medium text-brand-800">Vos honoraires</p>
-          <p className="mt-1 text-2xl font-bold text-brand-900">{fcfa(b.honoraires)}</p>
-          <p className="mt-1 text-xs text-brand-800">
+        <Carte className="border-succes-300 bg-succes-50/50 p-5">
+          <p className="text-sm font-medium text-succes-800">Vos honoraires</p>
+          <p className="mt-1 text-2xl font-bold text-succes-900">{fcfa(b.honoraires)}</p>
+          <p className="mt-1 text-xs text-succes-800">
             C&apos;est votre chiffre d&apos;affaires.
           </p>
         </Carte>
@@ -153,7 +153,7 @@ export default async function PageComptabilite({ searchParams }: { searchParams:
                     <td className="py-2.5 pr-3 text-slate-600">{l.proprietaire ?? "—"}</td>
                     <td className="py-2.5 pr-3 text-right tabular-nums text-slate-900">{fcfa(l.facture)}</td>
                     <td className="py-2.5 pr-3 text-right tabular-nums text-slate-900">{fcfa(l.encaisse)}</td>
-                    <td className="py-2.5 pr-3 text-right font-semibold tabular-nums text-brand-700">{fcfa(l.honoraires)}</td>
+                    <td className="py-2.5 pr-3 text-right font-semibold tabular-nums text-succes-700">{fcfa(l.honoraires)}</td>
                     <td className={`py-2.5 text-right tabular-nums ${l.reste > 0 ? "font-semibold text-rose-700" : "text-slate-400"}`}>
                       {l.reste > 0 ? fcfa(l.reste) : "—"}
                     </td>
@@ -165,7 +165,7 @@ export default async function PageComptabilite({ searchParams }: { searchParams:
                   <td className="pt-3 pr-3" colSpan={2}>Total</td>
                   <td className="pt-3 pr-3 text-right tabular-nums">{fcfa(b.facture)}</td>
                   <td className="pt-3 pr-3 text-right tabular-nums">{fcfa(b.encaisse)}</td>
-                  <td className="pt-3 pr-3 text-right tabular-nums text-brand-700">{fcfa(b.honoraires)}</td>
+                  <td className="pt-3 pr-3 text-right tabular-nums text-succes-700">{fcfa(b.honoraires)}</td>
                   <td className="pt-3 text-right tabular-nums">{fcfa(b.impayes)}</td>
                 </tr>
               </tfoot>

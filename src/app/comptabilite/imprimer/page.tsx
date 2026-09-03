@@ -58,10 +58,10 @@ export default async function PageImpressionComptabilite({ searchParams }: { sea
             <p className="mt-1 text-xl font-bold text-slate-900">{fcfa(b.encaisse)}</p>
             <p className="mt-1 text-[11px] text-slate-500">Tout l&apos;argent reçu. Ne vous appartient pas en entier.</p>
           </div>
-          <div className="rounded-lg border border-brand-300 bg-brand-50/50 p-4">
-            <p className="text-xs font-medium uppercase tracking-wide text-brand-800">Vos honoraires</p>
-            <p className="mt-1 text-xl font-bold text-brand-900">{fcfa(b.honoraires)}</p>
-            <p className="mt-1 text-[11px] text-brand-800">C&apos;est votre chiffre d&apos;affaires.</p>
+          <div className="rounded-lg border border-succes-300 bg-succes-50/50 p-4">
+            <p className="text-xs font-medium uppercase tracking-wide text-succes-800">Vos honoraires</p>
+            <p className="mt-1 text-xl font-bold text-succes-900">{fcfa(b.honoraires)}</p>
+            <p className="mt-1 text-[11px] text-succes-800">C&apos;est votre chiffre d&apos;affaires.</p>
           </div>
           <div className="rounded-lg border border-slate-200 p-4">
             <p className="text-xs uppercase tracking-wide text-slate-500">À reverser aux propriétaires</p>
@@ -133,7 +133,7 @@ export default async function PageImpressionComptabilite({ searchParams }: { sea
                     <td className="py-1.5 pr-3 text-slate-600">{l.proprietaire ?? "—"}</td>
                     <td className="py-1.5 pr-3 text-right tabular-nums">{fcfa(l.facture)}</td>
                     <td className="py-1.5 pr-3 text-right tabular-nums">{fcfa(l.encaisse)}</td>
-                    <td className="py-1.5 pr-3 text-right font-semibold tabular-nums text-brand-700">{fcfa(l.honoraires)}</td>
+                    <td className="py-1.5 pr-3 text-right font-semibold tabular-nums text-succes-700">{fcfa(l.honoraires)}</td>
                     <td className={`py-1.5 text-right tabular-nums ${l.reste > 0 ? "font-semibold text-rose-700" : "text-slate-400"}`}>
                       {l.reste > 0 ? fcfa(l.reste) : "—"}
                     </td>
@@ -145,7 +145,7 @@ export default async function PageImpressionComptabilite({ searchParams }: { sea
                   <td className="pt-2 pr-3" colSpan={2}>Total</td>
                   <td className="pt-2 pr-3 text-right tabular-nums">{fcfa(b.facture)}</td>
                   <td className="pt-2 pr-3 text-right tabular-nums">{fcfa(b.encaisse)}</td>
-                  <td className="pt-2 pr-3 text-right tabular-nums text-brand-700">{fcfa(b.honoraires)}</td>
+                  <td className="pt-2 pr-3 text-right tabular-nums text-succes-700">{fcfa(b.honoraires)}</td>
                   <td className="pt-2 text-right tabular-nums">{fcfa(b.impayes)}</td>
                 </tr>
               </tfoot>

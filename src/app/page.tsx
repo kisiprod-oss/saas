@@ -27,8 +27,8 @@ const BUDGETS = [
 const ATOUTS = [
   "Gratuit jusqu'à 3 biens",
   "Orange Money & Wave",
-  "Relances sur WhatsApp",
-  "Assistant disponible 24h/24",
+  "Relances prêtes sur WhatsApp",
+  "Quittances vérifiables en ligne",
 ];
 
 /**
@@ -66,16 +66,16 @@ export default async function PageVitrine({ searchParams }: { searchParams: Prom
                 🇸🇳 Gestion locative au Sénégal
               </p>
               <h1 className="max-w-xl text-3xl font-extrabold leading-tight tracking-tight text-white sm:text-5xl">
-                La location, sans tableur ni paperasse.
+                Vos loyers rentrent. Vous savez où vous en êtes.
               </h1>
               <p className="mt-4 max-w-lg text-base text-brand-50/90 sm:text-lg">
-                Biens, locataires, quittances et relances de loyer dans un seul outil.
-                Trouvez un logement ou un artisan, ou gérez votre agence — tout est ici.
+                Quittances, relances et comptes d&apos;agence, dans un outil pensé à
+                Dakar. Orange Money et Wave inclus.
               </p>
 
               <div className="mt-7 flex flex-wrap gap-3">
-                <Link href="/inscription" className="btn-secondaire px-6 py-3 text-base">
-                  Créer mon espace agence
+                <Link href="/inscription" className="btn-or px-6 py-3 text-base">
+                  Essayer gratuitement
                 </Link>
                 <Link href="#annonces" className="rounded-lg bg-white/12 px-6 py-3 text-base font-semibold text-white ring-1 ring-white/25 hover:bg-white/20">
                   Voir les annonces
