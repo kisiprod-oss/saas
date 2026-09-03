@@ -17,7 +17,7 @@ export default async function PageConnexionLocataire({ searchParams }: { searchP
   const erreur = Array.isArray(params.erreur) ? params.erreur[0] : params.erreur;
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-sable-600 via-sable-500 to-brand-700 px-4 py-12">
+    <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-brand-900 via-brand-700 to-or-600 px-4 py-12">
       <div className="w-full max-w-md">
         <div className="mb-6 flex justify-center">
           <Link href="/" className="rounded-xl bg-white px-6 py-4 shadow-sm"><LogoSenComplet /></Link>
@@ -42,7 +42,7 @@ export default async function PageConnexionLocataire({ searchParams }: { searchP
               <input id="motDePasse" name="motDePasse" type="password" required
                      autoComplete="current-password" placeholder="Fourni par votre agence" className="champ" />
             </div>
-            <button type="submit" className="btn-sable w-full py-3">Se connecter</button>
+            <button type="submit" className="btn-primaire w-full py-3">Se connecter</button>
           </form>
 
           <p className="mt-6 text-center text-xs leading-relaxed text-slate-500">
