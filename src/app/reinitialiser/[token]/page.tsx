@@ -51,11 +51,6 @@ export default async function PageReinitialiser({
               <form action={actionReinitialiser} className="mt-6 space-y-4">
                 <input type="hidden" name="token" value={token} />
                 <ChampMotDePasse label="Nouveau mot de passe" />
-                <div>
-                  <label className="etiquette" htmlFor="confirmation">Confirmez le mot de passe</label>
-                  <input id="confirmation" name="confirmation" type="password" required
-                         autoComplete="new-password" placeholder="Saisissez-le une seconde fois" className="champ" />
-                </div>
                 <button type="submit" className="btn-primaire w-full py-3">
                   Enregistrer et se connecter
                 </button>

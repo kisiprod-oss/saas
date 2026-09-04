@@ -145,6 +145,12 @@ export async function actionInscription(fd: FormData) {
   if (!nomAgence || !nom || !email) erreur("/inscription", "Merci de remplir tous les champs obligatoires.");
   const refus = refusMotDePasse(motDePasse);
   if (refus) erreur("/inscription", refus);
+  // La concordance se verifie ICI, pas seulement a l'ecran : le navigateur
+  // peut envoyer ce qu'il veut, et un compte ouvert sur une faute de frappe
+  // enferme dehors quelqu'un qui croit connaitre son mot de passe.
+  if (motDePasse !== String(fd.get("confirmation") ?? "")) {
+    erreur("/inscription", "Les deux mots de passe ne sont pas identiques.");
+  }
 
   const res = inscrireAgence({ nomAgence, nom, email, telephone, motDePasse });
   if (!res.ok) erreur("/inscription", res.erreur);
@@ -1568,6 +1574,9 @@ export async function actionCandidature(fd: FormData) {
   if (!METIERS.some((m) => m.valeur === metier)) erreur(retour, "Choisissez votre corps de métier.");
   const refus = refusMotDePasse(motDePasse);
   if (refus) erreur(retour, refus);
+  if (motDePasse !== String(fd.get("confirmation") ?? "")) {
+    erreur(retour, "Les deux mots de passe ne sont pas identiques.");
+  }
 
   const existe = un<{ id: number }>("SELECT id FROM artisans WHERE email = ?", email);
   if (existe) erreur(retour, "Une candidature existe déjà avec cette adresse e-mail.");
