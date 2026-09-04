@@ -67,11 +67,6 @@ export const INDICATIFS = [
 /** Indicatifs du plus long au plus court : « 221 » doit primer sur « 22 ». */
 const CODES_TRIES = [...INDICATIFS].map((i) => i.code).sort((a, b) => b.length - a.length);
 
-/** Le pays d'un indicatif, pour l'affichage. */
-export function paysDeLIndicatif(code: string): string | null {
-  return INDICATIFS.find((i) => i.code === code)?.pays ?? null;
-}
-
 /**
  * Numero canonique : uniquement des chiffres, indicatif pays compris.
  * C'est la forme stockee en base et celle qu'attendent `tel:` et `wa.me`.
@@ -114,7 +109,7 @@ export function numeroCanonique(saisie: string | null | undefined, indicatif?: s
 }
 
 /** Vrai si le numero est senegalais. */
-export function estSenegalais(tel: string | null | undefined): boolean {
+function estSenegalais(tel: string | null | undefined): boolean {
   const c = numeroCanonique(tel);
   return c.startsWith(INDICATIF_DEFAUT) && c.length === INDICATIF_DEFAUT.length + LONGUEUR_SENEGAL;
 }
@@ -167,16 +162,6 @@ export function pourAffichage(tel: string | null | undefined): string {
   return `+${code} ${groupes.join(" ")}`;
 }
 
-/**
- * Deux numeros designent-ils la meme ligne ?
- * Sert a la connexion de l'espace locataire : « 77 123 45 67 »,
- * « +221771234567 » et « 00221 77 123 45 67 » sont la meme personne.
- */
-export function memeNumero(a: string | null | undefined, b: string | null | undefined): boolean {
-  const ca = numeroCanonique(a);
-  const cb = numeroCanonique(b);
-  return ca !== "" && ca === cb;
-}
 
 /**
  * Le numero envoye par un `ChampTelephone`, sous sa forme canonique.

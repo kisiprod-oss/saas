@@ -393,7 +393,7 @@ export async function actionEnregistrerLocataire(fd: FormData) {
   const champs = [
     prenom, nom, telephone, vide(numeroSoumis(fd, "telephone2")), vide(txt(fd, "email")),
     vide(txt(fd, "cni")), vide(txt(fd, "profession")), vide(txt(fd, "employeur")),
-    vide(txt(fd, "adresse")), vide(txt(fd, "garant_nom")), vide(txt(fd, "garant_telephone")),
+    vide(txt(fd, "adresse")), vide(txt(fd, "garant_nom")), vide(numeroSoumis(fd, "garant_telephone")),
     vide(txt(fd, "notes")),
   ];
 
@@ -1879,7 +1879,7 @@ export async function actionDemanderDevis(fd: FormData) {
   if (!artisan) erreur("/professionnels", "Cet artisan ne peut pas recevoir de demande de devis.");
 
   const nom = txt(fd, "nom_client");
-  const telephone = txt(fd, "telephone_client");
+  const telephone = numeroSoumis(fd, "telephone_client");
   const description = txt(fd, "description");
   if (!nom || !telephone) erreur(retour, "Votre nom et votre téléphone sont obligatoires.");
   if (!description) erreur(retour, "Décrivez le projet pour lequel vous souhaitez un devis.");

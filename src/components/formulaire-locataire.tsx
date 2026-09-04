@@ -30,8 +30,9 @@ export function FormulaireLocataire({ locataire }: { locataire?: Locataire }) {
 
       <Section titre="Garant (caution solidaire)">
         <Champ label="Nom du garant" nom="garant_nom" valeur={locataire?.garant_nom} />
-        <Champ label="Téléphone du garant" nom="garant_telephone" valeur={locataire?.garant_telephone}
-               placeholder="70 123 45 67" />
+        <ChampTelephone nom="garant_telephone" label="Téléphone du garant"
+                        valeur={locataire?.garant_telephone}
+                        aide="Le garant vit souvent à l'étranger : choisissez son pays." />
         <div className="sm:col-span-2">
           <ZoneTexte label="Notes internes" nom="notes" valeur={locataire?.notes}
                      placeholder="Informations utiles : ponctualité des paiements, remarques…" />

@@ -6,6 +6,7 @@ import { libelle, METIERS, VILLES } from "@/lib/constantes";
 import { Alerte, Carte } from "@/components/ui";
 import { LogoSenComplet } from "@/components/entete-public";
 import { IconeOutils, IconeRetour } from "@/components/icones";
+import { ChampTelephone } from "@/components/champ-telephone";
 
 export const metadata = { title: "Demander un devis" };
 export const dynamic = "force-dynamic";
@@ -63,8 +64,8 @@ export default async function PageDemanderDevis({
               <input id="nom_client" name="nom_client" required className="champ" placeholder="Fatou Diop" />
             </div>
             <div>
-              <label className="etiquette" htmlFor="telephone_client">Votre téléphone</label>
-              <input id="telephone_client" name="telephone_client" required className="champ" placeholder="77 123 45 67" />
+              <ChampTelephone nom="telephone_client" label="Votre téléphone" obligatoire
+                              aide="C'est le numéro sur lequel l'artisan vous rappellera." />
             </div>
             <div>
               <label className="etiquette" htmlFor="ville">Ville (facultatif)</label>
