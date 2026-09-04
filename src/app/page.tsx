@@ -58,8 +58,11 @@ export default async function PageVitrine({ searchParams }: { searchParams: Prom
       <EntetePublic />
 
       {/* ---------------------------------- Hero ---------------------------------- */}
-      <section className="border-b border-slate-200 bg-gradient-to-br from-brand-800 via-brand-700 to-brand-600">
-        <div className="mx-auto max-w-6xl px-4 pt-14 sm:pt-20">
+      {/* Le degrade suit l'embleme : le marine des batiments a gauche, l'arche
+          verte a droite. Le vert reste tres sombre (succes-900) pour ne pas
+          voler la vedette au bouton dore, seul point vif de la page. */}
+      <section className="relative overflow-hidden border-b border-slate-200 bg-gradient-to-br from-brand-900 via-brand-700 to-succes-900">
+        <div className="relative mx-auto max-w-6xl px-4 pt-14 sm:pt-20">
           <div className="grid items-center gap-10 lg:grid-cols-2">
             <div>
               <p className="mb-3 inline-flex rounded-full bg-white/15 px-3 py-1 text-xs font-semibold text-brand-50 ring-1 ring-white/20">
@@ -85,7 +88,7 @@ export default async function PageVitrine({ searchParams }: { searchParams: Prom
               <ul className="mt-7 grid grid-cols-2 gap-x-4 gap-y-2 sm:flex sm:flex-wrap sm:gap-5">
                 {ATOUTS.map((a) => (
                   <li key={a} className="flex items-center gap-1.5 text-sm text-brand-50/90">
-                    <IconeCheck className="h-4 w-4 shrink-0 text-brand-200" /> {a}
+                    <IconeCheck className="h-4 w-4 shrink-0 text-succes-300" /> {a}
                   </li>
                 ))}
               </ul>
@@ -260,14 +263,18 @@ export default async function PageVitrine({ searchParams }: { searchParams: Prom
           </div>
 
           <div className="mt-10 grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
+            {/* Pastilles alternees vert / marine : c'est exactement ainsi que
+                le logo pose ses propres icones, l'une a cote de l'autre. */}
             {[
               { Icone: IconeTableauBord, titre: "Tableau de bord", texte: "Loyers encaissés, impayés et taux d'occupation en un coup d'œil." },
               { Icone: IconeFacture, titre: "Factures automatiques", texte: "Générez toutes les quittances du mois en un clic, prêtes à imprimer." },
               { Icone: IconeArgent, titre: "Orange Money & Wave", texte: "Enregistrez chaque paiement avec sa référence de transaction." },
               { Icone: IconeRelance, titre: "Relances WhatsApp", texte: "Le ton du message s'adapte au retard ; il ne reste qu'à l'envoyer." },
-            ].map((c) => (
+            ].map((c, i) => (
               <div key={c.titre} className="carte p-6">
-                <div className="mb-3 flex h-11 w-11 items-center justify-center rounded-lg bg-brand-50 text-brand-700">
+                <div className={`mb-3 flex h-11 w-11 items-center justify-center rounded-lg ${
+                  i % 2 === 0 ? "bg-brand-50 text-brand-700" : "bg-succes-50 text-succes-700"
+                }`}>
                   <c.Icone className="h-6 w-6" />
                 </div>
                 <h3 className="font-semibold text-slate-900">{c.titre}</h3>
