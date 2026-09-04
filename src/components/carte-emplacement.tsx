@@ -42,13 +42,17 @@ export function CarteEmplacement({ e }: { e: EmplacementDonnees }) {
       <Carte className="border-succes-300 bg-succes-50/50 p-5">
         <h2 className="font-semibold text-succes-900">Vos données sont à l&apos;abri</h2>
         <p className="mt-1 text-sm text-succes-800">
-          Elles sont rangées <strong>hors du dossier de l&apos;application</strong> :
-          une mise à jour du logiciel ne peut plus les effacer.
+          Elles sont rangées <strong>hors du dossier de l&apos;application</strong>,
+          là où les mises à jour ne passent pas. Vous pouvez déployer une nouvelle
+          version quand vous voulez : <strong>aucune agence ne perd quoi que ce
+          soit</strong>, et personne n&apos;a rien à ressaisir.
         </p>
         <Chemin libelle="Dossier des données" valeur={e.chemin} />
         <p className="mt-3 text-xs text-succes-800">
           Contient aujourd&apos;hui : {contenu}. Une sauvegarde complète, c&apos;est
-          la copie de ce seul dossier.
+          la copie de ce seul dossier — ou la commande{" "}
+          <code className="rounded bg-succes-100 px-1">npm run sauvegarde</code>,
+          à programmer chaque nuit.
         </p>
       </Carte>
     );

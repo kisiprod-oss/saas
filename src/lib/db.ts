@@ -1,26 +1,23 @@
 import Database from "better-sqlite3";
 import fs from "node:fs";
 import path from "node:path";
+import { resoudreDossierDonnees } from "./dossier-donnees.mjs";
 
 /**
  * Connexion unique a la base SQLite.
- * Le fichier de base est cree automatiquement au premier demarrage
- * dans le dossier `data/` a la racine du projet.
  */
 
 const racine = process.cwd();
 
 /**
- * Dossier qui contient TOUTES les donnees : base et photos.
+ * Dossier qui contient TOUTES les donnees : base, photos, documents.
  *
- * Sur un hebergement qui remplace le dossier de l'application a chaque
- * deploiement, il faut le placer ailleurs, par exemple :
- *   DOSSIER_DONNEES=/home/utilisateur/donnees-sen-gestion
- * Sans quoi la mise a jour du logiciel effacerait les donnees.
+ * La regle vit dans dossier-donnees.mjs, partagee avec les scripts en ligne
+ * de commande (sauvegarde, remise a zero, donnees de demonstration) : ils
+ * doivent tous designer le meme dossier, faute de quoi une sauvegarde
+ * viserait un emplacement vide sans que rien ne le signale.
  */
-export const dossierData = process.env.DOSSIER_DONNEES
-  ? path.resolve(process.env.DOSSIER_DONNEES)
-  : path.join(racine, "data");
+export const dossierData: string = resoudreDossierDonnees(racine);
 
 const cheminBase = process.env.DATABASE_FILE ?? path.join(dossierData, "sen-gestion.db");
 

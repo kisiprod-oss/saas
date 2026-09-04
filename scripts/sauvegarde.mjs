@@ -15,11 +15,10 @@ import Database from "better-sqlite3";
 import { execFileSync } from "node:child_process";
 import fs from "node:fs";
 import path from "node:path";
+import { resoudreDossierDonnees } from "../src/lib/dossier-donnees.mjs";
 
 const racine = process.cwd();
-const dossierData = process.env.DOSSIER_DONNEES
-  ? path.resolve(process.env.DOSSIER_DONNEES)
-  : path.join(racine, "data");
+const dossierData = resoudreDossierDonnees(racine);
 const base = process.env.DATABASE_FILE ?? path.join(dossierData, "sen-gestion.db");
 const dossier = path.join(dossierData, "sauvegardes");
 const aConserver = Number(process.env.SAUVEGARDES_A_CONSERVER ?? 14);

@@ -9,11 +9,10 @@ import Database from "better-sqlite3";
 import crypto from "node:crypto";
 import fs from "node:fs";
 import path from "node:path";
+import { resoudreDossierDonnees } from "../src/lib/dossier-donnees.mjs";
 
 const racine = process.cwd();
-const dossierData = process.env.DOSSIER_DONNEES
-  ? path.resolve(process.env.DOSSIER_DONNEES)
-  : path.join(racine, "data");
+const dossierData = resoudreDossierDonnees(racine);
 const cheminBase = process.env.DATABASE_FILE ?? path.join(dossierData, "sen-gestion.db");
 fs.mkdirSync(path.dirname(cheminBase), { recursive: true });
 

@@ -505,19 +505,29 @@ fabriquer, ni pour se valoriser ni pour nuire à un concurrent.
 L'application fonctionne sur n'importe quel serveur qui accepte Node.js
 (VPS, Render, Railway, un serveur au Sénégal…). Deux points d'attention :
 
-1. **Placez le dossier de données HORS du dossier de l'application.** La plupart
-   des hébergeurs (Hostinger, Render, Railway…) remplacent le dossier de
-   l'application à chaque déploiement : des données rangées dedans seraient
-   effacées à chaque mise à jour. Renseignez donc :
+1. **Le dossier de données se place tout seul hors de l'application.** La
+   plupart des hébergeurs (Hostinger, Render, Railway…) remplacent le dossier
+   de l'application à chaque déploiement : des données rangées dedans seraient
+   effacées à chaque mise à jour, et les agences devraient tout ressaisir.
+
+   Au démarrage, le logiciel range donc ses données à côté de l'application,
+   là où les déploiements ne passent pas (`donnees-sen-gestion`, dans le
+   dossier personnel du compte d'hébergement). Si des données existent encore
+   à l'ancien emplacement interne, il les **recopie** avant de s'en servir —
+   sans jamais supprimer l'original. Voir `src/lib/dossier-donnees.mjs`.
+
+   Pour choisir vous-même l'emplacement, renseignez :
 
    ```
    DOSSIER_DONNEES=/home/u123456789/donnees-sen-gestion
    ```
 
-   Base, photos et sauvegardes suivent automatiquement cet emplacement.
+   Ce réglage explicite l'emporte sur tout le reste. Base, photos, documents
+   et sauvegardes suivent cet emplacement, et les scripts en ligne de commande
+   le partagent : une sauvegarde vise toujours le bon dossier.
 
-   **Vérifiez-le avant toute vraie donnée** : créez un compte d'essai,
-   relancez un déploiement, et regardez si le compte existe encore.
+   L'espace d'administration (**Vue d'ensemble**) affiche l'emplacement
+   réellement utilisé, son poids et son contenu.
 2. Lancez `npm run build` puis `npm start`.
 
 ---
