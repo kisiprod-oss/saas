@@ -70,6 +70,13 @@ export default async function PageNouveauContrat({ searchParams }: { searchParam
       <EnTetePage titre="Nouveau contrat de bail" sousTitre="Reliez un bien disponible à un locataire." />
       <MessagesUrl params={params} />
 
+      <p className="mb-5 text-sm text-slate-500">
+        Le contrat imprimé reprendra les articles de{" "}
+        <Link href="/dashboard/contrats/modele" className="font-semibold text-brand-700 hover:underline">
+          votre modèle de bail
+        </Link>, remplis avec les informations saisies ci-dessous.
+      </p>
+
       {modeleBail && (
         <p className="mb-5 rounded-lg border border-sky-200 bg-sky-50 px-4 py-2.5 text-sm text-sky-900">
           Vous avez votre propre modèle de bail.{" "}

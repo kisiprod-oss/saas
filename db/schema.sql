@@ -125,6 +125,9 @@ CREATE TABLE IF NOT EXISTS agences (
   modele_bail_url         TEXT,
   modele_bail_nom         TEXT,
   modele_bail_le          TEXT,
+  -- Articles du bail reecrits par l'agence, en JSON {cle: texte}. Seules les
+  -- differences avec le modele du logiciel y figurent (src/lib/bail-clauses.ts).
+  modele_bail_clauses     TEXT,
   cree_le       TEXT NOT NULL DEFAULT (datetime('now'))
 );
 

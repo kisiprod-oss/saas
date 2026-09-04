@@ -24,6 +24,9 @@ export default async function PageContrats({ searchParams }: { searchParams: Pro
   return (
     <>
       <EnTetePage titre="Contrats de bail" sousTitre={`${contrats.length} bail(s)`}>
+        <Link href="/dashboard/contrats/modele" className="btn-secondaire">
+          Mon modèle de bail
+        </Link>
         <Link href="/dashboard/contrats/nouveau" className="btn-primaire">
           <IconePlus className="h-4 w-4" /> Nouveau bail
         </Link>

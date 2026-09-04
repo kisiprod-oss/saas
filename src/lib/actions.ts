@@ -50,6 +50,7 @@ import {
 import { enregistrerDocuments } from "./documents";
 import { enregistrerModeleBail, supprimerModeleBail } from "./modele-bail";
 import { numeroSoumis } from "./telephone";
+import { CLAUSES_PAR_DEFAUT, surchargesAEnregistrer } from "./bail-clauses";
 import {
   corrigerSession, genererQuestions, ouvrirSessionQuiz, sessionEnCours,
   viderBanque, type SessionQuiz,
@@ -225,6 +226,26 @@ export async function actionEnregistrerModeleBail(fd: FormData) {
   );
   revalidatePath("/dashboard/agence");
   redirect(`${retour}?ok=1`);
+}
+
+/**
+ * Enregistre les articles du bail reecrits par l'agence.
+ *
+ * Un cadre vide vaut « rends-moi le texte du logiciel » : c'est le seul
+ * moyen de revenir en arriere sans avoir a recopier l'original a la main.
+ */
+export async function actionEnregistrerClausesBail(fd: FormData) {
+  const { agence } = await exigerSession();
+
+  const saisies: Record<string, string> = {};
+  for (const c of CLAUSES_PAR_DEFAUT) saisies[c.cle] = txt(fd, `clause_${c.cle}`);
+
+  ecrire(
+    "UPDATE agences SET modele_bail_clauses = ? WHERE id = ?",
+    surchargesAEnregistrer(saisies), agence.id,
+  );
+  revalidatePath("/dashboard/contrats/modele");
+  redirect("/dashboard/contrats/modele?ok=1");
 }
 
 /** Retire le modele de bail de l'agence, sans en renvoyer un nouveau. */

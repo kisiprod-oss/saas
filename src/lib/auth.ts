@@ -40,6 +40,7 @@ export type Agence = {
   modele_bail_url: string | null;
   modele_bail_nom: string | null;
   modele_bail_le: string | null;
+  modele_bail_clauses: string | null;
   paiement_orange_money: string | null;
   paiement_wave: string | null;
   paiement_free_money: string | null;

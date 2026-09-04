@@ -1,4 +1,5 @@
 import { dateLongue, enLettres, fcfa, telephoneFr } from "@/lib/format";
+import { clausesDeLAgence, remplir } from "@/lib/bail-clauses";
 import { libelle, TYPES_BIEN } from "@/lib/constantes";
 import type { Agence } from "@/lib/auth";
 import type { ContratPourBail } from "@/lib/types";
@@ -46,12 +47,50 @@ export function DocumentBail({
     !dejaDit.includes(contrat.bien_ville.toLowerCase()) ? contrat.bien_ville : null,
   ].filter(Boolean).join(", ");
 
+  // Les clauses de l'agence (ou celles du logiciel), et les valeurs qui
+  // viennent s'y glisser. C'est ici que le bail devient celui DE CE
+  // locataire : meme texte juridique, donnees propres a son dossier.
+  const clauses = clausesDeLAgence(agence.modele_bail_clauses);
+
+  const moyens = [
+    agence.paiement_orange_money && `Orange Money (${telephoneFr(agence.paiement_orange_money)})`,
+    agence.paiement_wave && `Wave (${telephoneFr(agence.paiement_wave)})`,
+    agence.paiement_free_money && `Free Money (${telephoneFr(agence.paiement_free_money)})`,
+  ].filter(Boolean) as string[];
+
+  const valeurs: Record<string, string> = {
+    bailleur: agence.nom,
+    locataire: `${contrat.locataire_prenom} ${contrat.locataire_nom}`,
+    bien: contrat.bien_titre,
+    adresseBien: adresseBien ? `, situé à ${adresseBien}` : "",
+    description: description ? `, composé de : ${description}` : "",
+    duree: `${contrat.duree_mois} mois`,
+    dateDebut: dateLongue(contrat.date_debut),
+    phraseFin: contrat.date_fin
+      ? ` Il prendra fin le ${dateLongue(contrat.date_fin)}.`
+      : " Il est renouvelable par tacite reconduction.",
+    loyer: fcfa(contrat.loyer),
+    loyerLettres: enLettres(contrat.loyer),
+    jourEcheance: String(contrat.jour_echeance),
+    phrasePaiement: moyens.length > 0
+      ? `, auprès des services indiqués ${moyens.join(" ou ")}`
+      : "",
+    phraseCharges: contrat.charges > 0
+      ? ` S'y ajoutent des charges locatives de ${fcfa(contrat.charges)} par mois, soit un total mensuel de ${fcfa(loyerTotal)}.`
+      : "",
+    phraseCaution: contrat.caution > 0
+      ? `Le preneur verse à la signature un dépôt de garantie de ${fcfa(contrat.caution)}`
+        + `${moisCaution > 0 ? `, soit ${moisCaution} mois de loyer` : ""}.`
+      : "Aucun dépôt de garantie n'est exigé au titre du présent bail.",
+    ville: agence.ville ?? "Dakar",
+  };
+
   const Article = ({ n, titre, children }: { n: number; titre: string; children: React.ReactNode }) => (
     <div className="mt-4">
       <p className="text-[11px] font-bold uppercase tracking-wide text-slate-900">
         Article {n} — {titre}
       </p>
-      <p className="mt-1 text-[11px] leading-relaxed text-slate-700">{children}</p>
+      <div className="mt-1 space-y-1 text-[11px] leading-relaxed text-slate-700">{children}</div>
     </div>
   );
 
@@ -112,58 +151,17 @@ export function DocumentBail({
           Il a été convenu et arrêté ce qui suit
         </p>
 
-        <Article n={1} titre="Objet du contrat">
-          Le bailleur donne en location au preneur le bien désigné{" "}
-          <strong>{contrat.bien_titre}</strong>
-          {adresseBien && <>, situé à {adresseBien}</>}
-          {description && <>, composé de : {description}</>}.
-        </Article>
-
-        <Article n={2} titre="Durée">
-          Le présent bail est conclu pour une durée de <strong>{contrat.duree_mois} mois</strong>,
-          à compter du {dateLongue(contrat.date_debut)}
-          {contrat.date_fin
-            ? <> et prenant fin le {dateLongue(contrat.date_fin)}.</>
-            : <>, renouvelable par tacite reconduction.</>}
-        </Article>
-
-        <Article n={3} titre="Loyer">
-          Le loyer mensuel est fixé à <strong>{fcfa(contrat.loyer)}</strong>{" "}
-          ({enLettres(contrat.loyer)} francs CFA), payable d&apos;avance le{" "}
-          {contrat.jour_echeance} de chaque mois.
-          {contrat.charges > 0 && (
-            <> S&apos;y ajoutent des charges locatives de {fcfa(contrat.charges)} par mois,
-            soit un total mensuel de <strong>{fcfa(loyerTotal)}</strong>.</>
-          )}
-        </Article>
-
-        <Article n={4} titre="Dépôt de garantie">
-          {contrat.caution > 0 ? (
-            <>
-              Le preneur verse à la signature un dépôt de garantie de{" "}
-              <strong>{fcfa(contrat.caution)}</strong>
-              {moisCaution > 0 && <>, soit {moisCaution} mois de loyer</>}. Ce dépôt lui est
-              restitué en fin de bail, déduction faite des sommes dues et des réparations
-              locatives constatées.
-            </>
-          ) : (
-            <>Aucun dépôt de garantie n&apos;est exigé au titre du présent bail.</>
-          )}
-        </Article>
-
-        <Article n={5} titre="Charges et entretien">
-          {contrat.charges > 0
-            ? "Les charges mentionnées à l'article 3 couvrent les prestations convenues entre les parties."
-            : "L'eau, l'électricité et les consommations personnelles sont à la charge du preneur."}
-          {" "}Le preneur entretient le bien en bon père de famille et signale sans délai au
-          bailleur toute dégradation nécessitant réparation.
-        </Article>
-
-        <Article n={6} titre="Clause résolutoire">
-          À défaut de paiement du loyer à son échéance et un mois après une mise en demeure
-          restée sans effet, le présent bail pourra être résilié de plein droit si bon semble
-          au bailleur, sans préjudice de ses autres droits.
-        </Article>
+        {clauses.map((c, i) => (
+          <Article key={c.cle} n={i + 1} titre={c.titre}>
+            {/* Chaque ligne du texte devient un paragraphe : les clauses en
+                comportent plusieurs, et les tirets doivent se detacher. */}
+            {remplir(c.texte, valeurs)
+              .split("\n")
+              .map((ligne) => ligne.trim())
+              .filter((ligne) => ligne !== "")
+              .map((ligne, j) => <p key={j}>{ligne}</p>)}
+          </Article>
+        ))}
 
         <p className="mt-6 text-[11px] text-slate-700">
           Fait à {agence.ville ?? "Dakar"}, le{" "}

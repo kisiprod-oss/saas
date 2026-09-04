@@ -92,6 +92,7 @@ function migrer(base: Database.Database) {
     ["agences", "modele_bail_url", "TEXT"],
     ["agences", "modele_bail_nom", "TEXT"],
     ["agences", "modele_bail_le", "TEXT"],
+    ["agences", "modele_bail_clauses", "TEXT"],
   ] as const;
 
   for (const [table, colonne, type] of colonnes) {
