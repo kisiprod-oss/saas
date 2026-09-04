@@ -6,6 +6,10 @@ import { plan } from "@/lib/tarifs";
 import { EntetePublic, PiedPublic } from "@/components/entete-public";
 import { Alerte } from "@/components/ui";
 import { ChampTelephone } from "@/components/champ-telephone";
+import {
+  IllustrationCalendrier, IllustrationPrixNuit, IllustrationRecu, IllustrationRelance,
+  IllustrationRevenus, IllustrationSansCommission,
+} from "@/components/illustrations";
 
 export const metadata = {
   title: "Louer en courte durée",
@@ -62,31 +66,37 @@ export default async function PageCourteDuree({ searchParams }: { searchParams: 
   const atouts = [
     {
       titre: "Un calendrier qui se bloque tout seul",
+      Image: IllustrationCalendrier,
       texte: "Dès qu'un séjour est confirmé, les dates disparaissent des disponibilités. "
         + "Plus de double réservation le jour où deux voyageurs demandent la même semaine.",
     },
     {
       titre: "Prix à la nuitée, séjour minimum, capacité",
+      Image: IllustrationPrixNuit,
       texte: "Vous fixez votre prix par nuit, le nombre de nuits minimum et le nombre "
         + "de voyageurs. Le total se calcule tout seul devant le voyageur.",
     },
     {
       titre: "Réservation en ligne, sans commission",
+      Image: IllustrationSansCommission,
       texte: "Votre logement a sa page publique. Le voyageur choisit ses dates et vous "
         + "envoie sa demande. Aucun pourcentage prélevé sur vos nuitées.",
     },
     {
       titre: "Vos revenus, mois par mois",
+      Image: IllustrationRevenus,
       texte: "Encaissé, reste dû, taux de remplissage de vos logements : "
         + "un état imprimable que vous pouvez remettre à votre comptable.",
     },
     {
       titre: "Reçus et quittances à votre nom",
+      Image: IllustrationRecu,
       texte: "Un document A4 avec votre logo, vos mentions et un code de vérification "
         + "en ligne. Utile pour un voyageur en déplacement professionnel.",
     },
     {
       titre: "Relances automatiques des impayés",
+      Image: IllustrationRelance,
       texte: "Le logiciel repère les acomptes en retard, prépare le message et vous "
         + "n'avez qu'à l'envoyer sur WhatsApp.",
     },
@@ -160,9 +170,12 @@ export default async function PageCourteDuree({ searchParams }: { searchParams: 
 
           <div className="mt-8 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
             {atouts.map((a) => (
-              <div key={a.titre} className="carte p-5">
-                <h3 className="font-semibold text-slate-900">{a.titre}</h3>
-                <p className="mt-2 text-sm leading-relaxed text-slate-600">{a.texte}</p>
+              <div key={a.titre} className="carte overflow-hidden">
+                <a.Image />
+                <div className="p-5">
+                  <h3 className="font-semibold text-slate-900">{a.titre}</h3>
+                  <p className="mt-2 text-sm leading-relaxed text-slate-600">{a.texte}</p>
+                </div>
               </div>
             ))}
           </div>

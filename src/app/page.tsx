@@ -3,10 +3,10 @@ import { listerVitrine } from "@/lib/requetes";
 import { TYPES_BIEN, VILLES } from "@/lib/constantes";
 import { CarteBien } from "@/components/carte-bien";
 import { EntetePublic, PiedPublic } from "@/components/entete-public";
+import { IconeCheck, IconeOutils, IconeRecherche } from "@/components/icones";
 import {
-  IconeArgent, IconeCheck, IconeFacture, IconeOutils, IconeRecherche, IconeRelance,
-  IconeTableauBord,
-} from "@/components/icones";
+  IllustrationFacture, IllustrationPaiementMobile, IllustrationRelance, IllustrationTableauBord,
+} from "@/components/illustrations";
 
 type Params = { [cle: string]: string | string[] | undefined };
 
@@ -266,19 +266,17 @@ export default async function PageVitrine({ searchParams }: { searchParams: Prom
             {/* Pastilles alternees vert / marine : c'est exactement ainsi que
                 le logo pose ses propres icones, l'une a cote de l'autre. */}
             {[
-              { Icone: IconeTableauBord, titre: "Tableau de bord", texte: "Loyers encaissés, impayés et taux d'occupation en un coup d'œil." },
-              { Icone: IconeFacture, titre: "Factures automatiques", texte: "Générez toutes les quittances du mois en un clic, prêtes à imprimer." },
-              { Icone: IconeArgent, titre: "Orange Money & Wave", texte: "Enregistrez chaque paiement avec sa référence de transaction." },
-              { Icone: IconeRelance, titre: "Relances WhatsApp", texte: "Le ton du message s'adapte au retard ; il ne reste qu'à l'envoyer." },
-            ].map((c, i) => (
-              <div key={c.titre} className="carte p-6">
-                <div className={`mb-3 flex h-11 w-11 items-center justify-center rounded-lg ${
-                  i % 2 === 0 ? "bg-brand-50 text-brand-700" : "bg-succes-50 text-succes-700"
-                }`}>
-                  <c.Icone className="h-6 w-6" />
+              { Image: IllustrationTableauBord, titre: "Tableau de bord", texte: "Loyers encaissés, impayés et taux d'occupation en un coup d'œil." },
+              { Image: IllustrationFacture, titre: "Factures automatiques", texte: "Générez toutes les quittances du mois en un clic, prêtes à imprimer." },
+              { Image: IllustrationPaiementMobile, titre: "Orange Money & Wave", texte: "Enregistrez chaque paiement avec sa référence de transaction." },
+              { Image: IllustrationRelance, titre: "Relances WhatsApp", texte: "Le ton du message s'adapte au retard ; il ne reste qu'à l'envoyer." },
+            ].map((c) => (
+              <div key={c.titre} className="carte overflow-hidden">
+                <c.Image />
+                <div className="p-5">
+                  <h3 className="font-semibold text-slate-900">{c.titre}</h3>
+                  <p className="mt-1.5 text-sm text-slate-500">{c.texte}</p>
                 </div>
-                <h3 className="font-semibold text-slate-900">{c.titre}</h3>
-                <p className="mt-1.5 text-sm text-slate-500">{c.texte}</p>
               </div>
             ))}
           </div>
