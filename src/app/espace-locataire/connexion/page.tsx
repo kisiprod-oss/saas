@@ -4,6 +4,7 @@ import { actionConnexionLocataire } from "@/lib/actions";
 import { locataireCourant } from "@/lib/auth-locataire";
 import { Alerte } from "@/components/ui";
 import { LogoSenComplet } from "@/components/entete-public";
+import { ChampTelephone } from "@/components/champ-telephone";
 
 export const metadata = { title: "Espace locataire" };
 export const dynamic = "force-dynamic";
@@ -32,11 +33,8 @@ export default async function PageConnexionLocataire({ searchParams }: { searchP
           {erreur && <div className="mt-5"><Alerte type="erreur">{erreur}</Alerte></div>}
 
           <form action={actionConnexionLocataire} className="mt-6 space-y-4">
-            <div>
-              <label className="etiquette" htmlFor="telephone">Numéro de téléphone</label>
-              <input id="telephone" name="telephone" type="tel" required autoComplete="tel"
-                     placeholder="77 123 45 67" className="champ" />
-            </div>
+            <ChampTelephone obligatoire label="Numéro de téléphone"
+                            aide="Le numéro que votre agence a enregistré." />
             <div>
               <label className="etiquette" htmlFor="motDePasse">Mot de passe</label>
               <input id="motDePasse" name="motDePasse" type="password" required

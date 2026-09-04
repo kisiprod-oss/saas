@@ -6,6 +6,7 @@ import { Alerte } from "@/components/ui";
 import { LogoSenComplet } from "@/components/entete-public";
 import { ChampMotDePasse } from "@/components/champ-mot-de-passe";
 import { BoutonGoogle } from "@/components/bouton-google";
+import { ChampTelephone } from "@/components/champ-telephone";
 
 export const metadata = { title: "Créer mon agence" };
 
@@ -30,6 +31,12 @@ export default async function PageInscription({ searchParams }: { searchParams: 
             Gratuit pour démarrer. Vos données restent privées et séparées des autres agences.
           </p>
 
+          <p className="mt-3 rounded-lg border border-sky-200 bg-sky-50 px-3 py-2.5 text-sm text-sky-900">
+            <strong>Vous vivez à l&apos;étranger&nbsp;?</strong> Vos biens sont au Sénégal,
+            vous êtes à Paris, Milan ou New York : inscrivez-vous d&apos;ici avec votre
+            propre numéro. Tout se gère à distance.
+          </p>
+
           {erreur && <div className="mt-5"><Alerte type="erreur">{erreur}</Alerte></div>}
 
           <BoutonGoogle libelle="S’inscrire avec Google" />
@@ -45,10 +52,7 @@ export default async function PageInscription({ searchParams }: { searchParams: 
                 <label className="etiquette" htmlFor="nom">Votre nom <span className="text-rose-500">*</span></label>
                 <input id="nom" name="nom" required placeholder="Awa Diop" className="champ" />
               </div>
-              <div>
-                <label className="etiquette" htmlFor="telephone">Téléphone</label>
-                <input id="telephone" name="telephone" placeholder="77 123 45 67" className="champ" />
-              </div>
+              <ChampTelephone aide="Sénégal ou étranger : choisissez votre pays." />
             </div>
 
             <div>

@@ -5,6 +5,7 @@ import { fcfa } from "@/lib/format";
 import { plan } from "@/lib/tarifs";
 import { EntetePublic, PiedPublic } from "@/components/entete-public";
 import { Alerte } from "@/components/ui";
+import { ChampTelephone } from "@/components/champ-telephone";
 
 export const metadata = {
   title: "Louer en courte durée",
@@ -110,6 +111,11 @@ export default async function PageCourteDuree({ searchParams }: { searchParams: 
                 Un studio à Ngor, un appartement aux Almadies, une villa à Saly.
                 Sen Gestion tient votre calendrier, vos réservations et vos revenus
                 — sans prélever un centime sur vos nuitées.
+                <span className="mt-2 block">
+                  <strong className="text-slate-900">Vous vivez à l&apos;étranger&nbsp;?</strong>{" "}
+                  C&apos;est fait pour vous : vous suivez tout depuis chez vous, et vos
+                  voyageurs réservent avec leur propre numéro, d&apos;où qu&apos;ils viennent.
+                </span>
               </p>
               <p className="mt-3 text-sm text-slate-500">
                 Pas besoin d&apos;être une agence : la formule <strong>{bailleur.nom}</strong> à{" "}
@@ -205,13 +211,8 @@ export default async function PageCourteDuree({ searchParams }: { searchParams: 
                 <label className="etiquette" htmlFor="nom">Votre nom *</label>
                 <input id="nom" name="nom" required className="champ" placeholder="Awa Ndiaye" />
               </div>
-              <div>
-                <label className="etiquette" htmlFor="telephone">Téléphone *</label>
-                <input
-                  id="telephone" name="telephone" required inputMode="tel"
-                  className="champ" placeholder="77 123 45 67"
-                />
-              </div>
+              <ChampTelephone obligatoire label="Téléphone"
+                              aide="Nous vous rappelons, où que vous viviez." />
               <div>
                 <label className="etiquette" htmlFor="email">E-mail (facultatif)</label>
                 <input id="email" name="email" type="email" className="champ" placeholder="vous@exemple.sn" />

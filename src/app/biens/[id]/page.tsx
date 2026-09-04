@@ -11,6 +11,7 @@ import { FormulaireReservation } from "@/components/formulaire-reservation";
 import {
   IconeDouche, IconeLieu, IconeLit, IconeRetour, IconeSurface, IconeTelephone,
 } from "@/components/icones";
+import { ChampTelephone } from "@/components/champ-telephone";
 
 type Params = { [cle: string]: string | string[] | undefined };
 
@@ -259,7 +260,7 @@ export default async function PageBienPublic({
                 <form action={actionEnvoyerDemande} className="mt-4 space-y-3">
                   <input type="hidden" name="bien_id" value={bien.id} />
                   <input name="nom" required placeholder="Votre nom complet *" className="champ" />
-                  <input name="telephone" required placeholder="Téléphone (77 123 45 67) *" className="champ" />
+                  <ChampTelephone obligatoire label="Téléphone" aide="Sénégal ou étranger." />
                   <input name="email" type="email" placeholder="E-mail (facultatif)" className="champ" />
                   <textarea
                     name="message"

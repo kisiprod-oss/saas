@@ -12,6 +12,7 @@ import Link from "next/link";
 import { VILLES } from "@/lib/constantes";
 import { Carte, Champ, EnTetePage, MessagesUrl, Section } from "@/components/ui";
 import { ChampLogo } from "@/components/champ-logo";
+import { ChampTelephone } from "@/components/champ-telephone";
 
 export const metadata = { title: "Mon agence" };
 export const dynamic = "force-dynamic";
@@ -54,7 +55,8 @@ export default async function PageAgence({ searchParams }: { searchParams: Promi
           </Section>
 
           <Section titre="Coordonnées">
-            <Champ label="Téléphone" nom="telephone" valeur={agence.telephone} placeholder="77 123 45 67" />
+            <ChampTelephone valeur={agence.telephone}
+                            aide="Le numéro qui vous joint, même depuis l'étranger." />
             <Champ label="Adresse e-mail" nom="email" type="email" valeur={agence.email} />
             <div className="sm:col-span-2">
               <Champ label="Adresse" nom="adresse" valeur={agence.adresse}

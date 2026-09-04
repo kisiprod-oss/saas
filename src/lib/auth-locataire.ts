@@ -4,6 +4,7 @@ import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { db, un, ecrire } from "./db";
 import { hacherMotDePasse, verifierMotDePasse } from "./auth";
+import { numeroCanonique } from "./telephone";
 
 /**
  * Authentification de l'espace locataire.
@@ -25,11 +26,18 @@ export type Locataire2 = {
   photo_url: string | null;
 };
 
-/** Ne garde que les chiffres, pour comparer deux numeros ecrits differemment. */
-export function normaliserTelephone(tel: string): string {
-  const chiffres = tel.replace(/\D/g, "");
-  // "221771234567" et "771234567" doivent être reconnus comme le même numéro.
-  return chiffres.startsWith("221") ? chiffres.slice(3) : chiffres;
+/**
+ * Forme canonique d'un numero, pour comparer deux ecritures differentes.
+ *
+ * « 77 123 45 67 », « +221771234567 » et « 00221 77 123 45 67 » designent
+ * la meme ligne. Un locataire de la diaspora ajoute un cas de plus : son
+ * numero est enregistre en international (+33 6 12 34 56 78) alors qu'il
+ * le tape au format de son pays (06 12 34 56 78). D'ou l'indicatif, choisi
+ * dans le formulaire de connexion : sans lui, « 0612345678 » ne veut rien
+ * dire en soi.
+ */
+export function normaliserTelephone(tel: string, indicatif?: string): string {
+  return numeroCanonique(tel, indicatif);
 }
 
 /** Cree une session et depose le cookie de connexion du locataire. */
@@ -89,9 +97,9 @@ export async function exigerSessionLocataire(): Promise<Locataire2> {
  * plusieurs agences : le cas est signale plutot que de deviner.
  */
 export function verifierIdentifiantsLocataire(
-  telephone: string, motDePasse: string,
+  telephone: string, motDePasse: string, indicatif?: string,
 ): { ok: true; id: number } | { ok: false; erreur: string } {
-  const cherche = normaliserTelephone(telephone);
+  const cherche = normaliserTelephone(telephone, indicatif);
   if (cherche.length < 9) return { ok: false, erreur: "Numéro de téléphone incorrect." };
 
   const candidats = db.prepare(

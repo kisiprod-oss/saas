@@ -2,6 +2,7 @@ import Link from "next/link";
 import { actionEnregistrerLocataire } from "@/lib/actions";
 import { Champ, Section, ZoneTexte } from "@/components/ui";
 import type { Locataire } from "@/lib/types";
+import { ChampTelephone } from "@/components/champ-telephone";
 
 export function FormulaireLocataire({ locataire }: { locataire?: Locataire }) {
   return (
@@ -11,8 +12,9 @@ export function FormulaireLocataire({ locataire }: { locataire?: Locataire }) {
       <Section titre="Identité">
         <Champ label="Prénom" nom="prenom" obligatoire valeur={locataire?.prenom} placeholder="Awa" />
         <Champ label="Nom" nom="nom" obligatoire valeur={locataire?.nom} placeholder="Diop" />
-        <Champ label="Téléphone" nom="telephone" obligatoire valeur={locataire?.telephone} placeholder="77 123 45 67" />
-        <Champ label="Second téléphone" nom="telephone2" valeur={locataire?.telephone2} placeholder="76 987 65 43" />
+        <ChampTelephone obligatoire valeur={locataire?.telephone} />
+        <ChampTelephone nom="telephone2" label="Second téléphone" valeur={locataire?.telephone2}
+                        aide="Facultatif — un proche au Sénégal, par exemple." />
         <Champ label="Adresse e-mail" nom="email" type="email" valeur={locataire?.email} />
         <Champ label="Numéro de CNI / Passeport" nom="cni" valeur={locataire?.cni}
                placeholder="1 234 1990 00123" aide="Carte nationale d'identité du locataire." />

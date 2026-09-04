@@ -1,4 +1,5 @@
-/** Fonctions d'affichage : montants en FCFA, dates, telephones senegalais. */
+/** Fonctions d'affichage : montants en FCFA, dates, telephones. */
+import { pourAffichage, pourLien } from "./telephone";
 
 /** 1250000 -> "1 250 000 FCFA" */
 export function fcfa(montant: number | null | undefined): string {
@@ -72,17 +73,18 @@ export function dateLongue(iso: string | null | undefined): string {
 
 /** "771234567" -> "+221 77 123 45 67" */
 export function telephoneFr(tel: string | null | undefined): string {
-  if (!tel) return "—";
-  const chiffres = tel.replace(/\D/g, "");
-  const local = chiffres.startsWith("221") ? chiffres.slice(3) : chiffres;
-  if (local.length !== 9) return tel;
-  return `+221 ${local.slice(0, 2)} ${local.slice(2, 5)} ${local.slice(5, 7)} ${local.slice(7)}`;
+  return pourAffichage(tel);
 }
 
-/** Numero utilisable dans un lien tel: ou wa.me */
+/**
+ * Numero utilisable dans un lien tel: ou wa.me.
+ *
+ * Passe par src/lib/telephone.ts : coller « 221 » devant tout numero
+ * fabriquait des liens morts pour la diaspora (un numero francais devenait
+ * « 22133… »). Les numeros senegalais, eux, sortent inchanges.
+ */
 export function telephoneBrut(tel: string | null | undefined): string {
-  const chiffres = (tel ?? "").replace(/\D/g, "");
-  return chiffres.startsWith("221") ? chiffres : `221${chiffres}`;
+  return pourLien(tel);
 }
 
 /** Date du jour au format AAAA-MM-JJ */

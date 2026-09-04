@@ -2,6 +2,7 @@
 
 import { useMemo, useState } from "react";
 import { actionDemanderReservation } from "@/lib/actions";
+import { ChampTelephone } from "@/components/champ-telephone";
 
 /**
  * Demande de reservation pour un meuble touristique.
@@ -118,10 +119,7 @@ export function FormulaireReservation({
           <label className="etiquette" htmlFor="nom">Votre nom <span className="text-rose-500">*</span></label>
           <input id="nom" name="nom" required placeholder="Awa Diop" className="champ" />
         </div>
-        <div>
-          <label className="etiquette" htmlFor="telephone">Téléphone <span className="text-rose-500">*</span></label>
-          <input id="telephone" name="telephone" required placeholder="77 123 45 67" className="champ" />
-        </div>
+        <ChampTelephone obligatoire aide="Où que vous soyez : l'hôte vous joindra dessus." />
       </div>
 
       <div>

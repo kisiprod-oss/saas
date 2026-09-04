@@ -49,6 +49,7 @@ import {
 } from "./auth-artisan";
 import { enregistrerDocuments } from "./documents";
 import { enregistrerModeleBail, supprimerModeleBail } from "./modele-bail";
+import { numeroSoumis } from "./telephone";
 import {
   corrigerSession, genererQuestions, ouvrirSessionQuiz, sessionEnCours,
   viderBanque, type SessionQuiz,
@@ -140,7 +141,7 @@ export async function actionInscription(fd: FormData) {
   const nomAgence = txt(fd, "nomAgence");
   const nom = txt(fd, "nom");
   const email = txt(fd, "email");
-  const telephone = txt(fd, "telephone");
+  const telephone = numeroSoumis(fd);
   const motDePasse = String(fd.get("motDePasse") ?? "");
 
   if (!nomAgence || !nom || !email) erreur("/inscription", "Merci de remplir tous les champs obligatoires.");
@@ -191,7 +192,7 @@ export async function actionEnregistrerAgence(fd: FormData) {
       WHERE id = ?`,
     txt(fd, "nom") || agence.nom,
     vide(txt(fd, "ninea")), vide(txt(fd, "rccm")),
-    vide(txt(fd, "telephone")), vide(txt(fd, "email")),
+    vide(numeroSoumis(fd)), vide(txt(fd, "email")),
     vide(txt(fd, "adresse")), vide(txt(fd, "ville")),
     logoUrl,
     entier(fd, "commission_pct", 10),
@@ -383,14 +384,14 @@ export async function actionEnregistrerLocataire(fd: FormData) {
   const id = entier(fd, "id");
   const prenom = txt(fd, "prenom");
   const nom = txt(fd, "nom");
-  const telephone = txt(fd, "telephone");
+  const telephone = numeroSoumis(fd);
   const retour = id ? `/dashboard/locataires/${id}` : "/dashboard/locataires/nouveau";
 
   if (!prenom || !nom) erreur(retour, "Le prénom et le nom sont obligatoires.");
   if (!telephone) erreur(retour, "Le numéro de téléphone est obligatoire.");
 
   const champs = [
-    prenom, nom, telephone, vide(txt(fd, "telephone2")), vide(txt(fd, "email")),
+    prenom, nom, telephone, vide(numeroSoumis(fd, "telephone2")), vide(txt(fd, "email")),
     vide(txt(fd, "cni")), vide(txt(fd, "profession")), vide(txt(fd, "employeur")),
     vide(txt(fd, "adresse")), vide(txt(fd, "garant_nom")), vide(txt(fd, "garant_telephone")),
     vide(txt(fd, "notes")),
@@ -727,7 +728,7 @@ export async function actionEncaisserAcompte(fd: FormData) {
 export async function actionEnvoyerDemande(fd: FormData) {
   const bienId = entier(fd, "bien_id");
   const nom = txt(fd, "nom");
-  const telephone = txt(fd, "telephone");
+  const telephone = numeroSoumis(fd);
 
   const bien = un<{ agence_id: number }>(
     "SELECT agence_id FROM biens WHERE id = ? AND publie = 1", bienId,
@@ -756,7 +757,7 @@ export async function actionEnvoyerDemande(fd: FormData) {
 export async function actionEtreRappele(fd: FormData) {
   const retour = "/courte-duree";
   const nom = txt(fd, "nom");
-  const telephone = txt(fd, "telephone");
+  const telephone = numeroSoumis(fd);
 
   if (!nom || !telephone) {
     erreur(retour, "Votre nom et votre téléphone sont obligatoires.");
@@ -1041,7 +1042,9 @@ export async function actionConnexionLocataire(fd: FormData) {
     );
   }
 
-  const resultat = verifierIdentifiantsLocataire(telephone, motDePasse);
+  const resultat = verifierIdentifiantsLocataire(
+    telephone, motDePasse, String(fd.get("telephone_indicatif") ?? "") || undefined,
+  );
   if (!resultat.ok) {
     noterTentative(cle, false);
     if (origine !== null) noterTentative(origine, false);
@@ -1271,7 +1274,7 @@ export async function actionDemanderReservation(fd: FormData) {
   if (!bien || !bien.courte_duree) erreur("/", "Ce logement n'accepte pas les réservations.");
 
   const nom = txt(fd, "nom");
-  const telephone = txt(fd, "telephone");
+  const telephone = numeroSoumis(fd);
   if (!nom || !telephone) erreur(retour, "Votre nom et votre téléphone sont nécessaires.");
 
   const sejour = lireSejour(fd, bien);
