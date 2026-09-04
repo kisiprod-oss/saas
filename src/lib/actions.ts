@@ -48,6 +48,7 @@ import {
   verifierIdentifiantsArtisan,
 } from "./auth-artisan";
 import { enregistrerDocuments } from "./documents";
+import { enregistrerModeleBail, supprimerModeleBail } from "./modele-bail";
 import {
   corrigerSession, genererQuestions, ouvrirSessionQuiz, sessionEnCours,
   viderBanque, type SessionQuiz,
@@ -196,6 +197,43 @@ export async function actionEnregistrerAgence(fd: FormData) {
     entier(fd, "commission_pct", 10),
     vide(txt(fd, "paiement_orange_money")), vide(txt(fd, "paiement_wave")),
     vide(txt(fd, "paiement_free_money")), vide(txt(fd, "paiement_consignes")),
+    agence.id,
+  );
+  revalidatePath("/dashboard/agence");
+  redirect("/dashboard/agence?ok=1");
+}
+
+/** Envoie (ou remplace) le modele de bail propre a l'agence. */
+export async function actionEnregistrerModeleBail(fd: FormData) {
+  const { agence } = await exigerSession();
+  const retour = "/dashboard/agence";
+
+  const fichier = fd.get("modele_bail");
+  const { url, nom, erreur: probleme } = await enregistrerModeleBail(
+    fichier instanceof File ? fichier : null,
+  );
+  if (probleme) erreur(retour, probleme);
+  if (!url) erreur(retour, "Choisissez un fichier avant d'envoyer.");
+
+  if (agence.modele_bail_url) supprimerModeleBail(agence.modele_bail_url);
+
+  ecrire(
+    `UPDATE agences SET modele_bail_url = ?, modele_bail_nom = ?, modele_bail_le = datetime('now')
+      WHERE id = ?`,
+    url, nom, agence.id,
+  );
+  revalidatePath("/dashboard/agence");
+  redirect(`${retour}?ok=1`);
+}
+
+/** Retire le modele de bail de l'agence, sans en renvoyer un nouveau. */
+export async function actionSupprimerModeleBail() {
+  const { agence } = await exigerSession();
+  if (agence.modele_bail_url) supprimerModeleBail(agence.modele_bail_url);
+
+  ecrire(
+    `UPDATE agences SET modele_bail_url = NULL, modele_bail_nom = NULL, modele_bail_le = NULL
+      WHERE id = ?`,
     agence.id,
   );
   revalidatePath("/dashboard/agence");

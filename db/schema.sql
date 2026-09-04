@@ -118,6 +118,13 @@ CREATE TABLE IF NOT EXISTS agences (
   modele_rappel           TEXT,
   modele_relance          TEXT,
   modele_mise_en_demeure  TEXT,
+  -- Le modele de bail PROPRE a l'agence (PDF ou Word), envoye par elle pour
+  -- remplacer le bail standard genere par le logiciel quand son statut
+  -- juridique ou social exige des clauses differentes. Fichier prive,
+  -- jamais partage entre agences (voir src/lib/modele-bail.ts).
+  modele_bail_url         TEXT,
+  modele_bail_nom         TEXT,
+  modele_bail_le          TEXT,
   cree_le       TEXT NOT NULL DEFAULT (datetime('now'))
 );
 

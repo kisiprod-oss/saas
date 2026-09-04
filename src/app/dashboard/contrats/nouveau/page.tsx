@@ -16,6 +16,7 @@ type Params = { [cle: string]: string | string[] | undefined };
 export default async function PageNouveauContrat({ searchParams }: { searchParams: Promise<Params> }) {
   const { agence } = await exigerSession();
   const params = await searchParams;
+  const modeleBail = agence.modele_bail_url;
 
   const lire = (c: string) => {
     const v = params[c];
@@ -68,6 +69,14 @@ export default async function PageNouveauContrat({ searchParams }: { searchParam
       </Link>
       <EnTetePage titre="Nouveau contrat de bail" sousTitre="Reliez un bien disponible à un locataire." />
       <MessagesUrl params={params} />
+
+      {modeleBail && (
+        <p className="mb-5 rounded-lg border border-sky-200 bg-sky-50 px-4 py-2.5 text-sm text-sky-900">
+          Vous avez votre propre modèle de bail.{" "}
+          <a href={modeleBail} className="font-semibold hover:underline">Le télécharger ↓</a>
+          {" "}pour le remplir directement, plutôt que le bail standard ci-dessous.
+        </p>
+      )}
 
       {biens.length > 0 && locataires.length > 0 && aideDocumentsConfiguree() && (
         <DicteeDocument

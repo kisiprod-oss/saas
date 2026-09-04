@@ -1,7 +1,11 @@
 import { exigerSession } from "@/lib/auth";
-import { actionChangerPlan, actionEnregistrerAgence } from "@/lib/actions";
+import {
+  actionChangerPlan, actionEnregistrerAgence, actionEnregistrerModeleBail, actionSupprimerModeleBail,
+} from "@/lib/actions";
 import { un } from "@/lib/db";
-import { fcfa } from "@/lib/format";
+import { dateFr, fcfa } from "@/lib/format";
+import { TAILLE_MAX_MODELE } from "@/lib/modele-bail";
+import { BoutonConfirmation } from "@/components/bouton-confirmation";
 import { plan, PLANS } from "@/lib/tarifs";
 import { adresseDuSite, adresseSiteDeclaree, smtpConfigure } from "@/lib/email";
 import Link from "next/link";
@@ -247,6 +251,59 @@ export default async function PageAgence({ searchParams }: { searchParams: Promi
             <p className="mt-2 text-xs text-slate-500">
               Sur le serveur, <code className="rounded bg-slate-100 px-1">npm run sauvegarde</code> crée
               une archive avec les photos. À programmer chaque nuit.
+            </p>
+          </Carte>
+
+          <Carte className="p-5">
+            <h2 className="font-semibold text-slate-900">Mon modèle de bail</h2>
+            <p className="mt-1 text-sm text-slate-500">
+              Le bail que le logiciel génère est un modèle courant. Si votre statut
+              juridique ou social exige d&apos;autres clauses, envoyez ici votre propre
+              exemplaire : vous le retrouverez à tout moment pour le remplir ou le modifier.
+            </p>
+
+            {agence.modele_bail_url ? (
+              <div className="mt-3 rounded-lg border border-slate-200 bg-slate-50 px-3 py-2.5">
+                <p className="break-all text-sm font-medium text-slate-900">
+                  📄 {agence.modele_bail_nom ?? "Modèle envoyé"}
+                </p>
+                <p className="mt-0.5 text-xs text-slate-500">
+                  Envoyé le {dateFr(agence.modele_bail_le)}
+                </p>
+                <div className="mt-2.5 flex flex-wrap gap-2">
+                  <a href={agence.modele_bail_url} className="btn-secondaire py-1.5 text-xs">
+                    ⬇ Télécharger
+                  </a>
+                  <form action={actionSupprimerModeleBail}>
+                    <BoutonConfirmation
+                      message="Retirer ce modèle de bail ? Vous pourrez en renvoyer un autre à tout moment."
+                      className="btn-secondaire py-1.5 text-xs text-rose-700"
+                    >
+                      Retirer
+                    </BoutonConfirmation>
+                  </form>
+                </div>
+              </div>
+            ) : (
+              <p className="mt-3 text-xs text-slate-500">Aucun modèle envoyé pour l&apos;instant.</p>
+            )}
+
+            <form action={actionEnregistrerModeleBail} className="mt-3 space-y-2">
+              <input
+                name="modele_bail" type="file" required accept=".pdf,.doc,.docx"
+                className="champ file:mr-3 file:rounded file:border-0 file:bg-brand-50 file:px-3 file:py-1.5 file:text-sm file:font-medium file:text-brand-700"
+              />
+              <p className="text-xs text-slate-500">
+                PDF, DOC ou DOCX, {Math.round(TAILLE_MAX_MODELE / 1024 / 1024)} Mo maximum.
+                {agence.modele_bail_url && " L'envoi d'un nouveau fichier remplace l'ancien."}
+              </p>
+              <button type="submit" className="btn-secondaire w-full">
+                {agence.modele_bail_url ? "Remplacer le modèle" : "Envoyer mon modèle"}
+              </button>
+            </form>
+
+            <p className="mt-3 text-xs text-slate-500">
+              Ce fichier est privé : seule votre agence peut le télécharger.
             </p>
           </Carte>
 
