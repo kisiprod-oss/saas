@@ -3,3 +3,4 @@
  * scripts en ligne de commande puissent l'importer tel quel.
  */
 export function resoudreDossierDonnees(racine?: string, deplacer?: boolean): string;
+export function dossierDonneesSur(racine?: string, deplacer?: boolean): string;

@@ -1,7 +1,7 @@
 import Database from "better-sqlite3";
 import fs from "node:fs";
 import path from "node:path";
-import { resoudreDossierDonnees } from "./dossier-donnees.mjs";
+import { dossierDonneesSur } from "./dossier-donnees.mjs";
 
 /**
  * Connexion unique a la base SQLite.
@@ -17,19 +17,46 @@ const racine = process.cwd();
  * doivent tous designer le meme dossier, faute de quoi une sauvegarde
  * viserait un emplacement vide sans que rien ne le signale.
  */
-export const dossierData: string = resoudreDossierDonnees(racine);
+export const dossierData: string = dossierDonneesSur(racine);
 
 const cheminBase = process.env.DATABASE_FILE ?? path.join(dossierData, "sen-gestion.db");
 
-function ouvrirBase(): Database.Database {
-  fs.mkdirSync(path.dirname(cheminBase), { recursive: true });
-  const base = new Database(cheminBase);
+/** Chemin de repli, a l'ancienne place, si le premier ne s'ouvre pas. */
+const cheminSecours = path.join(racine, "data", "sen-gestion.db");
+
+function ouvrirA(chemin: string): Database.Database {
+  fs.mkdirSync(path.dirname(chemin), { recursive: true });
+  const base = new Database(chemin);
   base.pragma("journal_mode = WAL");
   base.pragma("foreign_keys = ON");
   const schema = fs.readFileSync(path.join(racine, "db", "schema.sql"), "utf8");
   base.exec(schema);
   migrer(base);
   return base;
+}
+
+/**
+ * Ouvre la base, et ne laisse JAMAIS un probleme de dossier abattre le site.
+ *
+ * Ce module est charge par toutes les pages : une exception ici et c'est
+ * « Application error » partout, pour tout le monde, y compris sur la page
+ * d'accueil publique. Un disque plein, un droit refuse ou une variable mal
+ * renseignee chez l'hebergeur ne doivent pas avoir ce pouvoir. On retente
+ * donc a l'ancienne place avant d'abandonner, en disant pourquoi dans le
+ * journal du serveur.
+ */
+function ouvrirBase(): Database.Database {
+  try {
+    return ouvrirA(cheminBase);
+  } catch (e) {
+    console.error(
+      `[Sen Gestion] Ouverture de la base impossible dans ${cheminBase} :`,
+      (e as Error).message,
+    );
+    if (cheminSecours === cheminBase) throw e;
+    console.error(`[Sen Gestion] Nouvel essai a l'ancienne place : ${cheminSecours}`);
+    return ouvrirA(cheminSecours);
+  }
 }
 
 /**

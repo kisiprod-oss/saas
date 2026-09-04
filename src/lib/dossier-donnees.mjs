@@ -43,6 +43,27 @@ function contientUneBase(dossier) {
   return fs.existsSync(path.join(dossier, "sen-gestion.db"));
 }
 
+/**
+ * Le dossier est-il REELLEMENT utilisable ?
+ *
+ * On le cree et on y ecrit un fichier d'essai, au lieu de se contenter de
+ * demander la permission au parent. Un hebergeur mutualise peut accorder le
+ * droit d'ecriture sur le dossier personnel et refuser la creation dedans —
+ * quota atteint, identifiant d'execution different, dossier protege. La
+ * seule reponse fiable, c'est d'essayer.
+ */
+function utilisable(dossier) {
+  try {
+    fs.mkdirSync(dossier, { recursive: true });
+    const essai = path.join(dossier, `.essai-${process.pid}`);
+    fs.writeFileSync(essai, "ok");
+    fs.rmSync(essai, { force: true });
+    return true;
+  } catch {
+    return false;
+  }
+}
+
 /** Un dossier ou l'on peut ecrire, et que les deploiements ne remplacent pas. */
 function dossierExterieur(racine) {
   const candidats = [];
@@ -63,12 +84,8 @@ function dossierExterieur(racine) {
   if (parent && parent !== racine) candidats.push(parent);
 
   for (const base of candidats) {
-    try {
-      fs.accessSync(base, fs.constants.W_OK);
-      return path.join(base, NOM_DOSSIER_SUR);
-    } catch {
-      /* pas inscriptible : on essaie le suivant */
-    }
+    const vise = path.join(base, NOM_DOSSIER_SUR);
+    if (utilisable(vise)) return vise;
   }
   return null;
 }
@@ -125,7 +142,22 @@ function recopier(source, destination) {
  * sans declencher de recopie.
  */
 export function resoudreDossierDonnees(racine = process.cwd(), deplacer = true) {
-  if (process.env.DOSSIER_DONNEES) return path.resolve(process.env.DOSSIER_DONNEES);
+  if (process.env.DOSSIER_DONNEES) {
+    const choisi = path.resolve(process.env.DOSSIER_DONNEES);
+    // Un reglage explicite fait foi — mais s'il designe un endroit ou l'on ne
+    // peut pas ecrire, mieux vaut un site debout avec un avertissement bien
+    // visible qu'une page blanche pour tout le monde.
+    if (deplacer && !utilisable(choisi)) {
+      console.error(
+        `[Sen Gestion] DOSSIER_DONNEES vaut « ${process.env.DOSSIER_DONNEES} », ` +
+        "mais ce dossier n'est pas accessible en ecriture. Verifiez cette " +
+        "variable chez votre hebergeur. En attendant, le logiciel choisit " +
+        "lui-meme un emplacement.",
+      );
+    } else {
+      return choisi;
+    }
+  }
 
   const interne = path.join(racine, "data");
   const externe = dossierExterieur(racine);
@@ -145,4 +177,23 @@ export function resoudreDossierDonnees(racine = process.cwd(), deplacer = true) 
 
   // Installation neuve : elle demarre directement au bon endroit.
   return externe;
+}
+
+/**
+ * L'emplacement retenu, garanti utilisable.
+ *
+ * Dernier filet : si rien de tout cela n'aboutit, on rend l'ancien dossier
+ * interne. Il ne survit pas aux mises a jour, mais un site debout vaut mieux
+ * qu'un site mort — et l'espace d'administration signale alors la situation
+ * en clair.
+ */
+export function dossierDonneesSur(racine = process.cwd(), deplacer = true) {
+  try {
+    const choisi = resoudreDossierDonnees(racine, deplacer);
+    if (!deplacer || utilisable(choisi)) return choisi;
+    console.error(`[Sen Gestion] Ecriture impossible dans ${choisi} : repli sur data/.`);
+  } catch (e) {
+    console.error("[Sen Gestion] Choix du dossier de donnees impossible :", e.message);
+  }
+  return path.join(racine, "data");
 }
