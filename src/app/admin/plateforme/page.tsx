@@ -1,9 +1,11 @@
 import { adressesAdminVisibles, exigerAdmin } from "@/lib/admin";
+import { emplacementDonnees } from "@/lib/emplacement-donnees";
 import { collaborateurs, plateforme } from "@/lib/plateforme";
 import { dateFr, fcfa, moisCourt } from "@/lib/format";
 import { plan } from "@/lib/tarifs";
 import { Carte, EnTetePage } from "@/components/ui";
 import { COULEUR_ENCAISSE, GraphiqueBarres } from "@/components/graphique-barres";
+import { CarteEmplacement } from "@/components/carte-emplacement";
 
 export const metadata = { title: "Vue d'ensemble" };
 export const dynamic = "force-dynamic";
@@ -13,6 +15,7 @@ export default async function PagePlateforme() {
   const p = plateforme();
   const equipe = collaborateurs();
   const admins = adressesAdminVisibles();
+  const emplacement = emplacementDonnees();
 
   return (
     <>
@@ -20,6 +23,12 @@ export default async function PagePlateforme() {
         titre="Vue d'ensemble"
         sousTitre="L'état de Sen Gestion : vos adhérents, vos abonnements, vos comptes."
       />
+
+      {emplacement.dansApplication && (
+        <div className="mb-6">
+          <CarteEmplacement e={emplacement} />
+        </div>
+      )}
 
       {/* ------------------------------- Adhérents ------------------------------- */}
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
@@ -221,6 +230,12 @@ export default async function PagePlateforme() {
           </table>
         </div>
       </Carte>
+
+      {!emplacement.dansApplication && (
+        <div className="mt-4">
+          <CarteEmplacement e={emplacement} />
+        </div>
+      )}
     </>
   );
 }
