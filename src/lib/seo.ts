@@ -17,15 +17,48 @@
  * robots.txt, et dans l'en-tete de la page elle-meme (voir NON_INDEXABLE).
  */
 
+const DOMAINE_PAR_DEFAUT = "https://sengestion.net";
+
 /**
  * Adresse publique du site.
  *
  * ADRESSE_SITE fait autorite. Le repli sur le domaine connu evite qu'une
  * variable oubliee produise des adresses canoniques cassees, ce qui coute
  * bien plus cher en referencement qu'un domaine ecrit en dur.
+ *
+ * POURQUOI TOUT CE SOIN POUR UNE SIMPLE CHAINE. Cette valeur finit dans
+ * `new URL()`, dans la mise en page racine. Or `new URL("sengestion.net")`
+ * ne renvoie pas une adresse approximative : il leve une exception. Comme la
+ * mise en page enveloppe absolument toutes les pages, y compris la page
+ * « introuvable » que Next construit en premier, une adresse saisie sans
+ * « https:// » chez l'hebergeur rendait l'application entiere incompilable,
+ * sur un message — « Failed to collect page data for /_not-found » — qui ne
+ * nomme ni la variable ni sa valeur. Le site est alors reste bloque sur une
+ * ancienne version pendant des dizaines de deploiements, sans que rien ne
+ * l'indique.
+ *
+ * Une variable mal saisie dans un panneau d'hebergement est une erreur
+ * ordinaire, pas un cas exceptionnel. Elle doit se rattraper.
  */
-export const SITE = (process.env.ADRESSE_SITE?.trim() || "https://sengestion.net")
-  .replace(/\/$/, "");
+function adresseDuSite(): string {
+  const brut = process.env.ADRESSE_SITE?.trim();
+  if (!brut) return DOMAINE_PAR_DEFAUT;
+
+  // Le protocole oublie est de loin l'erreur la plus frequente : on le
+  // remet plutot que de refuser une valeur qui dit clairement ce qu'elle veut.
+  const candidat = /^https?:\/\//i.test(brut) ? brut : `https://${brut}`;
+  try {
+    return new URL(candidat).href.replace(/\/$/, "");
+  } catch {
+    console.error(
+      `[Sen Gestion] ADRESSE_SITE ne forme pas une adresse valide (« ${brut} ») : `
+      + `repli sur ${DOMAINE_PAR_DEFAUT}. Corrigez la variable chez l'hebergeur.`,
+    );
+    return DOMAINE_PAR_DEFAUT;
+  }
+}
+
+export const SITE = adresseDuSite();
 
 /** Nom affiche partout : titres, partages, donnees structurees. */
 export const NOM_SITE = "Sen Gestion";
