@@ -57,6 +57,15 @@ export const metadata: Metadata = {
     images: ["/logo-sen-gestion.webp"],
   },
   formatDetection: { telephone: true, address: false, email: false },
+  // Preuve de propriete du site pour Google Search Console.
+  //
+  // Elle passe par une variable d'environnement, et non par le code : la
+  // personne qui gere le site colle le code fourni par Google chez
+  // l'hebergeur, sans avoir a modifier ni deployer quoi que ce soit. La
+  // balise n'apparait que si la variable est renseignee.
+  verification: process.env.GOOGLE_VERIFICATION
+    ? { google: process.env.GOOGLE_VERIFICATION.trim() }
+    : undefined,
 };
 
 export const viewport: Viewport = {
