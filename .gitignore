@@ -11,3 +11,6 @@ data/
 *.db-journal
 .DS_Store
 .scratch-pw/
+
+# Résultats des essais du skill annonce-bien : refabriqués à chaque itération.
+.claude/skills/*-workspace/

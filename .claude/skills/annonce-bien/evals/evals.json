@@ -1,0 +1,63 @@
+{
+  "skill_name": "annonce-bien",
+  "evals": [
+    {
+      "id": 1,
+      "name": "mermoz-classique",
+      "prompt": "J'ai un appartement à Mermoz, 2 chambres, pas meublé, 350 000 FCFA le mois plus 20 000 de charges, une salle de bain, il est au 3e étage, pas loin de la VDN. Rédige-moi l'annonce.",
+      "expected_output": "Deux propositions de titre et une description. Le loyer et les charges sont présentés au mois, en FCFA avec l'espace des milliers. Le bien est décrit comme non meublé. Rien n'est inventé au-delà des faits donnés (2 chambres, 1 salle de bain, 3e étage, Mermoz, proximité VDN).",
+      "files": [],
+      "assertions": [
+        "La réponse fournit deux propositions de titre nettement différentes, et non deux fois la même phrase reformulée",
+        "La réponse fournit une description détaillée, séparée des titres",
+        "Tous les montants sont écrits en FCFA avec une espace entre les milliers et sans décimales",
+        "La première phrase de la description se suffit à elle-même : elle donne le type de bien, le lieu et le prix",
+        "Aucune promesse invérifiable ni superlatif creux (« exceptionnel », « à ne pas manquer », « meilleur quartier »)",
+        "Le loyer est présenté au mois, jamais à la nuit",
+        "Le montant 350 000 FCFA apparaît correctement",
+        "Les 20 000 FCFA de charges sont mentionnés distinctement du loyer",
+        "Le texte indique que le logement n'est pas meublé",
+        "Mermoz apparaît dans au moins un des deux titres",
+        "Aucun équipement absent de la demande n'est inventé (ni climatisation, ni piscine, ni gardien, ni ascenseur, ni parking, ni jardin)"
+      ]
+    },
+    {
+      "id": 2,
+      "name": "ngaparou-courte-duree",
+      "prompt": "Nouveau bien à publier :\n- Villa à Ngaparou\n- 5 chambres, meublée\n- Piscine, jardin\n- Location courte durée uniquement, à la nuit\n- 60 000 FCFA la nuit, minimum 2 nuits\n- Capacité 10 personnes\nPeux-tu écrire l'annonce ?",
+      "expected_output": "Deux titres et une description qui parlent d'une location à la nuit (jamais d'un loyer mensuel), mentionnent le prix par nuit, le minimum de nuits et la capacité d'accueil. La ville n'est pas Dakar mais Ngaparou, et cela doit être respecté.",
+      "files": [],
+      "assertions": [
+        "La réponse fournit deux propositions de titre nettement différentes, et non deux fois la même phrase reformulée",
+        "La réponse fournit une description détaillée, séparée des titres",
+        "Tous les montants sont écrits en FCFA avec une espace entre les milliers et sans décimales",
+        "La première phrase de la description se suffit à elle-même : elle donne le type de bien, le lieu et le prix",
+        "Aucune promesse invérifiable ni superlatif creux (« exceptionnel », « à ne pas manquer », « meilleur quartier »)",
+        "Le prix est présenté par nuit et jamais comme un loyer mensuel",
+        "Le montant 60 000 FCFA la nuit apparaît correctement",
+        "Le minimum de 2 nuits est mentionné",
+        "La capacité de 10 personnes est mentionnée",
+        "La ville retenue est Ngaparou et non Dakar",
+        "La piscine et le jardin sont mentionnés"
+      ]
+    },
+    {
+      "id": 3,
+      "name": "hlm-infos-minimales",
+      "prompt": "Studio à HLM à louer, 100 000 FCFA par mois, c'est tout ce que j'ai pour l'instant. Fais-moi une annonce quand même.",
+      "expected_output": "Deux titres et une description écrits uniquement à partir des trois faits connus (studio, HLM, 100 000 FCFA par mois), sans inventer d'équipement, de surface ni de proximité. Idéalement une note courte signalant les informations qui manquent et rendraient l'annonce meilleure.",
+      "files": [],
+      "assertions": [
+        "La réponse fournit deux propositions de titre nettement différentes, et non deux fois la même phrase reformulée",
+        "La réponse fournit une description détaillée, séparée des titres",
+        "Tous les montants sont écrits en FCFA avec une espace entre les milliers et sans décimales",
+        "La première phrase de la description se suffit à elle-même : elle donne le type de bien, le lieu et le prix",
+        "Aucune promesse invérifiable ni superlatif creux (« exceptionnel », « à ne pas manquer », « meilleur quartier »)",
+        "Le montant 100 000 FCFA par mois apparaît correctement",
+        "HLM est identifié comme le quartier",
+        "Aucun équipement, surface, étage ni proximité n'est inventé : seuls les trois faits donnés sont utilisés",
+        "Une note signale les informations manquantes qui rendraient l'annonce meilleure"
+      ]
+    }
+  ]
+}
