@@ -36,7 +36,7 @@ export default async function LayoutAdmin({ children }: { children: React.ReactN
               Vue d&apos;ensemble
             </Link>
             <Link href="/admin/courte-duree" className="rounded-lg px-3 py-2 text-sm font-medium text-slate-300 hover:bg-slate-800 hover:text-white">
-              Courte durée
+              Appartement meublé
               {aRappeler > 0 && (
                 <span className="ml-1.5 rounded-full bg-rose-500 px-1.5 text-xs font-bold text-white">
                   {aRappeler}

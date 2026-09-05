@@ -56,7 +56,7 @@ export function EntetePublic() {
             Les annonces
           </Link>
           <Link href="/courte-duree" className="hidden rounded-lg px-3 py-2 text-sm font-medium text-slate-600 hover:text-brand-700 sm:block">
-            Courte durée
+            Appartement meublé
           </Link>
           <Link href="/tarifs" className="hidden rounded-lg px-3 py-2 text-sm font-medium text-slate-600 hover:text-brand-700 sm:block">
             Tarifs
@@ -85,7 +85,7 @@ export function EntetePublic() {
                 Les annonces
               </Link>
               <Link href="/courte-duree" className="block rounded-lg px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50">
-                Courte durée
+                Appartement meublé
               </Link>
               <Link href="/tarifs" className="block rounded-lg px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50">
                 Tarifs
@@ -122,7 +122,7 @@ export function PiedPublic() {
           <div className="text-sm">
             <p className="font-semibold text-slate-900">Espace professionnel</p>
             <ul className="mt-2 space-y-1.5 text-slate-500">
-              <li><Link href="/courte-duree" className="hover:text-brand-700">Louer en courte durée</Link></li>
+              <li><Link href="/courte-duree" className="hover:text-brand-700">Louer un appartement meublé</Link></li>
               <li><Link href="/tarifs" className="hover:text-brand-700">Tarifs et formules</Link></li>
               <li><Link href="/professionnels" className="hover:text-brand-700">Artisans et professionnels</Link></li>
               <li><Link href="/connexion" className="hover:text-brand-700">Se connecter</Link></li>

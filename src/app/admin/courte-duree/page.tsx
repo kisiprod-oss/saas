@@ -5,7 +5,7 @@ import { actionImagesCourteDuree, actionStatutProspect } from "@/lib/actions";
 import { dateFr, telephoneBrut, telephoneFr } from "@/lib/format";
 import { Carte, EnTetePage, MessagesUrl } from "@/components/ui";
 
-export const metadata = { title: "Page courte durée" };
+export const metadata = { title: "Page Appartement meublé" };
 export const dynamic = "force-dynamic";
 
 type Params = { [cle: string]: string | string[] | undefined };
@@ -27,7 +27,7 @@ export default async function PageAdminCourteDuree({ searchParams }: { searchPar
   return (
     <>
       <EnTetePage
-        titre="Page courte durée"
+        titre="Page Appartement meublé"
         sousTitre="Les photos de la page publique, et les personnes qui demandent à être rappelées."
       >
         <Link href="/courte-duree" target="_blank" className="btn-secondaire">
