@@ -3,6 +3,14 @@ import "./globals.css";
 import { AssistantMonte } from "@/components/assistant-monte";
 import { ficheOrganisation, MOTS_CLES, NOM_SITE, SITE } from "@/lib/seo";
 
+/**
+ * Code de propriete remis par Google Search Console, methode « Balise HTML ».
+ * 43 caracteres, alphabet base64url. Il identifie le compte autorise a
+ * consulter les statistiques de recherche du site — il n'ouvre aucun acces
+ * au site lui-meme.
+ */
+const CODE_GOOGLE = "rHwhIsIk6MGAHv_pphZkFPY9uy7WJ-mu_VL4AGuV2sE";
+
 export const metadata: Metadata = {
   // Sans metadataBase, Next produit des adresses RELATIVES pour les partages
   // et les liens canoniques : les apercus WhatsApp et Facebook restent alors
@@ -59,13 +67,18 @@ export const metadata: Metadata = {
   formatDetection: { telephone: true, address: false, email: false },
   // Preuve de propriete du site pour Google Search Console.
   //
-  // Elle passe par une variable d'environnement, et non par le code : la
-  // personne qui gere le site colle le code fourni par Google chez
-  // l'hebergeur, sans avoir a modifier ni deployer quoi que ce soit. La
-  // balise n'apparait que si la variable est renseignee.
-  verification: process.env.GOOGLE_VERIFICATION
-    ? { google: process.env.GOOGLE_VERIFICATION.trim() }
-    : undefined,
+  // Le code est ecrit dans le depot, en clair, et c'est voulu : Google le
+  // publie lui-meme dans le code source de chaque page, ce n'est donc pas
+  // un secret. Le faire dependre d'une variable d'environnement paraissait
+  // plus propre, mais ajoutait quatre facons d'echouer en silence — variable
+  // mal nommee, valeur tronquee a la saisie, guillemets colles avec le code,
+  // application pas redemarree — et la validation echouait sans que rien
+  // n'indique laquelle. Ecrit ici, la balise part avec le deploiement.
+  //
+  // GOOGLE_VERIFICATION reste prioritaire : elle permet de valider une
+  // autre propriete (second domaine, autre compte Google) sans toucher au
+  // code.
+  verification: { google: process.env.GOOGLE_VERIFICATION?.trim() || CODE_GOOGLE },
 };
 
 export const viewport: Viewport = {
