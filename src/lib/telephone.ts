@@ -91,6 +91,19 @@ export function numeroCanonique(saisie: string | null | undefined, indicatif?: s
   //    On retire le zero de depart des numeros nationaux (06… en France,
   //    07… au Royaume-Uni) : il ne se compose pas depuis l'etranger.
   if (indicatif) {
+    // Le numero porte DEJA l'indicatif choisi ? Alors la personne a tape son
+    // numero en entier, sans le « + ». C'est le cas quand l'agence lui a
+    // communique « +221 77 555 44 33 » et que le « + » s'est perdu en
+    // chemin. Le recoller une seconde fois donnait « 221221775554433 »,
+    // refuse avec un message parlant de mot de passe : le locataire cherchait
+    // alors du cote du mot de passe, et ne trouvait jamais.
+    //
+    // On exige un reste d'au moins huit chiffres pour ne pas confondre avec
+    // un numero national qui commencerait par les memes chiffres : aucun
+    // numero senegalais ne commence par 22, mais la prudence ne coute rien.
+    if (chiffres.startsWith(indicatif) && chiffres.length - indicatif.length >= 8) {
+      return chiffres;
+    }
     const national = chiffres.replace(/^0+/, "");
     return national ? `${indicatif}${national}` : "";
   }

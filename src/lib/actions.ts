@@ -91,7 +91,7 @@ export async function actionConnexion(fd: FormData) {
   const origine = await adresseIp();
 
   // Deux verrous : sur l'adresse e-mail visee, et sur la machine qui essaie.
-  if (tropDeTentatives(email) || (origine !== null && tropDeTentatives(origine))) {
+  if (tropDeTentatives(email) || (origine !== null && tropDeTentatives(origine, true))) {
     erreur(
       "/connexion",
       `Trop de tentatives de connexion. Réessayez dans ${MINUTES_BLOCAGE} minutes,`
@@ -1056,7 +1056,7 @@ export async function actionConnexionLocataire(fd: FormData) {
   const origine = await adresseIp();
   const cle = `loc:${telephone.replace(/\D/g, "")}`;
 
-  if (tropDeTentatives(cle) || (origine !== null && tropDeTentatives(origine))) {
+  if (tropDeTentatives(cle) || (origine !== null && tropDeTentatives(origine, true))) {
     erreur(
       "/espace-locataire/connexion",
       `Trop de tentatives de connexion. Réessayez dans ${MINUTES_BLOCAGE} minutes.`,
@@ -1689,7 +1689,7 @@ export async function actionConnexionArtisan(fd: FormData) {
   const origine = await adresseIp();
   const cle = `pro:${email}`;
 
-  if (tropDeTentatives(cle) || (origine !== null && tropDeTentatives(origine))) {
+  if (tropDeTentatives(cle) || (origine !== null && tropDeTentatives(origine, true))) {
     erreur("/pro/connexion", `Trop de tentatives. Réessayez dans ${MINUTES_BLOCAGE} minutes.`);
   }
 

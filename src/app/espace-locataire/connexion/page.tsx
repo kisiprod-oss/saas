@@ -34,7 +34,7 @@ export default async function PageConnexionLocataire({ searchParams }: { searchP
 
           <form action={actionConnexionLocataire} className="mt-6 space-y-4">
             <ChampTelephone obligatoire label="Numéro de téléphone"
-                            aide="Le numéro que votre agence a enregistré." />
+                            aide="Celui que votre agence a enregistré. Avec ou sans l'indicatif, peu importe." />
             <div>
               <label className="etiquette" htmlFor="motDePasse">Mot de passe</label>
               <input id="motDePasse" name="motDePasse" type="password" required
@@ -44,8 +44,9 @@ export default async function PageConnexionLocataire({ searchParams }: { searchP
           </form>
 
           <p className="mt-6 text-center text-xs leading-relaxed text-slate-500">
-            Votre agence vous a communiqué ce mot de passe. Vous ne l&apos;avez
-            pas encore reçu ? Contactez-la directement.
+            Votre agence vous a communiqué ce mot de passe. Vous l&apos;avez perdu,
+            ou vous n&apos;arrivez pas à entrer&nbsp;? Contactez-la&nbsp;: elle vous
+            en redonne un immédiatement.
           </p>
         </div>
 

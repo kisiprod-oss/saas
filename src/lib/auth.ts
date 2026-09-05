@@ -190,7 +190,23 @@ export function inscrireAgence(params: {
    Protection contre les essais de mots de passe en rafale
    ================================================================== */
 
+/** Echecs tolerees sur UN compte : c'est ce qui protege le mot de passe. */
 const MAX_TENTATIVES = 8;
+
+/**
+ * Echecs tolerees depuis une meme adresse reseau.
+ *
+ * Volontairement bien plus haut. Au Senegal, les locataires se connectent
+ * depuis leur telephone, et un operateur mobile fait passer des milliers
+ * d'abonnes par la meme adresse. A huit essais, il suffisait de quelques
+ * personnes qui se trompent pour bloquer TOUT le reseau pendant un quart
+ * d'heure — des gens qui n'avaient rien tente se voyaient refuser l'entree.
+ *
+ * Le verrou par compte reste strict : c'est lui qui protege reellement un
+ * mot de passe. Celui-ci ne sert qu'a freiner un balayage massif.
+ */
+const MAX_TENTATIVES_RESEAU = 60;
+
 const FENETRE_MINUTES = 15;
 
 /** Note une tentative de connexion, reussie ou non. */
@@ -203,14 +219,17 @@ export function noterTentative(cle: string, reussie: boolean) {
   ecrire("DELETE FROM tentatives_connexion WHERE le < datetime('now', '-1 day')");
 }
 
-/** Vrai si trop d'echecs recents : la connexion doit etre refusee. */
-export function tropDeTentatives(cle: string): boolean {
+/**
+ * Vrai si trop d'echecs recents : la connexion doit etre refusee.
+ * `reseau` a true pour une adresse IP, qui tolere bien plus d'essais.
+ */
+export function tropDeTentatives(cle: string, reseau = false): boolean {
   const r = un<{ n: number }>(
     `SELECT COUNT(*) AS n FROM tentatives_connexion
       WHERE cle = ? AND reussie = 0 AND le > datetime('now', ?)`,
     cle.toLowerCase(), `-${FENETRE_MINUTES} minutes`,
   );
-  return (r?.n ?? 0) >= MAX_TENTATIVES;
+  return (r?.n ?? 0) >= (reseau ? MAX_TENTATIVES_RESEAU : MAX_TENTATIVES);
 }
 
 /** Efface les echecs apres une connexion reussie. */
