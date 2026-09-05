@@ -7,8 +7,9 @@ import { EntetePublic, PiedPublic } from "@/components/entete-public";
 import { Alerte } from "@/components/ui";
 import { ChampTelephone } from "@/components/champ-telephone";
 import {
-  IllustrationCalendrier, IllustrationPrixNuit, IllustrationRecu, IllustrationRelance,
-  IllustrationRevenus, IllustrationSansCommission,
+  IllustrationCalendrier, IllustrationLogementMeuble, IllustrationPrixNuit,
+  IllustrationRecu, IllustrationRelance, IllustrationRevenus,
+  IllustrationSansCommission, IllustrationVillaBordDeMer, IllustrationVoyageur,
 } from "@/components/illustrations";
 
 export const metadata = {
@@ -22,38 +23,19 @@ export const dynamic = "force-dynamic";
 
 type Params = { [cle: string]: string | string[] | undefined };
 
-/** Visuel de remplacement tant qu'aucune photo n'a été ajoutée. */
-function Illustration({ variante }: { variante: number }) {
-  const fonds = ["bg-brand-50", "bg-sable-50", "bg-sky-50"];
-  return (
-    <div className={`flex aspect-[4/3] items-center justify-center rounded-xl ${fonds[variante % 3]}`}>
-      <svg viewBox="0 0 120 90" className="h-2/3 w-2/3 text-brand-600/40" fill="none"
-           stroke="currentColor" strokeWidth={2.2} strokeLinecap="round" strokeLinejoin="round">
-        {variante % 3 === 0 && (
-          <>
-            <path d="M12 42 60 12l48 30" /><path d="M24 38v40h72V38" />
-            <rect x="42" y="52" width="16" height="26" rx="1.5" />
-            <rect x="68" y="52" width="14" height="12" rx="1.5" />
-          </>
-        )}
-        {variante % 3 === 1 && (
-          <>
-            <rect x="18" y="20" width="84" height="58" rx="4" />
-            <path d="M18 36h84M38 20v-8M82 20v-8" />
-            <path d="M34 50h10M56 50h10M78 50h10M34 64h10M56 64h10" />
-          </>
-        )}
-        {variante % 3 === 2 && (
-          <>
-            <path d="M22 70V34l38-20 38 20v36" /><path d="M14 70h92" />
-            <circle cx="60" cy="44" r="9" />
-            <path d="M45 70a15 15 0 0 1 30 0" />
-          </>
-        )}
-      </svg>
-    </div>
-  );
-}
+/**
+ * Ce qui s'affiche a la place d'une photo absente.
+ *
+ * Les trois emplacements du bandeau attendent les cliches du proprietaire,
+ * ajoutes depuis l'ecran d'administration. Tant qu'ils manquent — et ils
+ * manqueront longtemps — ces dessins tiennent la place, au format exact de
+ * l'image qu'ils remplacent : le jour ou la photo arrive, la page ne bouge pas.
+ */
+const REMPLACEMENTS = [
+  { Dessin: IllustrationLogementMeuble, format: "aspect-[16/9]" },
+  { Dessin: IllustrationVillaBordDeMer, format: "aspect-[4/3]" },
+  { Dessin: IllustrationVoyageur, format: "aspect-[4/3]" },
+];
 
 export default async function PageCourteDuree({ searchParams }: { searchParams: Promise<Params> }) {
   const requete = await searchParams;
@@ -141,17 +123,17 @@ export default async function PageCourteDuree({ searchParams }: { searchParams: 
             </div>
 
             <div className="grid grid-cols-2 gap-3">
-              {[0, 1, 2].map((i) => (
+              {REMPLACEMENTS.map(({ Dessin, format }, i) => (
                 <div key={i} className={i === 0 ? "col-span-2" : ""}>
                   {images[i] ? (
                     // eslint-disable-next-line @next/next/no-img-element
                     <img
                       src={images[i]}
                       alt=""
-                      className={`w-full rounded-xl object-cover ${i === 0 ? "aspect-[16/9]" : "aspect-[4/3]"}`}
+                      className={`w-full rounded-xl object-cover ${format}`}
                     />
                   ) : (
-                    <Illustration variante={i} />
+                    <Dessin format={format} />
                   )}
                 </div>
               ))}

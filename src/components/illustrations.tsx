@@ -21,13 +21,19 @@
 
 const TAILLE = "0 0 120 90";
 
-function Cadre({ fond, children }: { fond: string; children: React.ReactNode }) {
+function Cadre({ fond, format, children }: {
+  fond: string; format?: string; children: React.ReactNode;
+}) {
   // Bandeau court sur telephone, image pleine sur ordinateur : en 4/3, quatre
   // cartes empilees imposaient un defilement interminable sur un ecran de
   // 390 px — or c'est la que se trouve la quasi-totalite du public.
+  //
+  // `format` sert aux dessins qui remplacent une photographie : ils doivent
+  // epouser la place exacte de l'image absente, sinon la mise en page saute
+  // le jour ou quelqu'un ajoute enfin la photo.
   return (
     <div
-      className={`flex aspect-[16/7] items-center justify-center rounded-xl sm:aspect-[4/3] ${fond}`}
+      className={`flex items-center justify-center rounded-xl ${format ?? "aspect-[16/7] sm:aspect-[4/3]"} ${fond}`}
     >
       <svg
         viewBox={TAILLE}
@@ -240,6 +246,109 @@ export function IllustrationRecu() {
         <rect x="92" y="58" width="8" height="8" rx="1" />
         <rect x="80" y="70" width="8" height="8" rx="1" />
         <rect x="94" y="72" width="4" height="4" rx="1" />
+      </g>
+    </Cadre>
+  );
+}
+
+
+/* ==========================================================================
+   Dessins tenant lieu de photographie — bandeau « Appartement meublé »
+   ==========================================================================
+
+   Ceux-ci derogent au principe des precedents, et il faut dire pourquoi. Les
+   illustrations ci-dessus montrent ce que le LOGICIEL fait, jamais un lieu :
+   une photo d'ambiance illustrerait n'importe quel produit. Ces trois-la
+   occupent au contraire les emplacements photo du bandeau, que le proprietaire
+   remplira avec ses propres cliches depuis l'ecran d'administration. Leur
+   travail est donc de tenir la place d'une photographie de logement — d'ou un
+   lieu, un sejour, un voyageur.
+
+   Elles restent des dessins, franchement : personne ne peut les confondre avec
+   la photo d'un vrai bien, et c'est voulu. Beaucoup de pages resteront sans
+   photo pendant des mois ; elles doivent tenir debout telles quelles.
+   ========================================================================== */
+
+/* ------------------------------------------------------ Logement meuble --- */
+export function IllustrationLogementMeuble({ format }: { format?: string }) {
+  return (
+    <Cadre fond="bg-brand-50" format={format}>
+      {/* Une chambre prete a recevoir : le lit fait, la clim au mur, la lampe
+          allumee. C'est « meuble » qu'il faut lire avant meme le texte. */}
+      <g className="stroke-brand-700" strokeWidth={2.4}>
+        <path d="M6 76h108" />
+
+        {/* Fenetre, puis dessous la table de chevet : la colonne de gauche. */}
+        <rect x="10" y="12" width="26" height="24" rx="3" className="fill-white" />
+        <path d="M23 12v24M10 24h26" />
+        <path d="M29 56v-6" />
+        <rect x="20" y="56" width="20" height="4" rx="1.5" className="fill-brand-100" />
+        <rect x="23" y="60" width="14" height="16" rx="1.5" className="fill-white" />
+        <path d="M23 67h14" />
+
+        {/* Le climatiseur, et l'air qui descend. */}
+        <rect x="80" y="12" width="28" height="11" rx="3" className="fill-white" />
+        <path d="M87 27v4M94 27v5M101 27v4" />
+
+        {/* Le lit, de profil : tete de lit, matelas, oreiller, pieds. */}
+        <rect x="44" y="30" width="10" height="46" rx="4" className="fill-brand-100" />
+        <rect x="44" y="54" width="62" height="16" rx="3" className="fill-white" />
+        <rect x="57" y="43" width="18" height="11" rx="5.5" className="fill-white" />
+        <path d="M60 70v6M100 70v6" />
+      </g>
+
+      {/* Les deux touches d'or : la couverture posee, et la lampe allumee. */}
+      <path d="M76 54h27a3 3 0 0 1 3 3v10a3 3 0 0 1-3 3H76z" className="fill-or-400" />
+      <path d="M23 50l3.5-9h5l3.5 9z" className="fill-or-400" />
+    </Cadre>
+  );
+}
+
+/* --------------------------------------------------- Villa au bord de l'eau --- */
+export function IllustrationVillaBordDeMer({ format }: { format?: string }) {
+  return (
+    <Cadre fond="bg-sky-50" format={format}>
+      {/* Ngor, les Almadies, Saly : le sejour se loue au bord de l'eau, et
+          c'est ce que le voyageur regarde avant le prix. La mer reste SOUS le
+          rivage — au meme niveau, la maison avait l'air inondee. */}
+      <circle cx="101" cy="15" r="9" className="fill-or-400" />
+      <g className="stroke-brand-700" strokeWidth={2.4}>
+        <path d="M26 40 58 18l32 22z" className="fill-brand-100" />
+        <rect x="32" y="40" width="52" height="30" className="fill-white" />
+        <rect x="38" y="46" width="10" height="10" rx="1.5" className="fill-white" />
+        <rect x="68" y="46" width="10" height="10" rx="1.5" className="fill-white" />
+        <rect x="50" y="54" width="14" height="16" rx="1.5" className="fill-brand-100" />
+        <path d="M10 70c1-11 3-17 7-22" />
+        <path d="M17 48c-6-4-11-2-14 2M17 48c-2-6 1-11 6-13M17 48c6-2 11 0 14 4M17 48c-1 5 1 9 4 11" />
+        <path d="M4 70h112" />
+      </g>
+      <g className="stroke-brand-400" strokeWidth={2.2}>
+        <path d="M6 79q6-4 12 0t12 0t12 0t12 0t12 0t12 0t12 0t12 0" />
+        <path d="M12 86q6-4 12 0t12 0t12 0t12 0t12 0t12 0t12 0" />
+      </g>
+    </Cadre>
+  );
+}
+
+/* ------------------------------------------------------------ Le voyageur --- */
+export function IllustrationVoyageur({ format }: { format?: string }) {
+  return (
+    <Cadre fond="bg-sable-50" format={format}>
+      {/* La valise et la cle : quelqu'un arrive, quelqu'un lui ouvre. C'est
+          tout le metier de la location a la nuitee en une image. */}
+      <g className="stroke-brand-700" strokeWidth={2.4}>
+        <path d="M34 34v-7a8 8 0 0 1 16 0v7" />
+        <rect x="20" y="34" width="44" height="38" rx="5" className="fill-white" />
+        <path d="M20 46h44" />
+      </g>
+      <g className="fill-brand-700">
+        <circle cx="29" cy="77" r="4.5" />
+        <circle cx="55" cy="77" r="4.5" />
+      </g>
+      {/* La cle en or : ce qui change de main. */}
+      <g className="stroke-or-400" strokeWidth={5} fill="none">
+        <circle cx="92" cy="32" r="10" />
+        <path d="M92 42v28M92 58h9M92 66h7" />
       </g>
     </Cadre>
   );
