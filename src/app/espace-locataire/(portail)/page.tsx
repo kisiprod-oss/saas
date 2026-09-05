@@ -5,7 +5,8 @@ import { exigerSessionLocataire } from "@/lib/auth-locataire";
 import {
   contratActifLocataire, listerFacturesLocataire, paiementsEnAttenteLocataire,
 } from "@/lib/requetes";
-import { fcfa, periodeLisible } from "@/lib/format";
+import { fcfa, periodeLisible, telephoneBrut } from "@/lib/format";
+import { un } from "@/lib/db";
 import { Alerte, Carte, EtatVide } from "@/components/ui";
 import { IconeAlerte } from "@/components/icones";
 
@@ -37,10 +38,58 @@ export default async function PageEspaceLocataire() {
   const reportee = (await cookies()).get("sen_photo_reportee")?.value === "1";
   if (!locataire.photo_url && !reportee) redirect("/espace-locataire/profil?bienvenue=1");
 
+  // Dossier pas encore relie a un bail : on ACCUEILLE quand meme.
+  //
+  // Ce cas renvoyait auparavant vers l'ecran de connexion avec un message
+  // d'erreur. C'etait un piege : la personne venait de taper les bons
+  // identifiants, se retrouvait devant le formulaire, croyait s'etre trompee,
+  // et recommencait sans fin. Elle ne pouvait rien y faire — creer le bail est
+  // le travail de l'agence, pas le sien.
+  //
+  // On lui montre donc où elle en est, et de quoi joindre son agence.
   if (!contrat && factures.length === 0) {
-    redirect("/espace-locataire/connexion?erreur=" + encodeURIComponent(
-      "Aucun bail n'est encore associé à votre compte. Contactez votre agence.",
-    ));
+    const agence = un<{ nom: string; telephone: string | null }>(
+      "SELECT nom, telephone FROM agences WHERE id = ?", locataire.agence_id,
+    );
+    return (
+      <>
+        <h1 className="text-2xl font-bold tracking-tight text-slate-900">
+          Bonjour {locataire.prenom}
+        </h1>
+        <p className="mt-1 text-sm text-slate-500">
+          Votre compte est bien ouvert{agence?.nom ? ` chez ${agence.nom}` : ""}.
+        </p>
+
+        <Carte className="mt-6 p-6 text-center">
+          <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-brand-50 text-2xl">
+            📋
+          </div>
+          <h2 className="font-semibold text-slate-900">Votre bail n&apos;est pas encore enregistré</h2>
+          <p className="mx-auto mt-2 max-w-md text-sm leading-relaxed text-slate-600">
+            Votre connexion a bien fonctionné. Il ne manque plus que votre contrat
+            de location, que votre agence doit enregistrer. Dès que ce sera fait,
+            vous verrez ici vos quittances, votre solde et vos règlements.
+          </p>
+
+          {agence?.telephone && (
+            <div className="mt-5 flex flex-wrap justify-center gap-2">
+              <a href={`tel:+${telephoneBrut(agence.telephone)}`} className="btn-secondaire">
+                Appeler {agence.nom}
+              </a>
+              <a
+                href={`https://wa.me/${telephoneBrut(agence.telephone)}?text=${encodeURIComponent(
+                  `Bonjour, je suis ${locataire.prenom} ${locataire.nom}. J'ai bien accès à mon espace locataire, mais mon bail n'y apparaît pas encore.`,
+                )}`}
+                target="_blank" rel="noopener noreferrer"
+                className="btn-primaire"
+              >
+                Écrire sur WhatsApp
+              </a>
+            </div>
+          )}
+        </Carte>
+      </>
+    );
   }
 
   return (

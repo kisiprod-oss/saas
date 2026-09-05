@@ -1153,7 +1153,14 @@ export async function actionActiverAccesLocataire(fd: FormData) {
 
   const motDePasse = activerAccesLocataire(locataireId);
   revalidatePath(`/dashboard/locataires/${locataireId}`);
-  redirect(`/dashboard/locataires/${locataireId}?acces=${motDePasse}`);
+  // encodeURIComponent est INDISPENSABLE ici. Le mot de passe genere contient
+  // toujours un caractere special pris dans « !?@#$%&*+= », et cinq d'entre eux
+  // ont un sens dans une adresse web : « & » ouvre un autre parametre, « # »
+  // fait disparaitre tout ce qui suit, « + » se relit comme une espace, « % »
+  // amorce un code d'echappement. Sans encodage, l'agence lisait un mot de
+  // passe tronque ou deforme, le transmettait tel quel, et le locataire ne
+  // pouvait jamais entrer — alors que la base, elle, contenait le bon.
+  redirect(`/dashboard/locataires/${locataireId}?acces=${encodeURIComponent(motDePasse)}`);
 }
 
 export async function actionDesactiverAccesLocataire(fd: FormData) {
@@ -1325,7 +1332,7 @@ export async function actionDemanderReservation(fd: FormData) {
 
   revalidatePath("/dashboard/reservations");
   revalidatePath(retour);
-  redirect(`${retour}?reserve=${reference}`);
+  redirect(`${retour}?reserve=${encodeURIComponent(reference)}`);
 }
 
 /** L'agence confirme, annule ou clôture une réservation. */
@@ -1777,7 +1784,7 @@ export async function actionRendreQuiz(fd: FormData) {
   corrigerSession(session, reponses);
   revalidatePath("/pro");
   revalidatePath("/professionnels");
-  redirect(`/pro/quiz/resultat?s=${session.id}`);
+  redirect(`/pro/quiz/resultat?s=${encodeURIComponent(String(session.id))}`);
 }
 
 // ------------------------------------ administration des candidatures
