@@ -12,6 +12,8 @@ import {
   IconeDouche, IconeLieu, IconeLit, IconeRetour, IconeSurface, IconeTelephone,
 } from "@/components/icones";
 import { ChampTelephone } from "@/components/champ-telephone";
+import { description as couper, url } from "@/lib/seo";
+import type { Metadata } from "next";
 
 type Params = { [cle: string]: string | string[] | undefined };
 
@@ -19,6 +21,65 @@ const lire = (p: Params, c: string) => {
   const v = p[c];
   return (Array.isArray(v) ? v[0] : v) ?? "";
 };
+
+/**
+ * Titre et description propres a cette annonce.
+ *
+ * C'est ici que se joue l'essentiel du referencement du site. Une annonce
+ * porte un type de bien, un nombre de chambres, un quartier, une ville et un
+ * prix : autant de mots que les gens tapent reellement (« appartement 3
+ * chambres Almadies »). Sans ces metadonnees, les vingt annonces du site
+ * partageaient le meme titre generique et se faisaient concurrence entre
+ * elles sans qu'aucune ne ressorte.
+ */
+export async function generateMetadata(
+  { params }: { params: Promise<{ id: string }> },
+): Promise<Metadata> {
+  const { id } = await params;
+  const bien = lireBienPublic(Number(id));
+  if (!bien) return { title: "Bien introuvable", robots: { index: false, follow: false } };
+
+  const lieu = [bien.quartier, bien.ville].filter(Boolean).join(", ");
+  const nature = libelle(TYPES_BIEN, bien.type);
+  const prix = bien.courte_duree === 1
+    ? `${fcfa(bien.prix_nuit)} la nuit`
+    : `${fcfa(bien.loyer + bien.charges)} par mois`;
+
+  const titre = `${nature}${bien.chambres > 0 ? ` ${bien.chambres} chambres` : ""} à louer`
+    + `${lieu ? ` à ${lieu}` : ""} — ${prix}`;
+
+  const details = [
+    bien.chambres > 0 && `${bien.chambres} chambre(s)`,
+    bien.salles_bain > 0 && `${bien.salles_bain} salle(s) d'eau`,
+    bien.surface && `${bien.surface} m²`,
+    bien.meuble === 1 && "meublé",
+  ].filter(Boolean).join(", ");
+
+  const texte = bien.description?.trim()
+    || `${nature} à louer${lieu ? ` à ${lieu}` : ""}${details ? `. ${details}` : ""}. `
+       + `${prix}. Contactez ${bien.agence_nom} sur Sen Gestion.`;
+
+  const photos = toutesPhotos(bien.photos);
+
+  return {
+    title: titre,
+    description: couper(texte),
+    alternates: { canonical: `/biens/${bien.id}` },
+    openGraph: {
+      type: "article",
+      title: titre,
+      description: couper(texte),
+      url: url(`/biens/${bien.id}`),
+      images: photos.length > 0 ? [{ url: photos[0], alt: bien.titre }] : undefined,
+    },
+    twitter: {
+      card: "summary_large_image",
+      title: titre,
+      description: couper(texte),
+      images: photos.length > 0 ? [photos[0]] : undefined,
+    },
+  };
+}
 
 export default async function PageBienPublic({
   params, searchParams,
@@ -38,8 +99,48 @@ export default async function PageBienPublic({
   const sejours = courteDuree ? prochainsSejours(bien.id) : [];
   const reserve = lire(requete, "reserve");
 
+  // Fiche structuree de l'annonce : c'est elle qui permet a Google d'afficher
+  // le prix, le nombre de pieces et la photo dans ses resultats, au lieu d'un
+  // simple lien. Les valeurs viennent toutes de l'annonce reelle — rien n'y
+  // est inventé.
+  const fiche = {
+    "@context": "https://schema.org",
+    "@type": courteDuree ? "Accommodation" : "Apartment",
+    name: bien.titre,
+    description: bien.description ?? undefined,
+    url: url(`/biens/${bien.id}`),
+    image: photos.length > 0 ? photos.map((ph) => url(ph)) : undefined,
+    numberOfRooms: bien.chambres > 0 ? bien.chambres : undefined,
+    numberOfBathroomsTotal: bien.salles_bain > 0 ? bien.salles_bain : undefined,
+    floorSize: bien.surface
+      ? { "@type": "QuantitativeValue", value: bien.surface, unitCode: "MTK" }
+      : undefined,
+    address: {
+      "@type": "PostalAddress",
+      addressLocality: bien.ville,
+      addressRegion: bien.quartier ?? undefined,
+      addressCountry: "SN",
+    },
+    ...(courteDuree
+      ? { occupancy: { "@type": "QuantitativeValue", value: bien.capacite } }
+      : {}),
+    offers: {
+      "@type": "Offer",
+      price: courteDuree ? bien.prix_nuit : bien.loyer + bien.charges,
+      priceCurrency: "XOF",
+      availability: bien.statut === "disponible"
+        ? "https://schema.org/InStock"
+        : "https://schema.org/OutOfStock",
+      seller: { "@type": "RealEstateAgent", name: bien.agence_nom },
+    },
+  };
+
   return (
     <div className="min-h-screen">
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(fiche) }}
+      />
       <EntetePublic />
 
       <main className="mx-auto max-w-6xl px-4 py-8">

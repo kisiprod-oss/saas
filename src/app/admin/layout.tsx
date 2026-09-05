@@ -4,6 +4,18 @@ import { compterCandidaturesEnAttente } from "@/lib/requetes";
 import { compterProspectsNouveaux } from "@/lib/vitrine";
 import { LogoSen } from "@/components/entete-public";
 
+import type { Metadata } from "next";
+import { NON_INDEXABLE } from "@/lib/seo";
+
+/**
+ * Espace prive : jamais dans un moteur de recherche.
+ *
+ * robots.txt le demande deja, mais cet en-tete l'impose meme si l'adresse
+ * est decouverte autrement — par un lien partage, par exemple. Les pages
+ * d'ici portent des noms, des telephones et des montants de loyer.
+ */
+export const metadata: Metadata = NON_INDEXABLE;
+
 export default async function LayoutAdmin({ children }: { children: React.ReactNode }) {
   const { utilisateur } = await exigerAdmin();
   const enAttente = compterCandidaturesEnAttente();

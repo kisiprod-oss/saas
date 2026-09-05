@@ -5,9 +5,10 @@ import { EntetePublic, PiedPublic } from "@/components/entete-public";
 import { IconeCheck } from "@/components/icones";
 
 export const metadata = {
-  title: "Tarifs",
+  title: "Tarifs — à partir de 5 000 FCFA par mois, gratuit pour démarrer",
   description:
     "Formules et tarifs de Sen Gestion : gratuit pour démarrer, puis 5 000 à 45 000 FCFA par mois. Sans engagement, paiement Orange Money et Wave.",
+  alternates: { canonical: "/tarifs" },
 };
 
 type Params = { [cle: string]: string | string[] | undefined };

@@ -2,7 +2,13 @@ import { actionRechercherVerification } from "@/lib/actions";
 import { EntetePublic, PiedPublic } from "@/components/entete-public";
 import { Alerte } from "@/components/ui";
 
-export const metadata = { title: "Vérifier un document" };
+export const metadata = {
+  title: "Vérifier une quittance ou un bail",
+  description:
+    "Saisissez le code figurant sur une quittance de loyer ou un contrat de bail "
+    + "Sen Gestion pour confirmer qu'il a bien été émis par l'agence indiquée.",
+  alternates: { canonical: "/verifier" },
+};
 export const dynamic = "force-dynamic";
 
 type Params = { [cle: string]: string | string[] | undefined };

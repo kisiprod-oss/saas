@@ -7,7 +7,13 @@ import { Etoiles } from "@/components/etoiles";
 import { BadgeVerifie } from "@/components/badge-verifie";
 import { IconeLieu, IconeOutils, IconeRecherche, IconeTelephone } from "@/components/icones";
 
-export const metadata = { title: "Artisans et professionnels" };
+export const metadata = {
+  title: "Artisans et professionnels du bâtiment au Sénégal",
+  description:
+    "Trouvez un plombier, un électricien, un menuisier ou un peintre près de chez vous "
+    + "au Sénégal. Profils vérifiés, avis de vrais clients, demande de devis en ligne.",
+  alternates: { canonical: "/professionnels" },
+};
 
 type Params = { [cle: string]: string | string[] | undefined };
 const lire = (p: Params, c: string) => {

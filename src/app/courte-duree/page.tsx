@@ -12,10 +12,11 @@ import {
 } from "@/components/illustrations";
 
 export const metadata = {
-  title: "Louer en courte durée",
+  title: "Location courte durée au Sénégal — gérer son meublé à la nuitée",
   description:
     "Vous louez un appartement meublé à la nuitée à Dakar, Saly ou ailleurs ? "
     + "Sen Gestion tient votre calendrier, vos réservations et vos revenus.",
+  alternates: { canonical: "/courte-duree" },
 };
 export const dynamic = "force-dynamic";
 

@@ -5,6 +5,18 @@ import { libelle, METIERS } from "@/lib/constantes";
 import { LogoSen } from "@/components/entete-public";
 import { IconeSortie } from "@/components/icones";
 
+import type { Metadata } from "next";
+import { NON_INDEXABLE } from "@/lib/seo";
+
+/**
+ * Espace prive : jamais dans un moteur de recherche.
+ *
+ * robots.txt le demande deja, mais cet en-tete l'impose meme si l'adresse
+ * est decouverte autrement — par un lien partage, par exemple. Les pages
+ * d'ici portent des noms, des telephones et des montants de loyer.
+ */
+export const metadata: Metadata = NON_INDEXABLE;
+
 export default async function LayoutEspacePro({ children }: { children: React.ReactNode }) {
   const artisan = await exigerSessionArtisan();
 

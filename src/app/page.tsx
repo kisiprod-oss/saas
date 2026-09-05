@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import { listerVitrine } from "@/lib/requetes";
 import { TYPES_BIEN, VILLES } from "@/lib/constantes";
@@ -7,6 +8,21 @@ import { IconeCheck, IconeOutils, IconeRecherche } from "@/components/icones";
 import {
   IllustrationFacture, IllustrationPaiementMobile, IllustrationRelance, IllustrationTableauBord,
 } from "@/components/illustrations";
+
+/**
+ * La page la plus importante du site n'avait aucun titre propre : elle
+ * heritait du gabarit general. Le titre vise ce que cherche une agence
+ * (« logiciel gestion locative Senegal »), la description dit ce qu'on
+ * obtient et leve le frein du prix des la ligne de resultat.
+ */
+export const metadata: Metadata = {
+  title: "Logiciel de gestion locative au Sénégal — biens, loyers, quittances",
+  description:
+    "Gérez vos biens, vos locataires et vos loyers depuis un seul tableau de bord. "
+    + "Quittances et baux prêts à imprimer, relances WhatsApp, paiements Orange Money "
+    + "et Wave. Gratuit jusqu'à 3 biens.",
+  alternates: { canonical: "/" },
+};
 
 type Params = { [cle: string]: string | string[] | undefined };
 

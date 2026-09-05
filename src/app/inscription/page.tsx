@@ -8,7 +8,13 @@ import { ChampMotDePasse } from "@/components/champ-mot-de-passe";
 import { BoutonGoogle } from "@/components/bouton-google";
 import { ChampTelephone } from "@/components/champ-telephone";
 
-export const metadata = { title: "Créer mon agence" };
+export const metadata = {
+  title: "Créer mon espace agence — gratuit",
+  description:
+    "Ouvrez votre espace de gestion locative en deux minutes. Gratuit jusqu'à 3 biens "
+    + "et 5 factures par mois. Depuis le Sénégal comme depuis l'étranger.",
+  alternates: { canonical: "/inscription" },
+};
 
 type Params = { [cle: string]: string | string[] | undefined };
 
