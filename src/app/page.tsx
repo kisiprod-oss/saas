@@ -161,7 +161,7 @@ export default async function PageVitrine({ searchParams }: { searchParams: Prom
                   <select id="duree" name="duree" defaultValue={filtres.duree} className="champ w-auto py-2">
                     <option value="">Toutes</option>
                     <option value="longue">Location au mois</option>
-                    <option value="courte">Courte durée</option>
+                    <option value="courte">À la nuitée</option>
                   </select>
                 </div>
                 <div className="flex items-center gap-2">

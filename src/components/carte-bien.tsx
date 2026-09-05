@@ -48,8 +48,14 @@ export function CarteBien({ bien, agenceNom }: Props) {
             {libelle(TYPES_BIEN, bien.type)}
           </span>
           {courteDuree ? (
+            // « Meublé à la nuitée » plutot que « Courte durée » : c'est le mot
+            // qu'emploient les gens ici. Il forme une paire lisible avec le
+            // badge « Meublé » ci-dessous — meme logement, autre rythme de
+            // location — et il reste vrai pour une villa comme pour un studio,
+            // ce que « appartement meuble » ne serait pas : le badge voisin
+            // annonce deja le type du bien.
             <span className="rounded-full bg-brand-600/95 px-2.5 py-1 text-xs font-semibold text-white shadow-sm">
-              Courte durée
+              Meublé à la nuitée
             </span>
           ) : bien.meuble === 1 && (
             <span className="rounded-full bg-sable-500/95 px-2.5 py-1 text-xs font-semibold text-white shadow-sm">
