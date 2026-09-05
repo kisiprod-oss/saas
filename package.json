@@ -12,6 +12,9 @@
     "sauvegarde": "node scripts/sauvegarde.mjs",
     "tester-email": "node --env-file-if-exists=.env.local scripts/tester-email.mjs"
   },
+  "engines": {
+    "node": ">=20.9.0"
+  },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.122.0",
     "better-sqlite3": "^12.2.0",
