@@ -56,6 +56,7 @@ export type Plateforme = {
   nbUtilisateurs: number;
   nbArtisans: number;
   nbLocataires: number;
+  nbProprietaires: number;
 
   /** Abonnements REELLEMENT encaisses. Zero tant que rien n'a ete regle. */
   encaisseTotal: number;
@@ -118,6 +119,7 @@ export function plateforme(): Plateforme {
     nbUtilisateurs: compte("SELECT COUNT(*) AS n FROM utilisateurs"),
     nbArtisans: compte("SELECT COUNT(*) AS n FROM artisans"),
     nbLocataires: compte("SELECT COUNT(*) AS n FROM locataires"),
+    nbProprietaires: compte("SELECT COUNT(*) AS n FROM proprietaires"),
     encaisseTotal: encaisse.total,
     encaisseCeMois: encaisseMois.total,
     nbReglements: encaisse.nb,

@@ -36,7 +36,7 @@ export default async function PagePlateforme() {
           { libelle: "Agences inscrites", valeur: String(p.nbAgences), detail: `dont ${p.nouvellesCeMois} ce mois-ci` },
           { libelle: "Agences payantes", valeur: String(p.nbPayantes), detail: `${p.nbGratuites} sur la formule gratuite` },
           { libelle: "Actives (30 j)", valeur: String(p.nbActives), detail: `${p.nbDormantes} sans facture récente` },
-          { libelle: "Comptes ouverts", valeur: String(p.nbUtilisateurs), detail: `${p.nbLocataires} locataires · ${p.nbArtisans} artisans` },
+          { libelle: "Comptes ouverts", valeur: String(p.nbUtilisateurs), detail: `${p.nbLocataires} locataires · ${p.nbProprietaires} propriétaires · ${p.nbArtisans} artisans` },
         ].map((c) => (
           <Carte key={c.libelle} className="p-4">
             <p className="text-xs text-slate-500">{c.libelle}</p>

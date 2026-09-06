@@ -2,6 +2,7 @@ import Database from "better-sqlite3";
 import fs from "node:fs";
 import path from "node:path";
 import { dossierDonneesSur } from "./dossier-donnees.mjs";
+import { numeroCanonique } from "./telephone";
 
 /**
  * Connexion unique a la base SQLite.
@@ -117,6 +118,7 @@ function migrer(base: Database.Database) {
     ["agences", "modele_bail_nom", "TEXT"],
     ["agences", "modele_bail_le", "TEXT"],
     ["agences", "modele_bail_clauses", "TEXT"],
+    ["biens", "proprietaire_id", "INTEGER REFERENCES proprietaires(id) ON DELETE SET NULL"],
   ] as const;
 
   for (const [table, colonne, type] of colonnes) {
@@ -168,6 +170,68 @@ function migrer(base: Database.Database) {
   base.exec(
     "CREATE INDEX IF NOT EXISTS idx_envois_agence ON envois_documents(agence_id)",
   );
+  // Sur biens(proprietaire_id) : la colonne n'existe sur une base ancienne
+  // qu'apres la boucle ALTER TABLE ci-dessus, donc l'index ne peut pas vivre
+  // dans schema.sql (il y echouerait sur toute base pas encore migree).
+  base.exec(
+    "CREATE INDEX IF NOT EXISTS idx_biens_proprietaire ON biens(proprietaire_id)",
+  );
+
+  creerProprietairesDepuisBiens(base);
+}
+
+/**
+ * Cree une fiche Proprietaire pour chaque nom deja saisi sur un bien.
+ *
+ * Avant cette table, le proprietaire n'etait qu'un texte libre repete sur
+ * chaque bien : cette fonction transforme ce texte en fiches reelles, sans
+ * rien effacer — `proprietaire_nom` et `proprietaire_telephone` restent en
+ * place sur `biens`.
+ *
+ * Deux biens d'une meme agence fusionnent dans la meme fiche quand leur nom
+ * (une fois les espaces reduits) ET leur telephone (une fois passe par
+ * `numeroCanonique`, comme partout ailleurs dans l'application) coincident.
+ * C'est ce qui reunit correctement « 77 123 45 67 » et « +221771234567 » :
+ * le meme numero, ecrit deux fois differemment. Un bien sans telephone
+ * renseigne ne fusionne qu'avec un autre bien du meme nom lui aussi sans
+ * telephone : mieux vaut deux fiches en double, faciles a fusionner a la
+ * main plus tard, qu'une fusion hative entre deux personnes differentes qui
+ * partagent un nom.
+ *
+ * Ne s'execute qu'une fois : si `proprietaires` contient deja une ligne,
+ * la reprise a deja eu lieu (ou l'agence gere deja ses proprietaires a la
+ * main) et on ne la refait pas.
+ */
+function creerProprietairesDepuisBiens(base: Database.Database) {
+  const dejaFait = (base.prepare("SELECT COUNT(*) AS n FROM proprietaires").get() as { n: number }).n > 0;
+  if (dejaFait) return;
+
+  const biens = base.prepare(
+    `SELECT id, agence_id, proprietaire_nom, proprietaire_telephone FROM biens
+      WHERE proprietaire_nom IS NOT NULL AND TRIM(proprietaire_nom) != ''`,
+  ).all() as { id: number; agence_id: number; proprietaire_nom: string; proprietaire_telephone: string | null }[];
+
+  if (biens.length === 0) return;
+
+  const inserer = base.prepare("INSERT INTO proprietaires (agence_id, nom, telephone) VALUES (?, ?, ?)");
+  const lier = base.prepare("UPDATE biens SET proprietaire_id = ? WHERE id = ?");
+  const cache = new Map<string, number>();
+
+  base.transaction(() => {
+    for (const b of biens) {
+      const nom = b.proprietaire_nom.trim().replace(/\s+/g, " ");
+      const telephone = numeroCanonique(b.proprietaire_telephone);
+      const cle = `${b.agence_id}|${nom.toLowerCase()}|${telephone}`;
+
+      let proprietaireId = cache.get(cle);
+      if (proprietaireId === undefined) {
+        const res = inserer.run(b.agence_id, nom, telephone || null);
+        proprietaireId = Number(res.lastInsertRowid);
+        cache.set(cle, proprietaireId);
+      }
+      lier.run(proprietaireId, b.id);
+    }
+  })();
 }
 
 /**

@@ -43,6 +43,9 @@ export const IconeBoiteReception = (p: Props) => (
 export const IconeAgence = (p: Props) => (
   <Svg {...p}><path d="M3.5 21h17" /><path d="M5 21V6l7-3.5L19 6v15" /><path d="M9.5 21v-5h5v5" /><path d="M9.5 9.5h1M13.5 9.5h1M9.5 13h1M13.5 13h1" /></Svg>
 );
+export const IconeCle = (p: Props) => (
+  <Svg {...p}><circle cx="7.5" cy="14.5" r="4" /><path d="M10.6 11.4 20 2" /><path d="M16.5 5.5 19 8M13.5 8.5 15.5 10.5" /></Svg>
+);
 export const IconePlus = (p: Props) => (
   <Svg {...p}><path d="M12 5v14M5 12h14" /></Svg>
 );

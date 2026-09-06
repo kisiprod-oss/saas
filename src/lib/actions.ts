@@ -398,6 +398,54 @@ export async function actionSupprimerBien(fd: FormData) {
   redirect("/dashboard/biens");
 }
 
+// ------------------------------------------------------------ proprietaires
+
+export async function actionEnregistrerProprietaire(fd: FormData) {
+  const { agence } = await exigerSession();
+  const id = entier(fd, "id");
+  const nom = txt(fd, "nom");
+  const telephone = numeroSoumis(fd, "telephone");
+  const retour = id ? `/dashboard/proprietaires/${id}` : "/dashboard/proprietaires/nouveau";
+
+  if (!nom) erreur(retour, "Le nom est obligatoire.");
+
+  const champs = [
+    nom, vide(telephone), vide(txt(fd, "email")), vide(txt(fd, "adresse")), vide(txt(fd, "notes")),
+  ];
+
+  if (id) {
+    ecrire(
+      `UPDATE proprietaires SET nom=?, telephone=?, email=?, adresse=?, notes=?
+        WHERE id=? AND agence_id=?`,
+      ...champs, id, agence.id,
+    );
+    revalidatePath(`/dashboard/proprietaires/${id}`);
+    redirect(`/dashboard/proprietaires/${id}?ok=1`);
+  } else {
+    const res = ecrire(
+      `INSERT INTO proprietaires (agence_id, nom, telephone, email, adresse, notes)
+       VALUES (?, ?, ?, ?, ?, ?)`,
+      agence.id, ...champs,
+    );
+    revalidatePath("/dashboard/proprietaires");
+    redirect(`/dashboard/proprietaires/${res.lastInsertRowid}?ok=1`);
+  }
+}
+
+export async function actionSupprimerProprietaire(fd: FormData) {
+  const { agence } = await exigerSession();
+  const id = entier(fd, "id");
+
+  const lie = un<{ n: number }>("SELECT COUNT(*) AS n FROM biens WHERE proprietaire_id = ?", id);
+  if ((lie?.n ?? 0) > 0) {
+    erreur("/dashboard/proprietaires", "Ce propriétaire a des biens rattachés : détachez-les d'abord.");
+  }
+
+  ecrire("DELETE FROM proprietaires WHERE id = ? AND agence_id = ?", id, agence.id);
+  revalidatePath("/dashboard/proprietaires");
+  redirect("/dashboard/proprietaires");
+}
+
 // -------------------------------------------------------------- locataires
 
 export async function actionEnregistrerLocataire(fd: FormData) {

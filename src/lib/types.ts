@@ -26,6 +26,18 @@ export type Bien = {
   publie: number;
   proprietaire_nom: string | null;
   proprietaire_telephone: string | null;
+  proprietaire_id: number | null;
+  cree_le: string;
+};
+
+export type Proprietaire = {
+  id: number;
+  agence_id: number;
+  nom: string;
+  telephone: string | null;
+  email: string | null;
+  adresse: string | null;
+  notes: string | null;
   cree_le: string;
 };
 

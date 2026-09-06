@@ -158,6 +158,26 @@ CREATE TABLE IF NOT EXISTS sessions (
 );
 CREATE INDEX IF NOT EXISTS idx_sessions_user ON sessions(utilisateur_id);
 
+-- ---------- Proprietaires ----------
+-- Une fiche par personne proprietaire d'un ou plusieurs biens. A l'origine,
+-- le nom et le telephone du proprietaire n'etaient qu'un texte libre saisi
+-- sur chaque bien : deux villas du meme proprietaire ne se reliaient nulle
+-- part. Les deux colonnes de texte restent sur `biens`, pour les documents
+-- deja generes et les ecrans qui les lisent directement ; c'est desormais
+-- `proprietaire_id` qui fait autorite pour retrouver tous les biens d'une
+-- meme personne.
+CREATE TABLE IF NOT EXISTS proprietaires (
+  id            INTEGER PRIMARY KEY AUTOINCREMENT,
+  agence_id     INTEGER NOT NULL REFERENCES agences(id) ON DELETE CASCADE,
+  nom           TEXT NOT NULL,
+  telephone     TEXT,
+  email         TEXT,
+  adresse       TEXT,
+  notes         TEXT,
+  cree_le       TEXT NOT NULL DEFAULT (datetime('now'))
+);
+CREATE INDEX IF NOT EXISTS idx_proprietaires_agence ON proprietaires(agence_id);
+
 -- ---------- Biens immobiliers ----------
 CREATE TABLE IF NOT EXISTS biens (
   id            INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -192,6 +212,7 @@ CREATE TABLE IF NOT EXISTS biens (
   publie        INTEGER NOT NULL DEFAULT 1, -- visible sur la vitrine publique
   proprietaire_nom       TEXT,
   proprietaire_telephone TEXT,
+  proprietaire_id INTEGER REFERENCES proprietaires(id) ON DELETE SET NULL,
   cree_le       TEXT NOT NULL DEFAULT (datetime('now'))
 );
 CREATE INDEX IF NOT EXISTS idx_biens_agence  ON biens(agence_id);

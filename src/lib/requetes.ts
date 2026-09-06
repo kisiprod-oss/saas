@@ -4,6 +4,7 @@ import { aujourdhui, decalerMois, moisCourant } from "./format";
 import { DELAI_ENTRE_RELANCES, niveauPour, type Niveau } from "./relances";
 import type {
   Bien, ContratDetaille, ContratPourBail, Demande, FactureDetaillee, Locataire, Paiement,
+  Proprietaire,
 } from "./types";
 
 /** Bloc SQL commun : calcule le montant paye, le reste du et l'etat d'une facture. */
@@ -109,6 +110,44 @@ export function lireBienPublic(id: number) {
        FROM biens b JOIN agences a ON a.id = b.agence_id
       WHERE b.id = ? AND b.publie = 1`,
     id,
+  );
+}
+
+// ----------------------------------------------------------- Proprietaires
+
+/** Un proprietaire, avec le nombre de biens qui pointent vers sa fiche. */
+export function listerProprietaires(agenceId: number, recherche?: string) {
+  const conditions = ["p.agence_id = ?"];
+  const params: unknown[] = [agenceId];
+  if (recherche) {
+    conditions.push("(p.nom LIKE ? OR p.telephone LIKE ?)");
+    const q = `%${recherche}%`;
+    params.push(q, q);
+  }
+
+  return tous<Proprietaire & { nb_biens: number }>(
+    `SELECT p.*,
+            (SELECT COUNT(*) FROM biens b WHERE b.proprietaire_id = p.id) AS nb_biens
+       FROM proprietaires p
+      WHERE ${conditions.join(" AND ")}
+      ORDER BY p.nom`,
+    ...params,
+  );
+}
+
+/** Une fiche proprietaire, filtree par agence : une agence ne doit jamais
+ * pouvoir ouvrir la fiche d'une autre en changeant l'identifiant dans
+ * l'adresse. */
+export function lireProprietaire(id: number, agenceId: number) {
+  return un<Proprietaire>(
+    "SELECT * FROM proprietaires WHERE id = ? AND agence_id = ?", id, agenceId,
+  );
+}
+
+/** Les biens rattaches a ce proprietaire — ce que l'on veut voir sur sa fiche. */
+export function biensDuProprietaire(proprietaireId: number) {
+  return tous<Bien>(
+    "SELECT * FROM biens WHERE proprietaire_id = ? ORDER BY titre", proprietaireId,
   );
 }
 

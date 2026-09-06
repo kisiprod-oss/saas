@@ -4,13 +4,14 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
   IconeAgence, IconeArgent, IconeBoiteReception, IconeCalendrier, IconeCarte,
-  IconeContrat, IconeFacture, IconeGraphique, IconeMaison, IconeOutils, IconeRelance,
-  IconeTableauBord, IconeUtilisateurs,
+  IconeCle, IconeContrat, IconeFacture, IconeGraphique, IconeMaison, IconeOutils,
+  IconeRelance, IconeTableauBord, IconeUtilisateurs,
 } from "./icones";
 
 const LIENS = [
   { href: "/dashboard",             libelle: "Tableau de bord", Icone: IconeTableauBord },
   { href: "/dashboard/biens",       libelle: "Biens",           Icone: IconeMaison },
+  { href: "/dashboard/proprietaires", libelle: "Propriétaires", Icone: IconeCle },
   { href: "/dashboard/locataires",  libelle: "Locataires",      Icone: IconeUtilisateurs },
   { href: "/dashboard/contrats",    libelle: "Contrats de bail",Icone: IconeContrat },
   { href: "/dashboard/factures",    libelle: "Factures",        Icone: IconeFacture },
