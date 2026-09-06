@@ -55,7 +55,23 @@ export default async function PageProprietaires({ searchParams }: { searchParams
               <tbody>
                 {proprietaires.map((p) => (
                   <tr key={p.id}>
-                    <td className="font-medium text-slate-900">{p.nom}</td>
+                    <td>
+                      <div className="flex items-center gap-3">
+                        {p.photo_url ? (
+                          // eslint-disable-next-line @next/next/no-img-element
+                          <img
+                            src={p.photo_url}
+                            alt=""
+                            className="h-9 w-9 shrink-0 rounded-full border border-slate-200 object-cover"
+                          />
+                        ) : (
+                          <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-brand-100 text-sm font-bold text-brand-700">
+                            {p.nom[0]}
+                          </span>
+                        )}
+                        <span className="font-medium text-slate-900">{p.nom}</span>
+                      </div>
+                    </td>
                     <td className="whitespace-nowrap">{pourAffichage(p.telephone)}</td>
                     <td className="text-slate-500">{p.email ?? "—"}</td>
                     <td className="text-right text-slate-600">{p.nb_biens}</td>

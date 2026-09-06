@@ -409,22 +409,38 @@ export async function actionEnregistrerProprietaire(fd: FormData) {
 
   if (!nom) erreur(retour, "Le nom est obligatoire.");
 
+  // Une photo televersee remplace l'adresse web ; sans nouvelle photo, on
+  // garde celle qui est deja enregistree (l'agence l'a saisie a la main, ou
+  // c'est celle qui a survecu a la migration depuis l'ancien champ texte).
+  const fichierPhoto = fd.get("photo");
+  let photoUrl = vide(txt(fd, "photo_url"));
+  if (fichierPhoto instanceof File && fichierPhoto.size > 0) {
+    const { url, erreur: probleme } = await enregistrerPhotoProfil(fichierPhoto);
+    if (probleme) erreur(retour, probleme);
+    photoUrl = url;
+  }
+
   const champs = [
     nom, vide(telephone), vide(txt(fd, "email")), vide(txt(fd, "adresse")), vide(txt(fd, "notes")),
+    photoUrl,
   ];
 
   if (id) {
+    const ancien = un<{ photo_url: string | null }>(
+      "SELECT photo_url FROM proprietaires WHERE id = ? AND agence_id = ?", id, agence.id,
+    );
     ecrire(
-      `UPDATE proprietaires SET nom=?, telephone=?, email=?, adresse=?, notes=?
+      `UPDATE proprietaires SET nom=?, telephone=?, email=?, adresse=?, notes=?, photo_url=?
         WHERE id=? AND agence_id=?`,
       ...champs, id, agence.id,
     );
+    if (ancien?.photo_url && ancien.photo_url !== photoUrl) await supprimerPhoto(ancien.photo_url);
     revalidatePath(`/dashboard/proprietaires/${id}`);
     redirect(`/dashboard/proprietaires/${id}?ok=1`);
   } else {
     const res = ecrire(
-      `INSERT INTO proprietaires (agence_id, nom, telephone, email, adresse, notes)
-       VALUES (?, ?, ?, ?, ?, ?)`,
+      `INSERT INTO proprietaires (agence_id, nom, telephone, email, adresse, notes, photo_url)
+       VALUES (?, ?, ?, ?, ?, ?, ?)`,
       agence.id, ...champs,
     );
     revalidatePath("/dashboard/proprietaires");

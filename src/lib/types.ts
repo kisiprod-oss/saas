@@ -38,6 +38,7 @@ export type Proprietaire = {
   email: string | null;
   adresse: string | null;
   notes: string | null;
+  photo_url: string | null;
   cree_le: string;
 };
 

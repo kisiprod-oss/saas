@@ -174,6 +174,7 @@ CREATE TABLE IF NOT EXISTS proprietaires (
   email         TEXT,
   adresse       TEXT,
   notes         TEXT,
+  photo_url     TEXT,
   cree_le       TEXT NOT NULL DEFAULT (datetime('now'))
 );
 CREATE INDEX IF NOT EXISTS idx_proprietaires_agence ON proprietaires(agence_id);

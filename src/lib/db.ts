@@ -119,6 +119,7 @@ function migrer(base: Database.Database) {
     ["agences", "modele_bail_le", "TEXT"],
     ["agences", "modele_bail_clauses", "TEXT"],
     ["biens", "proprietaire_id", "INTEGER REFERENCES proprietaires(id) ON DELETE SET NULL"],
+    ["proprietaires", "photo_url", "TEXT"],
   ] as const;
 
   for (const [table, colonne, type] of colonnes) {
