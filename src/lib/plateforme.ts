@@ -28,6 +28,8 @@ export type LigneAdherent = {
   email: string | null;
   telephone: string | null;
   plan: string;
+  /** Fin de la periode reglee. NULL = formule posee a la main, sans echeance. */
+  plan_expire_le: string | null;
   cree_le: string;
   nb_utilisateurs: number;
   nb_biens: number;
@@ -63,7 +65,7 @@ export type Plateforme = {
 
 export function plateforme(): Plateforme {
   const adherents = tous<LigneAdherent>(
-    `SELECT a.id, a.nom, a.ville, a.email, a.telephone, a.plan, a.cree_le,
+    `SELECT a.id, a.nom, a.ville, a.email, a.telephone, a.plan, a.plan_expire_le, a.cree_le,
             (SELECT COUNT(*) FROM utilisateurs u WHERE u.agence_id = a.id)          AS nb_utilisateurs,
             (SELECT COUNT(*) FROM biens b WHERE b.agence_id = a.id)                 AS nb_biens,
             (SELECT COUNT(*) FROM locataires l WHERE l.agence_id = a.id)            AS nb_locataires,
@@ -122,6 +124,22 @@ export function plateforme(): Plateforme {
   };
 }
 
+/**
+ * Nombre d'agences payantes dont l'abonnement demande une action : déjà
+ * expiré, ou à echeance dans les 30 jours. Sert au badge du menu — le même
+ * calcul que la page /admin/agences, pour ne jamais afficher deux chiffres
+ * différents pour la même chose.
+ */
+export function compterAbonnementsARelancer(): number {
+  const seuil = new Date(Date.now() + 30 * 86_400_000).toISOString().slice(0, 10);
+  const r = un<{ n: number }>(
+    `SELECT COUNT(*) AS n FROM agences
+      WHERE plan != 'decouverte' AND plan_expire_le IS NOT NULL AND plan_expire_le <= ?`,
+    seuil,
+  )!;
+  return r.n;
+}
+
 export type Collaborateur = {
   id: number;
   nom: string;
@@ -142,5 +160,88 @@ export function collaborateurs(): Collaborateur[] {
        FROM utilisateurs u
        JOIN agences a ON a.id = u.agence_id
       ORDER BY u.cree_le DESC`,
+  );
+}
+
+/* ==========================================================================
+   La fiche d'une agence
+   ========================================================================== */
+
+export type FicheAgence = {
+  id: number;
+  nom: string;
+  slug: string;
+  ville: string | null;
+  email: string | null;
+  telephone: string | null;
+  ninea: string | null;
+  rccm: string | null;
+  plan: string;
+  plan_expire_le: string | null;
+  commission_pct: number;
+  encaissement_actif: number;
+  encaissement_mode: string;
+  compte_gratuit_reutilise: number;
+  cree_le: string;
+  nb_utilisateurs: number;
+  nb_biens: number;
+  nb_locataires: number;
+  nb_contrats_actifs: number;
+  nb_factures: number;
+  derniere_activite: string | null;
+  /** Abonnements reellement encaisses par cette agence-ci. */
+  regle_total: number;
+  nb_reglements: number;
+};
+
+export type MembreAgence = {
+  id: number;
+  nom: string;
+  email: string;
+  telephone: string | null;
+  role: string;
+  actif: number;
+  cree_le: string;
+};
+
+/**
+ * Tout ce qu'il faut savoir sur une agence avant d'agir sur son compte.
+ *
+ * Les colonnes sont enumerees une par une, jamais `SELECT *` : la table porte
+ * les cles marchandes chiffrees de l'agence, et elles n'ont rien a faire dans
+ * une page, meme reservee a l'administrateur. Ce qui n'est pas selectionne ne
+ * peut pas fuir par distraction.
+ */
+export function ficheAgence(id: number): FicheAgence | null {
+  return un<FicheAgence>(
+    `SELECT a.id, a.nom, a.slug, a.ville, a.email, a.telephone, a.ninea, a.rccm,
+            a.plan, a.plan_expire_le, a.commission_pct,
+            a.encaissement_actif, a.encaissement_mode, a.compte_gratuit_reutilise,
+            a.cree_le,
+            (SELECT COUNT(*) FROM utilisateurs u WHERE u.agence_id = a.id)   AS nb_utilisateurs,
+            (SELECT COUNT(*) FROM biens b WHERE b.agence_id = a.id)          AS nb_biens,
+            (SELECT COUNT(*) FROM locataires l WHERE l.agence_id = a.id)     AS nb_locataires,
+            (SELECT COUNT(*) FROM contrats c
+              WHERE c.agence_id = a.id AND c.statut = 'actif')               AS nb_contrats_actifs,
+            (SELECT COUNT(*) FROM factures f
+              WHERE f.agence_id = a.id AND f.statut != 'annulee')            AS nb_factures,
+            (SELECT MAX(date(f.date_emission)) FROM factures f
+              WHERE f.agence_id = a.id AND f.statut != 'annulee')            AS derniere_activite,
+            (SELECT COALESCE(SUM(ab.montant), 0) FROM abonnements ab
+              WHERE ab.agence_id = a.id AND ab.statut = 'payee')             AS regle_total,
+            (SELECT COUNT(*) FROM abonnements ab
+              WHERE ab.agence_id = a.id AND ab.statut = 'payee')             AS nb_reglements
+       FROM agences a
+      WHERE a.id = ?`,
+    id,
+  ) ?? null;
+}
+
+/** Les personnes qui se connectent pour cette agence. */
+export function membresAgence(agenceId: number): MembreAgence[] {
+  return tous<MembreAgence>(
+    `SELECT id, nom, email, telephone, role, actif, cree_le
+       FROM utilisateurs WHERE agence_id = ? ORDER BY id`,
+    agenceId,
   );
 }

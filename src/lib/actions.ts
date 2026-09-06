@@ -2147,3 +2147,101 @@ export async function actionAccuserReception(fd: FormData) {
   revalidatePath(`/document/${jeton}`);
   redirect(`/document/${jeton}?recu=1`);
 }
+
+/* ==========================================================================
+   Administration des agences : la formule et son échéance
+   ==========================================================================
+
+   Ce sont les deux seuls leviers commerciaux qui comptent, et ils suffisent.
+   Une formule payante dont l'échéance est dépassée retombe d'elle-même en
+   Découverte (voir `planEffectif`) : il n'y a donc rien à « couper » à la
+   main quand une agence cesse de régler, et rien à rétablir quand elle
+   reprend. Poser la bonne date fait tout le travail.
+
+   Une échéance vide n'est pas un oubli : elle veut dire « formule accordée
+   sans terme », le geste commercial d'un début d'activité. Le code la
+   respecte, et l'écran doit le dire clairement plutôt que de la présenter
+   comme une donnée manquante.
+   ========================================================================== */
+
+/**
+ * Décale une date de N mois sans déborder sur le mois suivant.
+ *
+ * Le 31 janvier prolongé d'un mois donne le 28 février, pas le 3 mars. Sans
+ * ce garde-fou, une agence réglant le 31 se verrait offrir deux ou trois
+ * jours à chaque échéance — invisible une fois, gênant au bout d'un an.
+ */
+function ajouterMois(depart: string, mois: number): string {
+  const [a, m, j] = depart.slice(0, 10).split("-").map(Number);
+  const cible = new Date(Date.UTC(a, m - 1 + mois, 1));
+  const dernierJour = new Date(
+    Date.UTC(cible.getUTCFullYear(), cible.getUTCMonth() + 1, 0),
+  ).getUTCDate();
+  cible.setUTCDate(Math.min(j, dernierJour));
+  return cible.toISOString().slice(0, 10);
+}
+
+/** L'administrateur fixe la formule d'une agence et la date de fin réglée. */
+export async function actionFormuleAgence(fd: FormData) {
+  await exigerAdmin();
+  const id = entier(fd, "id");
+  const retour = `/admin/agences/${id}`;
+
+  const agence = un<{ id: number }>("SELECT id FROM agences WHERE id = ?", id);
+  if (!agence) erreur("/admin/agences", "Agence introuvable.");
+
+  const formule = txt(fd, "plan");
+  if (!PLANS.some((p) => p.code === formule)) {
+    erreur(retour, "Formule inconnue.");
+  }
+
+  // La date arrive d'un champ « date » du navigateur, donc en AAAA-MM-JJ.
+  // On la vérifie quand même : un formulaire peut être envoyé autrement.
+  const echeance = vide(txt(fd, "plan_expire_le"));
+  if (echeance && !/^\d{4}-\d{2}-\d{2}$/.test(echeance)) {
+    erreur(retour, "La date de fin doit être au format jour/mois/année.");
+  }
+  if (echeance && Number.isNaN(new Date(`${echeance}T00:00:00Z`).getTime())) {
+    erreur(retour, "Cette date n'existe pas.");
+  }
+
+  ecrire("UPDATE agences SET plan = ?, plan_expire_le = ? WHERE id = ?", formule, echeance, id);
+
+  revalidatePath(retour);
+  revalidatePath("/admin/agences");
+  revalidatePath("/admin/plateforme");
+  redirect(`${retour}?ok=1`);
+}
+
+/**
+ * L'administrateur prolonge l'abonnement de N mois.
+ *
+ * Le point de départ est l'échéance en cours quand elle est encore à venir,
+ * et la date du jour sinon. Une agence qui règle avec deux semaines d'avance
+ * ne doit pas perdre ces deux semaines ; une agence qui règle avec deux mois
+ * de retard ne doit pas se les voir facturer.
+ */
+export async function actionProlongerFormule(fd: FormData) {
+  await exigerAdmin();
+  const id = entier(fd, "id");
+  const retour = `/admin/agences/${id}`;
+
+  const agence = un<{ plan: string; plan_expire_le: string | null }>(
+    "SELECT plan, plan_expire_le FROM agences WHERE id = ?", id,
+  );
+  if (!agence) erreur("/admin/agences", "Agence introuvable.");
+
+  const mois = entier(fd, "mois");
+  if (![1, 3, 6, 12].includes(mois)) erreur(retour, "Durée de prolongation inconnue.");
+
+  const aujourdHui = new Date().toISOString().slice(0, 10);
+  const enCours = agence.plan_expire_le;
+  const depart = enCours && enCours >= aujourdHui ? enCours : aujourdHui;
+
+  ecrire("UPDATE agences SET plan_expire_le = ? WHERE id = ?", ajouterMois(depart, mois), id);
+
+  revalidatePath(retour);
+  revalidatePath("/admin/agences");
+  revalidatePath("/admin/plateforme");
+  redirect(`${retour}?ok=1`);
+}

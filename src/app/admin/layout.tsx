@@ -2,6 +2,7 @@ import Link from "next/link";
 import { exigerAdmin } from "@/lib/admin";
 import { compterCandidaturesEnAttente } from "@/lib/requetes";
 import { compterProspectsNouveaux } from "@/lib/vitrine";
+import { compterAbonnementsARelancer } from "@/lib/plateforme";
 import { LogoSen } from "@/components/entete-public";
 
 import type { Metadata } from "next";
@@ -20,6 +21,7 @@ export default async function LayoutAdmin({ children }: { children: React.ReactN
   const { utilisateur } = await exigerAdmin();
   const enAttente = compterCandidaturesEnAttente();
   const aRappeler = compterProspectsNouveaux();
+  const aRelancer = compterAbonnementsARelancer();
 
   return (
     <div className="min-h-screen bg-slate-50">
@@ -34,6 +36,14 @@ export default async function LayoutAdmin({ children }: { children: React.ReactN
           <div className="flex items-center gap-2">
             <Link href="/admin/plateforme" className="rounded-lg px-3 py-2 text-sm font-medium text-slate-300 hover:bg-slate-800 hover:text-white">
               Vue d&apos;ensemble
+            </Link>
+            <Link href="/admin/agences" className="rounded-lg px-3 py-2 text-sm font-medium text-slate-300 hover:bg-slate-800 hover:text-white">
+              Agences
+              {aRelancer > 0 && (
+                <span className="ml-1.5 rounded-full bg-amber-500 px-1.5 text-xs font-bold text-white">
+                  {aRelancer}
+                </span>
+              )}
             </Link>
             <Link href="/admin/courte-duree" className="rounded-lg px-3 py-2 text-sm font-medium text-slate-300 hover:bg-slate-800 hover:text-white">
               Appartement meublé
