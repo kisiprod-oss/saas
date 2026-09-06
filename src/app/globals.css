@@ -147,6 +147,49 @@ body {
   .tableau tbody tr:hover { @apply bg-slate-50/70; }
 }
 
+/* ---------------- Fils animes du bandeau d'accueil ---------------- */
+
+/*
+ * Un lent va-et-vient, rien de plus. `transform` seul : le navigateur le
+ * confie au compositeur, sans recalcul de mise en page ni repeinture — c'est
+ * ce qui permet de laisser tourner l'animation sans faire chauffer un
+ * telephone d'entree de gamme.
+ *
+ * Duree et retard viennent du composant, fil par fil, pour qu'aucun ne batte
+ * la mesure avec un autre.
+ */
+@keyframes derive-fil {
+  from { transform: translate(-26px, -9px); }
+  to   { transform: translate(26px, 9px); }
+}
+
+.fil {
+  transform-box: view-box;
+  transform-origin: center;
+  animation: derive-fil var(--duree, 29s) ease-in-out infinite alternate;
+  animation-delay: var(--retard, 0s);
+}
+
+/*
+ * Sur telephone, le cadre est etire verticalement bien plus qu'horizontalement
+ * (`preserveAspectRatio="none"`), ce qui epaissit les traits et les rend plus
+ * presents. Mesure faite sur les pixels reellement affiches : le paragraphe
+ * tombait a 6.86:1 contre 8.72:1 sur ordinateur. On attenue donc les fils sur
+ * petit ecran — c'est la que se trouve la quasi-totalite du public.
+ */
+@media (max-width: 640px) {
+  .fil { opacity: 0.62; }
+}
+
+/*
+ * Certaines personnes demandent a leur systeme de reduire les animations :
+ * troubles vestibulaires, migraines, ou simplement economie de batterie. Le
+ * decor reste affiche, il cesse seulement de bouger.
+ */
+@media (prefers-reduced-motion: reduce) {
+  .fil { animation: none; }
+}
+
 /* ---------------- Impression des factures ---------------- */
 @media print {
   .sans-impression { display: none !important; }

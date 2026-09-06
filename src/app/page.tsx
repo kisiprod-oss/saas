@@ -4,6 +4,7 @@ import { listerVitrine } from "@/lib/requetes";
 import { TYPES_BIEN, VILLES } from "@/lib/constantes";
 import { CarteBien } from "@/components/carte-bien";
 import { EntetePublic, PiedPublic } from "@/components/entete-public";
+import { FilsAnimes } from "@/components/fils-animes";
 import { IconeCheck, IconeOutils, IconeRecherche } from "@/components/icones";
 import {
   IllustrationFacture, IllustrationPaiementMobile, IllustrationRelance, IllustrationTableauBord,
@@ -78,6 +79,9 @@ export default async function PageVitrine({ searchParams }: { searchParams: Prom
           verte a droite. Le vert reste tres sombre (succes-900) pour ne pas
           voler la vedette au bouton dore, seul point vif de la page. */}
       <section className="relative overflow-hidden border-b border-slate-200 bg-gradient-to-br from-brand-900 via-brand-700 to-succes-900">
+        {/* Decor seul : pose avant le contenu, qui porte `relative` et passe
+            donc au-dessus sans qu'on ait besoin d'empiler des z-index. */}
+        <FilsAnimes />
         <div className="relative mx-auto max-w-6xl px-4 pt-14 sm:pt-20">
           <div className="grid items-center gap-10 lg:grid-cols-2">
             <div>
