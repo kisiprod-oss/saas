@@ -3,6 +3,9 @@ import fs from "node:fs";
 import path from "node:path";
 import { dossierDonneesSur } from "./dossier-donnees.mjs";
 import { numeroCanonique } from "./telephone";
+import {
+  dossiersPhotos, NOM_PHOTO_VALIDE, PREFIXE_PRIVE, PREFIXE_PUBLIC,
+} from "./emplacements-photos";
 
 /**
  * Connexion unique a la base SQLite.
@@ -179,6 +182,82 @@ function migrer(base: Database.Database) {
   );
 
   creerProprietairesDepuisBiens(base);
+  rangerPhotosPrivees(base);
+}
+
+/**
+ * Deplace vers le dossier ferme les photos de locataires et de proprietaires
+ * qui dorment encore dans le dossier public.
+ *
+ * Ces visages etaient servis par une adresse publique, sans verification et
+ * avec « cache un an ». Changer le code pour les nouvelles photos ne suffit
+ * pas : celles deja envoyees resteraient accessibles a qui detient le lien.
+ *
+ * ORDRE DES OPERATIONS, ET POURQUOI IL EST DANS CET ORDRE. On COPIE, puis on
+ * met a jour l'adresse en base, puis SEULEMENT ENSUITE on efface l'original.
+ * Une coupure de courant entre deux etapes ne peut donc jamais faire
+ * disparaitre une photo : au pire le fichier existe en double, la fiche
+ * pointe encore sur l'ancien, et le prochain demarrage termine le travail.
+ * L'ordre inverse — deplacer puis mettre a jour — perdrait l'image a la
+ * moindre interruption.
+ *
+ * Idempotent : ne regarde que les fiches encore sur l'ancien prefixe. Une
+ * fois toutes migrees, la requete ne renvoie rien et la fonction ne coute
+ * qu'une lecture.
+ */
+function rangerPhotosPrivees(base: Database.Database) {
+  const aRanger = base.prepare(
+    `SELECT 'locataires' AS t, id, photo_url FROM locataires
+       WHERE photo_url LIKE ? || '%'
+     UNION ALL
+     SELECT 'proprietaires' AS t, id, photo_url FROM proprietaires
+       WHERE photo_url LIKE ? || '%'`,
+  ).all(PREFIXE_PUBLIC, PREFIXE_PUBLIC) as { t: string; id: number; photo_url: string }[];
+
+  if (aRanger.length === 0) return;
+
+  const dossiers = dossiersPhotos(dossierData);
+  fs.mkdirSync(dossiers.prive, { recursive: true });
+  let deplacees = 0;
+
+  for (const ligne of aRanger) {
+    // `ligne.t` vient des deux litteraux de la requete ci-dessus, jamais d'une
+    // saisie. On le verifie quand meme avant de l'interpoler : une table
+    // interpolee sans controle est exactement la forme que prend une injection
+    // le jour ou quelqu'un modifie la requete sans y penser.
+    if (ligne.t !== "locataires" && ligne.t !== "proprietaires") continue;
+
+    const nom = ligne.photo_url.slice(PREFIXE_PUBLIC.length);
+    // Un nom inattendu (adresse externe bricolee a la main) : on n'y touche pas.
+    if (!NOM_PHOTO_VALIDE.test(nom)) continue;
+
+    const source = path.join(dossiers.public, nom);
+    const cible = path.join(dossiers.prive, nom);
+
+    try {
+      // Le fichier peut avoir deja ete copie par un demarrage interrompu.
+      if (fs.existsSync(source)) fs.copyFileSync(source, cible);
+      else if (!fs.existsSync(cible)) continue; // plus rien a deplacer : on laisse l'adresse telle quelle
+
+      base.prepare(`UPDATE ${ligne.t} SET photo_url = ? WHERE id = ?`)
+        .run(PREFIXE_PRIVE + nom, ligne.id);
+
+      if (fs.existsSync(source)) fs.unlinkSync(source);
+      deplacees++;
+    } catch (e) {
+      // On ne bloque JAMAIS le demarrage du site pour une photo : la fiche
+      // garde son ancienne adresse, qui fonctionne encore, et le prochain
+      // demarrage reessaiera.
+      console.error(
+        `[Sen Gestion] Photo privee non deplacee (${ligne.t} n°${ligne.id}) :`,
+        (e as Error).message,
+      );
+    }
+  }
+
+  if (deplacees > 0) {
+    console.log(`[Sen Gestion] ${deplacees} photo(s) de locataire ou de proprietaire rangee(s) a l'abri.`);
+  }
 }
 
 /**

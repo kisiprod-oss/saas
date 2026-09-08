@@ -5,6 +5,9 @@ import fsp from "node:fs/promises";
 import path from "node:path";
 import sharp from "sharp";
 import { dossierData } from "./db";
+import {
+  dossiersPhotos, NOM_PHOTO_VALIDE, PREFIXE_PRIVE, PREFIXE_PUBLIC,
+} from "./emplacements-photos";
 
 /**
  * Stockage des photos envoyees depuis le telephone ou l'ordinateur.
@@ -18,8 +21,29 @@ import { dossierData } from "./db";
  * connexion se fait en donnees mobiles.
  */
 
-const DOSSIER = path.join(dossierData, "televersements");
-const PREFIXE_URL = "/api/photos/";
+const DOSSIER = dossiersPhotos(dossierData).public;
+const PREFIXE_URL = PREFIXE_PUBLIC;
+
+/**
+ * DEUX DOSSIERS, PARCE QUE DEUX PUBLICS.
+ *
+ * `televersements/` : ce qui est fait pour etre vu de tous — photos
+ * d'annonces, logo d'agence, portrait d'artisan qui figure dans l'annuaire
+ * public. Servi sans compte, et mis en cache longtemps : c'est voulu.
+ *
+ * `televersements/prive/` : les visages des LOCATAIRES et des PROPRIETAIRES.
+ * Ce sont des personnes qui n'ont rien demande a personne et qui ne
+ * s'affichent nulle part publiquement. Leur photo ne doit sortir que pour
+ * leur agence, pour eux-memes, ou pour l'administrateur.
+ *
+ * Avant cette separation, tout partageait la meme adresse publique, servie
+ * sans aucune verification et avec « cache un an ». L'adresse etait certes
+ * introuvable au hasard (16 octets tires au sort), mais une adresse difficile
+ * a deviner n'est pas un controle d'acces : il suffisait qu'un lien fuite une
+ * fois — capture d'ecran, historique, journal d'un intermediaire — pour que
+ * la photo reste accessible a vie, et en prime recopiee dans les caches.
+ */
+const DOSSIER_PRIVE = dossiersPhotos(dossierData).prive;
 
 const LARGEUR_MAX = 1600;
 /** Photo de profil : carree, elle ne s'affiche jamais plus grande. */
@@ -32,8 +56,7 @@ export const NOMBRE_MAX_PHOTOS = 12;
 
 const TYPES_ACCEPTES = ["image/jpeg", "image/png", "image/webp", "image/heic", "image/heif", "image/avif"];
 
-/** Nom de fichier sur : 32 caracteres hexadecimaux suivis de .webp */
-const NOM_VALIDE = /^[a-f0-9]{32}\.webp$/;
+const NOM_VALIDE = NOM_PHOTO_VALIDE;
 
 export type ResultatTeleversement = {
   urls: string[];
@@ -97,6 +120,7 @@ export async function enregistrerPhotos(fichiers: File[]): Promise<ResultatTelev
  */
 export async function enregistrerPhotoProfil(
   fichier: File,
+  options: { prive?: boolean } = {},
 ): Promise<{ url: string | null; erreur: string | null }> {
   if (!fichier || fichier.size === 0) return { url: null, erreur: null };
 
@@ -115,10 +139,12 @@ export async function enregistrerPhotoProfil(
       .webp({ quality: QUALITE })
       .toBuffer();
 
-    await fsp.mkdir(DOSSIER, { recursive: true });
+    const dossier = options.prive ? DOSSIER_PRIVE : DOSSIER;
+    const prefixe = options.prive ? PREFIXE_PRIVE : PREFIXE_URL;
+    await fsp.mkdir(dossier, { recursive: true });
     const nom = `${crypto.randomBytes(16).toString("hex")}.webp`;
-    await fsp.writeFile(path.join(DOSSIER, nom), image);
-    return { url: PREFIXE_URL + nom, erreur: null };
+    await fsp.writeFile(path.join(dossier, nom), image);
+    return { url: prefixe + nom, erreur: null };
   } catch {
     return { url: null, erreur: "La photo n'a pas pu être traitée : le fichier est peut-être abîmé." };
   }
@@ -161,20 +187,57 @@ export async function enregistrerLogo(
   }
 }
 
-/** Vrai si l'adresse designe une photo stockee par nos soins. */
-export function estPhotoTeleversee(url: string): boolean {
-  return url.startsWith(PREFIXE_URL) && NOM_VALIDE.test(url.slice(PREFIXE_URL.length));
+/** Vrai si l'adresse designe une photo privee stockee par nos soins. */
+export function estPhotoPrivee(url: string): boolean {
+  return url.startsWith(PREFIXE_PRIVE) && NOM_VALIDE.test(url.slice(PREFIXE_PRIVE.length));
 }
 
-/** Supprime du disque une photo que l'agence retire d'un bien. */
+/**
+ * Vrai si l'adresse designe une photo stockee par nos soins, publique OU
+ * privee. Les deux comptent : cette fonction sert a decider si un fichier
+ * nous appartient et doit etre efface quand l'agence le remplace. Oublier
+ * les privees laisserait justement les visages sur le disque pour toujours.
+ */
+export function estPhotoTeleversee(url: string): boolean {
+  return estPhotoPrivee(url)
+    || (url.startsWith(PREFIXE_URL) && NOM_VALIDE.test(url.slice(PREFIXE_URL.length)));
+}
+
+/** Supprime du disque une photo que l'agence remplace ou retire. */
 export async function supprimerPhoto(url: string): Promise<void> {
   if (!estPhotoTeleversee(url)) return; // adresse externe : rien a supprimer
+  const prive = estPhotoPrivee(url);
+  const dossier = prive ? DOSSIER_PRIVE : DOSSIER;
+  const prefixe = prive ? PREFIXE_PRIVE : PREFIXE_URL;
   try {
-    await fsp.unlink(path.join(DOSSIER, url.slice(PREFIXE_URL.length)));
+    await fsp.unlink(path.join(dossier, url.slice(prefixe.length)));
   } catch {
     // Fichier deja absent : il n'y a rien a faire.
   }
 }
+
+/**
+ * Chemin disque d'une photo PRIVEE, pour la route qui la sert.
+ *
+ * Meme double verrou que pour les photos publiques : le nom doit etre
+ * exactement 32 caracteres hexadecimaux suivis de « .webp », puis le chemin
+ * resolu doit rester sous le dossier prive. Une adresse contenant « ../ »
+ * echoue des la premiere regle.
+ */
+export function cheminPhotoPrivee(nom: string): string | null {
+  if (!NOM_VALIDE.test(nom)) return null;
+  const chemin = path.join(DOSSIER_PRIVE, nom);
+  if (!chemin.startsWith(DOSSIER_PRIVE + path.sep)) return null;
+  return fs.existsSync(chemin) ? chemin : null;
+}
+
+/** Emplacements bruts, pour la migration des photos deja en place. */
+export const EMPLACEMENTS_PHOTOS = {
+  dossierPublic: DOSSIER,
+  dossierPrive: DOSSIER_PRIVE,
+  prefixePublic: PREFIXE_URL,
+  prefixePrive: PREFIXE_PRIVE,
+};
 
 /**
  * Chemin disque d'une photo, pour la route qui la sert.

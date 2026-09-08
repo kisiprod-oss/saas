@@ -415,7 +415,7 @@ export async function actionEnregistrerProprietaire(fd: FormData) {
   const fichierPhoto = fd.get("photo");
   let photoUrl = vide(txt(fd, "photo_url"));
   if (fichierPhoto instanceof File && fichierPhoto.size > 0) {
-    const { url, erreur: probleme } = await enregistrerPhotoProfil(fichierPhoto);
+    const { url, erreur: probleme } = await enregistrerPhotoProfil(fichierPhoto, { prive: true });
     if (probleme) erreur(retour, probleme);
     photoUrl = url;
   }
@@ -1260,7 +1260,7 @@ export async function actionEnregistrerPhotoLocataire(fd: FormData) {
     erreur(retour, "Choisissez une photo avant d'enregistrer.");
   }
 
-  const { url, erreur: probleme } = await enregistrerPhotoProfil(fichier);
+  const { url, erreur: probleme } = await enregistrerPhotoProfil(fichier, { prive: true });
   if (probleme) erreur(retour, probleme);
   if (!url) erreur(retour, "La photo n'a pas pu être enregistrée.");
 
