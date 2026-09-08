@@ -76,6 +76,13 @@
   --color-logo-vert:   #18a840;
   --color-logo-or:     #f8b810;
 
+  /* Creme : un fond, pas une encre. La nouvelle page d'accueil est posee
+     dessus plutot que sur du blanc pur — le blanc franc durcit une page
+     tres typographique, et le creme rechauffe les captures d'ecran, qui
+     sont elles-memes blanches. N'entre pas dans la regle des trois encres :
+     rien n'est jamais ecrit en creme. */
+  --color-creme: #faf8f3;
+
   --font-sans: "Inter", ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
 }
 
@@ -188,6 +195,139 @@ body {
  */
 @media (prefers-reduced-motion: reduce) {
   .fil { animation: none; }
+}
+
+/* ================================================================
+   Page d'accueil : entree, apparitions, demonstration, FAQ.
+
+   REGLE QUI GOUVERNE TOUT CE BLOC : par defaut, rien n'est masque. Les
+   regles qui cachent sont toutes conditionnees a `data-anim="1"`, un
+   attribut que seul le script de la page pose, et qu'il retire s'il
+   echoue. Sans JavaScript, avec un JavaScript casse, ou avec un
+   navigateur qui ignore ces proprietes, la page reste entierement
+   lisible : l'animation est un bonus, jamais une condition d'affichage.
+   ================================================================ */
+
+@keyframes monte-doux {
+  from { opacity: 0; transform: translateY(18px); }
+  to   { opacity: 1; transform: none; }
+}
+
+/* Entree du premier ecran : chaque ligne part avec son propre retard. */
+[data-anim="1"] .entree {
+  opacity: 0;
+  animation: monte-doux 700ms cubic-bezier(0.22, 0.61, 0.36, 1) forwards;
+  animation-delay: var(--retard, 0ms);
+}
+
+/* Apparition au defilement, une seule fois : le script ajoute `.vu`. */
+[data-anim="1"] .revele { opacity: 0; transform: translateY(20px); }
+[data-anim="1"] .revele.vu {
+  opacity: 1;
+  transform: none;
+  transition: opacity 500ms cubic-bezier(0.22, 0.61, 0.36, 1),
+              transform 500ms cubic-bezier(0.22, 0.61, 0.36, 1);
+  transition-delay: var(--retard, 0ms);
+}
+
+/* --------- Demonstration : onglets sans une ligne de JavaScript ---------
+   Trois boutons radio masques a l'oeil mais bien reels : le navigateur
+   fournit gratuitement le clavier (fleches entre les onglets, focus
+   visible) et l'annonce aux lecteurs d'ecran. Les trois panneaux occupent
+   la MEME case de grille : la hauteur du bloc est celle du plus grand,
+   donc changer d'onglet ne fait jamais sauter la page.               */
+.demo-panneaux { display: grid; }
+/* `min-width: 0` : sans lui, un panneau qui contient une capture glissante
+   impose sa largeur a la colonne et pousse la page au lieu de defiler. */
+.demo-panneaux > * { grid-area: 1 / 1; min-width: 0; }
+
+.demo-panneau {
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 240ms ease-out;
+}
+.demo-choix:nth-of-type(1):checked ~ .demo-panneaux > .demo-panneau:nth-child(1),
+.demo-choix:nth-of-type(2):checked ~ .demo-panneaux > .demo-panneau:nth-child(2),
+.demo-choix:nth-of-type(3):checked ~ .demo-panneaux > .demo-panneau:nth-child(3) {
+  opacity: 1;
+  visibility: visible;
+}
+
+/* L'onglet actif, et le contour de focus reporte du bouton sur son
+   etiquette — c'est elle qu'on voit, le bouton est masque. */
+.demo-choix:nth-of-type(1):checked ~ .demo-onglets label:nth-child(1),
+.demo-choix:nth-of-type(2):checked ~ .demo-onglets label:nth-child(2),
+.demo-choix:nth-of-type(3):checked ~ .demo-onglets label:nth-child(3) {
+  background-color: var(--color-brand-900);
+  color: #fff;
+  border-color: var(--color-brand-900);
+}
+.demo-choix:nth-of-type(1):focus-visible ~ .demo-onglets label:nth-child(1),
+.demo-choix:nth-of-type(2):focus-visible ~ .demo-onglets label:nth-child(2),
+.demo-choix:nth-of-type(3):focus-visible ~ .demo-onglets label:nth-child(3) {
+  outline: 2px solid var(--color-brand-600);
+  outline-offset: 3px;
+}
+
+/* Sur telephone, une capture d'ecran d'ordinateur reduite a 390 px n'est
+   plus lisible. Plutot que de la rendre decorative, on la laisse a une
+   taille lisible et on la fait glisser du doigt. Le debordement reste
+   ENFERME dans ce cadre : la page, elle, ne defile jamais de travers. */
+/* `min-width: 0` n'est pas decoratif : sans lui, ce cadre est un element de
+   grille dont la largeur minimale vaut celle de son contenu (46rem). Il ne
+   defilerait pas, il POUSSERAIT la page — verifie, c'etait 370 px de
+   debordement horizontal sur telephone. */
+.capture-glissante {
+  overflow-x: auto;
+  overscroll-behavior-x: contain;
+  min-width: 0;
+  max-width: 100%;
+}
+.capture-glissante > * { min-width: 46rem; }
+@media (min-width: 640px) {
+  .capture-glissante { overflow-x: visible; }
+  .capture-glissante > * { min-width: 0; }
+}
+
+/* --------- FAQ : le <details> natif, ouvert en douceur ---------
+   `interpolate-size` autorise l'animation d'une hauteur vers `auto`. Pose
+   ici et pas sur :root pour ne rien changer au reste du site ; les
+   navigateurs qui l'ignorent ouvrent et ferment d'un coup, ce qui reste
+   parfaitement utilisable.                                           */
+.faq { interpolate-size: allow-keywords; }
+
+.faq details::details-content {
+  block-size: 0;
+  overflow: hidden;
+  transition: block-size 300ms ease, content-visibility 300ms;
+  transition-behavior: allow-discrete;
+}
+.faq details[open]::details-content { block-size: auto; }
+.faq summary::-webkit-details-marker { display: none; }
+.faq details[open] .faq-croix { transform: rotate(45deg); }
+
+/* --------- Pied de page devoile au defilement (ordinateur seul) ---------
+   Le pied est fixe au fond de la fenetre ; le corps de la page, opaque,
+   glisse par-dessus et le decouvre en fin de course. Aucun ecouteur de
+   defilement, donc rien a recalculer a chaque pixel. Hauteur imposee ici
+   pour que la marge du corps corresponde exactement.                  */
+@media (min-width: 1024px) and (prefers-reduced-motion: no-preference) {
+  .accueil-corps { position: relative; z-index: 1; margin-bottom: 13rem; }
+  .accueil-pied {
+    position: fixed; inset: auto 0 0 0; z-index: 0;
+    height: 13rem; display: flex; align-items: center;
+  }
+}
+
+/* Reduction des animations : tout reste, plus rien ne bouge. */
+@media (prefers-reduced-motion: reduce) {
+  [data-anim="1"] .entree,
+  [data-anim="1"] .revele,
+  [data-anim="1"] .revele.vu {
+    opacity: 1; transform: none; animation: none; transition: none;
+  }
+  .demo-panneau { transition: none; }
+  .faq details::details-content { transition: none; }
 }
 
 /* ---------------- Impression des factures ---------------- */
