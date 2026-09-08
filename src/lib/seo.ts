@@ -140,6 +140,29 @@ export function description(texte: string, max = 158): string {
  * C'est ce qui permet a Google d'afficher le nom, le logo et le domaine
  * d'activite dans son panneau lateral, plutot qu'un simple lien bleu.
  */
+/**
+ * Serialise une donnee structuree pour la poser dans un <script>.
+ *
+ * A UTILISER SANS EXCEPTION pour tout bloc « application/ld+json ».
+ * `JSON.stringify` seul ne suffit pas, et l'erreur est facile a commettre :
+ * il echappe les guillemets, mais PAS le caractere « < ». Or l'analyseur HTML
+ * ferme un <script> des qu'il rencontre la suite « </script » — meme au
+ * milieu d'une chaine JSON. Il suffisait donc qu'une agence intitule un bien
+ * « Villa </script><img src=x onerror=...> » pour que son code s'execute chez
+ * tous les visiteurs de l'annonce. Constate en conditions reelles avant
+ * correction : le script s'executait bien chez un visiteur anonyme.
+ *
+ * Les trois caracteres sont remplaces par leur echappement Unicode, qui reste
+ * du JSON parfaitement valide : la donnee structuree lue par Google est
+ * identique, seul l'analyseur HTML cesse d'y voir une balise.
+ */
+export function donneeStructuree(valeur: unknown): string {
+  return JSON.stringify(valeur)
+    .replace(/</g, "\\u003c")
+    .replace(/>/g, "\\u003e")
+    .replace(/&/g, "\\u0026");
+}
+
 export function ficheOrganisation() {
   return {
     "@context": "https://schema.org",

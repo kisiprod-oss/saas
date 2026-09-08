@@ -12,7 +12,7 @@ import {
   IconeDouche, IconeLieu, IconeLit, IconeRetour, IconeSurface, IconeTelephone,
 } from "@/components/icones";
 import { ChampTelephone } from "@/components/champ-telephone";
-import { description as couper, url } from "@/lib/seo";
+import { description as couper, url, donneeStructuree } from "@/lib/seo";
 import type { Metadata } from "next";
 
 type Params = { [cle: string]: string | string[] | undefined };
@@ -139,7 +139,7 @@ export default async function PageBienPublic({
     <div className="min-h-screen">
       <script
         type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(fiche) }}
+        dangerouslySetInnerHTML={{ __html: donneeStructuree(fiche) }}
       />
       <EntetePublic />
 

@@ -1,60 +1,45 @@
-import crypto from "node:crypto";
-import fs from "node:fs";
-import os from "node:os";
-import path from "node:path";
-import Database from "better-sqlite3";
-import { utilisateurCourant } from "@/lib/auth";
-import { dossierData } from "@/lib/db";
+import { exigerSession } from "@/lib/auth";
+import { exporterAgence } from "@/lib/export-agence";
 
 /**
- * Telechargement d'une copie de la base par le titulaire du compte.
+ * Telechargement par une agence de SES donnees.
  *
- * La copie est produite par l'API de sauvegarde de SQLite : elle est
- * coherente meme si quelqu'un ecrit au meme moment.
+ * ATTENTION — CE QUE CETTE ROUTE NE DOIT PLUS JAMAIS FAIRE.
+ *
+ * Elle renvoyait auparavant une copie du fichier SQLite. Or ce fichier porte
+ * TOUTES les agences. Le seul controle etait `role === "proprietaire"`, un
+ * role que `inscrireAgence()` donne au premier utilisateur de CHAQUE agence :
+ * autrement dit, a tout inscrit. N'importe qui pouvait donc creer un compte
+ * gratuit et repartir avec les locataires, les baux, les numeros de piece
+ * d'identite, les empreintes de mots de passe et les jetons de session de
+ * toutes les autres agences. Verifie en conditions reelles avant correction.
+ *
+ * La lecon tient en une phrase : un role ne dit pas QUELLES donnees on peut
+ * lire. Ici, seule `agence_id` le dit — et c'est desormais `exporterAgence()`
+ * qui l'applique, table par table.
  */
-
-const TAILLE_MAX = 100 * 1024 * 1024; // au-dela, on renvoie vers le script
-
 export async function GET() {
-  const utilisateur = await utilisateurCourant();
-  if (!utilisateur) {
-    return new Response("Connexion requise", { status: 401 });
-  }
+  // exigerSession() garantit une session valide ET fournit l'agence a laquelle
+  // l'export sera borne. On ne lit pas l'identifiant d'agence dans la requete.
+  const { utilisateur, agence } = await exigerSession();
+
+  // Second verrou, et non le premier : le cloisonnement vient de agence_id
+  // ci-dessous. Celui-ci limite en plus l'export au titulaire du compte —
+  // une agence peut compter plusieurs utilisateurs, et le fichier des
+  // locataires n'a pas a partir dans la poche de chacun d'eux.
   if (utilisateur.role !== "proprietaire") {
-    return new Response("Seul le titulaire du compte peut télécharger la sauvegarde", { status: 403 });
+    return new Response("Seul le titulaire du compte peut exporter les données.", { status: 403 });
   }
 
-  const source = process.env.DATABASE_FILE ?? path.join(dossierData, "sen-gestion.db");
+  const contenu = JSON.stringify(exporterAgence(agence.id), null, 2);
+  const nom = `sen-gestion-${agence.slug}-${new Date().toISOString().slice(0, 10)}.json`;
 
-  if (!fs.existsSync(source)) {
-    return new Response("Base introuvable", { status: 404 });
-  }
-  if (fs.statSync(source).size > TAILLE_MAX) {
-    return new Response(
-      "Base trop volumineuse pour un téléchargement direct. Utilisez « npm run sauvegarde » sur le serveur.",
-      { status: 413 },
-    );
-  }
-
-  const copie = path.join(os.tmpdir(), `sen-gestion-${crypto.randomBytes(8).toString("hex")}.db`);
-
-  try {
-    const db = new Database(source, { readonly: true });
-    await db.backup(copie);
-    db.close();
-
-    const contenu = fs.readFileSync(copie);
-    const nom = `sen-gestion-${new Date().toISOString().slice(0, 10)}.db`;
-
-    return new Response(new Uint8Array(contenu), {
-      headers: {
-        "Content-Type": "application/octet-stream",
-        "Content-Disposition": `attachment; filename="${nom}"`,
-        "Content-Length": String(contenu.length),
-        "Cache-Control": "no-store",
-      },
-    });
-  } finally {
-    if (fs.existsSync(copie)) fs.unlinkSync(copie);
-  }
+  return new Response(contenu, {
+    headers: {
+      "Content-Type": "application/json; charset=utf-8",
+      "Content-Disposition": `attachment; filename="${nom}"`,
+      "X-Content-Type-Options": "nosniff",
+      "Cache-Control": "private, no-store",
+    },
+  });
 }

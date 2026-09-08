@@ -244,8 +244,9 @@ export default async function PageAgence({ searchParams }: { searchParams: Promi
           <Carte className="p-5">
             <h2 className="font-semibold text-slate-900">Sauvegarde</h2>
             <p className="mt-1 text-sm text-slate-500">
-              Téléchargez une copie complète de vos données : agences, biens,
-              locataires, baux, factures et paiements.
+              Téléchargez un fichier contenant les données de votre agence :
+              propriétaires, biens, locataires, baux, factures et paiements.
+              Aucune autre agence n&apos;y figure.
             </p>
             <a href="/api/sauvegarde" className="btn-secondaire mt-3 w-full">
               ⬇ Télécharger mes données

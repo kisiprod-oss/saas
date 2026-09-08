@@ -1,7 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import "./globals.css";
 import { AssistantMonte } from "@/components/assistant-monte";
-import { ficheOrganisation, MOTS_CLES, NOM_SITE, SITE } from "@/lib/seo";
+import { ficheOrganisation, MOTS_CLES, NOM_SITE, SITE, donneeStructuree } from "@/lib/seo";
 
 /**
  * Code de propriete remis par Google Search Console, methode « Balise HTML ».
@@ -103,7 +103,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             d'afficher le nom, le logo et l'activite plutot qu'un lien nu. */}
         <script
           type="application/ld+json"
-          dangerouslySetInnerHTML={{ __html: JSON.stringify(ficheOrganisation()) }}
+          dangerouslySetInnerHTML={{ __html: donneeStructuree(ficheOrganisation()) }}
         />
         {children}
         <AssistantMonte />
