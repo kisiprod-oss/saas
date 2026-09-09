@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { LogoSen } from "@/components/entete-public";
 import { IconeMenu } from "@/components/icones";
+import { TexteManuscrit } from "@/components/texte-manuscrit";
 
 /**
  * Nouvelle direction artistique de la page d'accueil — APERCU, PAS PUBLIE.
@@ -232,8 +233,11 @@ export default function PageApercuAccueil() {
             <h1 className="text-[2.1rem] font-bold leading-[1.03] tracking-[-0.025em] text-brand-950 sm:text-6xl lg:text-[4.6rem]">
               <span className="entree block" style={{ "--retard": "80ms" } as React.CSSProperties}>Vos biens.</span>
               <span className="entree block" style={{ "--retard": "160ms" } as React.CSSProperties}>Vos locataires.</span>
+              {/* La troisième ligne s'écrit au stylo. Tracés statiques, aucune
+                  police ni bibliothèque chargée chez le visiteur — voir
+                  texte-manuscrit.tsx. */}
               <span className="entree block text-succes-900" style={{ "--retard": "240ms" } as React.CSSProperties}>
-                Tout simplement.
+                <TexteManuscrit retard={0.9} duree={1.8} />
               </span>
             </h1>
 

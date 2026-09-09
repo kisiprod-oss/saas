@@ -230,6 +230,53 @@ body {
   transition-delay: var(--retard, 0ms);
 }
 
+/* --------- Phrase écrite au stylo, puis encrée ---------
+   Tout se joue en CSS : les tracés sont déjà dans la page (voir
+   texte-manuscrit.tsx), il ne reste qu'à les découvrir. `pathLength="1"` sur
+   chaque contour laisse le navigateur normaliser la longueur, ce qui évite de
+   la mesurer en JavaScript.
+
+   ÉTAT PAR DÉFAUT : la phrase est PLEINE et le trait absent. C'est l'état final,
+   et c'est celui qu'on obtient si les animations ne tournent pas — réglage de
+   réduction, navigateur ancien, CSS non chargé. On ne peut donc jamais tomber
+   sur une phrase invisible. */
+@keyframes manuscrit-trait {
+  from { stroke-dashoffset: 1; }
+  to   { stroke-dashoffset: 0; }
+}
+@keyframes manuscrit-encre {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+/* « 1 2 », et le vide deux fois plus long que le trait : ce n'est pas un
+   réglage esthétique. Avec « 1 » seul — ou même « 1 1 » — l'attente place le
+   motif EXACTEMENT sur sa frontière, et un bout de trait arrondi posé sur un
+   tiret de longueur nulle dessine un point. La phrase apparaissait pointillée
+   avant que le stylo n'y arrive. Un vide plus long éloigne cette frontière :
+   au repos on est franchement dans le vide, et plus rien ne s'affiche.
+   Mesuré, après deux corrections qui portaient à côté. */
+.manuscrit-trait { stroke-dasharray: 1 2; stroke-dashoffset: 0; }
+.manuscrit-plein { opacity: 1; }
+
+@media (prefers-reduced-motion: no-preference) {
+  .manuscrit-trait {
+    stroke-dashoffset: 1;
+    animation-name: manuscrit-trait;
+    animation-timing-function: ease-out;
+    /* « both » et non « forwards » : pendant son délai, une animation en
+       « forwards » laisse l'élément dans son style de base. Les contours pas
+       encore écrits montraient donc le bout arrondi de leur premier point, et
+       la phrase apparaissait pointillée avant que le stylo n'y arrive.
+       « both » applique aussi l'état de DÉPART pendant l'attente. */
+    animation-fill-mode: both;
+  }
+  .manuscrit-plein {
+    opacity: 0;
+    animation: manuscrit-encre 0.5s ease-out forwards;
+  }
+}
+
 /* --------- Demonstration : onglets sans une ligne de JavaScript ---------
    Trois boutons radio masques a l'oeil mais bien reels : le navigateur
    fournit gratuitement le clavier (fleches entre les onglets, focus
