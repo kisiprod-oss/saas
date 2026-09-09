@@ -1,4 +1,5 @@
 import { adressesAdminVisibles, exigerAdmin } from "@/lib/admin";
+import { actionFermerToutesLesSessions } from "@/lib/actions";
 import { emplacementDonnees } from "@/lib/emplacement-donnees";
 import { collaborateurs, plateforme } from "@/lib/plateforme";
 import { dateFr, fcfa, moisCourt } from "@/lib/format";
@@ -236,6 +237,50 @@ export default async function PagePlateforme() {
           <CarteEmplacement e={emplacement} />
         </div>
       )}
+
+      {/* Ce qu'il faut savoir AVANT de toucher aux secrets chez l'hébergeur. */}
+      <Carte className="mt-6 p-5">
+        <h2 className="font-semibold text-slate-900">Sécurité — après un secret exposé</h2>
+
+        <dl className="mt-4 grid gap-4 sm:grid-cols-2">
+          <div className="rounded-lg border border-slate-200 p-4">
+            <dt className="text-sm text-slate-600">Agences ayant enregistré des clés marchandes</dt>
+            <dd className="mt-1 text-2xl font-bold text-slate-900">{p.nbEncaissementConfigure}</dd>
+            <p className="mt-2 text-xs leading-relaxed text-slate-600">
+              {p.nbEncaissementConfigure === 0 ? (
+                <>
+                  Aucune. Changer <code className="rounded bg-slate-100 px-1">CLE_CHIFFREMENT</code>{" "}
+                  chez l&apos;hébergeur ne cassera rien.
+                </>
+              ) : (
+                <>
+                  Attention : changer <code className="rounded bg-slate-100 px-1">CLE_CHIFFREMENT</code>{" "}
+                  rendra leurs clés illisibles et arrêtera leur encaissement en ligne,
+                  <strong> sans message d&apos;erreur</strong>. Prévenez-les et faites-leur
+                  ressaisir leurs clés juste après.
+                </>
+              )}
+            </p>
+          </div>
+
+          <div className="rounded-lg border border-slate-200 p-4">
+            <dt className="text-sm text-slate-600">Sessions ouvertes</dt>
+            <dd className="mt-1 text-2xl font-bold text-slate-900">{p.nbSessions}</dd>
+            <p className="mt-2 text-xs leading-relaxed text-slate-600">
+              Un jeton de session suffit à se faire passer pour quelqu&apos;un, sans mot de
+              passe, pendant trente jours. Changer les mots de passe ne les annule pas.
+            </p>
+            <form action={actionFermerToutesLesSessions} className="mt-3">
+              <button type="submit" className="btn-danger w-full">
+                Fermer toutes les sessions
+              </button>
+            </form>
+            <p className="mt-2 text-xs text-slate-500">
+              Tout le monde devra se reconnecter, vous compris. Aucune donnée n&apos;est touchée.
+            </p>
+          </div>
+        </dl>
+      </Carte>
     </>
   );
 }

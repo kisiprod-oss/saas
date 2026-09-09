@@ -2285,6 +2285,36 @@ export async function actionFormuleAgence(fd: FormData) {
  * ne doit pas perdre ces deux semaines ; une agence qui règle avec deux mois
  * de retard ne doit pas se les voir facturer.
  */
+/**
+ * Ferme TOUTES les sessions ouvertes : agences, locataires, artisans.
+ *
+ * À utiliser après un incident — un secret exposé, une base qui a pu être
+ * copiée. Un jeton de session vole dans la base tel quel : il suffit à se
+ * faire passer pour quelqu'un, sans mot de passe et sans expiration avant
+ * trente jours. Changer les mots de passe ne les invalide pas ; seule leur
+ * suppression le fait.
+ *
+ * Conséquence assumée : tout le monde devra se reconnecter, vous compris.
+ * Aucune donnée n'est touchée — uniquement les jetons.
+ */
+export async function actionFermerToutesLesSessions() {
+  await exigerAdmin();
+
+  db.transaction(() => {
+    ecrire("DELETE FROM sessions");
+    ecrire("DELETE FROM sessions_locataires");
+    ecrire("DELETE FROM sessions_artisans");
+  })();
+
+  revalidatePath("/admin/plateforme");
+  // La session de l'administrateur vient d'etre supprimee elle aussi : la
+  // page suivante le renverra vers la connexion. On l'annonce plutot que de
+  // le laisser decouvrir un ecran de connexion sans explication.
+  redirect("/connexion?message=" + encodeURIComponent(
+    "Toutes les sessions ont été fermées. Reconnectez-vous.",
+  ));
+}
+
 export async function actionProlongerFormule(fd: FormData) {
   await exigerAdmin();
   const id = entier(fd, "id");

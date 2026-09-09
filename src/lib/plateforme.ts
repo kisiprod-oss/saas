@@ -57,6 +57,20 @@ export type Plateforme = {
   nbArtisans: number;
   nbLocataires: number;
   nbProprietaires: number;
+  /**
+   * Agences ayant enregistré des clés marchandes chiffrées.
+   *
+   * Sert à UNE décision précise : faut-il changer CLE_CHIFFREMENT ? Ces clés
+   * sont chiffrées avec elle ; en changer rendrait les anciennes illisibles,
+   * et l'encaissement en ligne de ces agences s'arrêterait SANS message
+   * d'erreur — dechiffrer() renvoie null, et l'application traite alors
+   * l'encaissement comme « non configuré ». À zéro, la rotation ne casse
+   * rien. Au-dessus, il faut prévenir ces agences et leur faire ressaisir
+   * leurs clés.
+   */
+  nbEncaissementConfigure: number;
+  /** Sessions ouvertes, tous espaces confondus. */
+  nbSessions: number;
 
   /** Abonnements REELLEMENT encaisses. Zero tant que rien n'a ete regle. */
   encaisseTotal: number;
@@ -120,6 +134,15 @@ export function plateforme(): Plateforme {
     nbArtisans: compte("SELECT COUNT(*) AS n FROM artisans"),
     nbLocataires: compte("SELECT COUNT(*) AS n FROM locataires"),
     nbProprietaires: compte("SELECT COUNT(*) AS n FROM proprietaires"),
+    nbEncaissementConfigure: compte(
+      `SELECT COUNT(*) AS n FROM agences
+        WHERE encaissement_cle_maitre IS NOT NULL AND encaissement_cle_maitre != ''`,
+    ),
+    nbSessions: compte(
+      `SELECT (SELECT COUNT(*) FROM sessions)
+            + (SELECT COUNT(*) FROM sessions_locataires)
+            + (SELECT COUNT(*) FROM sessions_artisans) AS n`,
+    ),
     encaisseTotal: encaisse.total,
     encaisseCeMois: encaisseMois.total,
     nbReglements: encaisse.nb,

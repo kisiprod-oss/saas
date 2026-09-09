@@ -16,6 +16,10 @@ export default async function PageConnexion({ searchParams }: { searchParams: Pr
   const params = await searchParams;
   const erreur = Array.isArray(params.erreur) ? params.erreur[0] : params.erreur;
   const reinitialise = (Array.isArray(params.reinitialise) ? params.reinitialise[0] : params.reinitialise) === "1";
+  // Information neutre — par exemple après une fermeture de toutes les
+  // sessions. Distincte de `erreur` : l'afficher en rouge ferait croire à
+  // un problème là où il ne s'est rien passé d'anormal.
+  const message = Array.isArray(params.message) ? params.message[0] : params.message;
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-brand-800 via-brand-700 to-brand-600 px-4 py-12">
@@ -29,6 +33,7 @@ export default async function PageConnexion({ searchParams }: { searchParams: Pr
           <p className="mt-1 text-sm text-slate-500">Connectez-vous pour gérer vos biens et vos loyers.</p>
 
           {erreur && <div className="mt-5"><Alerte type="erreur">{erreur}</Alerte></div>}
+          {message && <div className="mt-5"><Alerte type="info">{message}</Alerte></div>}
           {reinitialise && (
             <div className="mt-5">
               <Alerte type="succes">
