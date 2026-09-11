@@ -57,15 +57,25 @@ export default async function DashboardLayout({ children }: { children: React.Re
         <div className="mt-auto hidden border-t border-slate-100 p-3 lg:block">
           {administrateur && (
             <Link
-              href="/admin/candidatures"
+              href="/admin"
               className="mb-2 flex items-center gap-3 rounded-lg bg-slate-900 px-3 py-2.5 text-sm font-medium text-white hover:bg-slate-800"
             >
               Administration
             </Link>
           )}
+          {/* L'adresse de connexion, et pas seulement le nom.
+              Elle decide de droits invisibles — l'acces a l'administration
+              depend d'elle (voir estAdmin) — et personne ne pouvait la lire
+              nulle part dans l'application. On cherchait « pourquoi je ne
+              vois pas l'administration » sans pouvoir constater avec quel
+              compte on etait entre. C'est aussi utile quand une agence a
+              plusieurs utilisateurs : on sait qui est connecte. */}
           <div className="rounded-lg bg-slate-50 p-3">
             <p className="truncate text-sm font-semibold text-slate-900">{utilisateur.nom}</p>
             <p className="truncate text-xs text-slate-500">{agence.nom}</p>
+            <p className="mt-1 truncate text-xs text-slate-400" title={utilisateur.email}>
+              {utilisateur.email}
+            </p>
           </div>
           <form action={actionDeconnexion}>
             <button type="submit" className="lien-nav mt-1 w-full text-left">
