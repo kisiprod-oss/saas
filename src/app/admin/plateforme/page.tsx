@@ -34,7 +34,9 @@ export default async function PagePlateforme() {
       {/* ------------------------------- Adhérents ------------------------------- */}
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         {[
-          { libelle: "Agences inscrites", valeur: String(p.nbAgences), detail: `dont ${p.nouvellesCeMois} ce mois-ci` },
+          // Le guide se telecharge avant d'entrer dans l'espace : l'ecart
+          // entre les deux nombres, ce sont les agences arretees a la porte.
+          { libelle: "Agences inscrites", valeur: String(p.nbAgences), detail: `dont ${p.nouvellesCeMois} ce mois-ci · ${p.nbGuideTelecharge} ont reçu le guide` },
           { libelle: "Agences payantes", valeur: String(p.nbPayantes), detail: `${p.nbGratuites} sur la formule gratuite` },
           { libelle: "Actives (30 j)", valeur: String(p.nbActives), detail: `${p.nbDormantes} sans facture récente` },
           { libelle: "Comptes ouverts", valeur: String(p.nbUtilisateurs), detail: `${p.nbLocataires} locataires · ${p.nbProprietaires} propriétaires · ${p.nbArtisans} artisans` },

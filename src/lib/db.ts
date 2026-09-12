@@ -123,6 +123,9 @@ function migrer(base: Database.Database) {
     ["agences", "modele_bail_clauses", "TEXT"],
     ["biens", "proprietaire_id", "INTEGER REFERENCES proprietaires(id) ON DELETE SET NULL"],
     ["proprietaires", "photo_url", "TEXT"],
+    // Date a laquelle l'agence a telecharge le guide d'utilisation. NULL tant
+    // qu'elle ne l'a pas fait : c'est ce qui declenche le passage oblige.
+    ["agences", "guide_telecharge_le", "TEXT"],
   ] as const;
 
   for (const [table, colonne, type] of colonnes) {

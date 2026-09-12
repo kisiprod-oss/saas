@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { redirect } from "next/navigation";
 import { exigerSession } from "@/lib/auth";
 import { estAdmin } from "@/lib/admin";
 import {
@@ -8,7 +9,7 @@ import {
 import { actionDeconnexion } from "@/lib/actions";
 import { NavLaterale } from "@/components/nav-laterale";
 import { LogoSen } from "@/components/entete-public";
-import { IconeSortie } from "@/components/icones";
+import { IconeContrat, IconeSortie } from "@/components/icones";
 
 import type { Metadata } from "next";
 import { NON_INDEXABLE } from "@/lib/seo";
@@ -24,6 +25,25 @@ export const metadata: Metadata = NON_INDEXABLE;
 
 export default async function DashboardLayout({ children }: { children: React.ReactNode }) {
   const { utilisateur, agence } = await exigerSession();
+
+  /**
+   * LE GUIDE D'ABORD.
+   *
+   * Tant que l'agence n'a pas recu le guide d'utilisation, aucune page de
+   * l'espace ne s'affiche. Le controle est pose ICI, dans la mise en page,
+   * et non page par page : une mise en page couvre tout ce qui est range
+   * dessous, y compris les ecrans ajoutes plus tard. Poser le controle sur
+   * chaque page laisserait tot ou tard passer la prochaine.
+   *
+   * `/bienvenue` vit hors de ce dossier : sinon cette ligne la renverrait
+   * vers elle-meme indefiniment.
+   *
+   * Ne concerne que les agences. Les locataires et les artisans ont leurs
+   * propres espaces, leurs propres mises en page, et ce guide ne leur est
+   * pas destine.
+   */
+  if (!agence.guide_telecharge_le) redirect("/bienvenue");
+
   const nouvellesDemandes = compterDemandesNouvelles(agence.id);
   const aRelancer = compterARelancer(agence.id);
   const paiementsEnAttente = compterPaiementsEnAttente(agence.id);
@@ -77,6 +97,12 @@ export default async function DashboardLayout({ children }: { children: React.Re
               {utilisateur.email}
             </p>
           </div>
+          {/* Le guide reste a portee de clic. La page d'accueil le promet,
+              et une agence qui a perdu le fichier ne doit pas avoir a
+              ecrire pour le redemander. */}
+          <a href="/api/guide" className="lien-nav mt-1 w-full">
+            <IconeContrat className="h-5 w-5 shrink-0" /> Guide d&apos;utilisation
+          </a>
           <form action={actionDeconnexion}>
             <button type="submit" className="lien-nav mt-1 w-full text-left">
               <IconeSortie className="h-5 w-5" /> Se déconnecter

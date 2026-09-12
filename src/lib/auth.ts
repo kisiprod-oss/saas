@@ -45,6 +45,8 @@ export type Agence = {
   paiement_wave: string | null;
   paiement_free_money: string | null;
   paiement_consignes: string | null;
+  /** Quand l'agence a telecharge le guide. NULL = pas encore. */
+  guide_telecharge_le: string | null;
 };
 
 /** Hache un mot de passe avec scrypt et un sel aleatoire. */

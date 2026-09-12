@@ -128,6 +128,10 @@ CREATE TABLE IF NOT EXISTS agences (
   -- Articles du bail reecrits par l'agence, en JSON {cle: texte}. Seules les
   -- differences avec le modele du logiciel y figurent (src/lib/bail-clauses.ts).
   modele_bail_clauses     TEXT,
+  -- Date a laquelle l'agence a telecharge le guide d'utilisation. NULL tant
+  -- qu'elle ne l'a pas fait : c'est ce qui tient la porte fermee (voir
+  -- src/app/bienvenue et src/app/api/guide).
+  guide_telecharge_le     TEXT,
   cree_le       TEXT NOT NULL DEFAULT (datetime('now'))
 );
 

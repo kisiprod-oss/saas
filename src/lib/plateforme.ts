@@ -71,6 +71,13 @@ export type Plateforme = {
   nbEncaissementConfigure: number;
   /** Sessions ouvertes, tous espaces confondus. */
   nbSessions: number;
+  /**
+   * Agences ayant recu le guide d'utilisation. L'ecart avec `nbAgences` est
+   * le nombre d'agences qui n'ont pas encore ouvert leur espace depuis que
+   * le guide est remis a l'entree — utile pour savoir si le passage oblige
+   * bloque quelqu'un plutot que de l'accompagner.
+   */
+  nbGuideTelecharge: number;
 
   /** Abonnements REELLEMENT encaisses. Zero tant que rien n'a ete regle. */
   encaisseTotal: number;
@@ -142,6 +149,9 @@ export function plateforme(): Plateforme {
       `SELECT (SELECT COUNT(*) FROM sessions)
             + (SELECT COUNT(*) FROM sessions_locataires)
             + (SELECT COUNT(*) FROM sessions_artisans) AS n`,
+    ),
+    nbGuideTelecharge: compte(
+      "SELECT COUNT(*) AS n FROM agences WHERE guide_telecharge_le IS NOT NULL",
     ),
     encaisseTotal: encaisse.total,
     encaisseCeMois: encaisseMois.total,

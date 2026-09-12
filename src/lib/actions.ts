@@ -159,12 +159,32 @@ export async function actionInscription(fd: FormData) {
   if (!res.ok) erreur("/inscription", res.erreur);
 
   await ouvrirSession(res.utilisateurId);
-  redirect("/dashboard");
+  // Vers le guide, pas vers le tableau de bord : c'est le premier pas du
+  // parcours. La mise en page du tableau de bord y renverrait de toute
+  // facon, autant y aller franchement.
+  redirect("/bienvenue");
 }
 
 export async function actionDeconnexion() {
   await fermerSession();
   redirect("/connexion");
+}
+
+/**
+ * Ouvre l'espace agence — a condition que le guide soit parti.
+ *
+ * Le controle porte sur la DATE en base, jamais sur le clic : elle n'est
+ * posee que par la route /api/guide, au moment ou le fichier est remis.
+ * Un bouton « j'ai telecharge » ne prouverait rien tout seul.
+ *
+ * Le refus renvoie sur la meme page avec un mot d'explication, plutot que
+ * de laisser le bouton ne rien faire : le plus sur moyen de faire croire
+ * que le logiciel est casse est de ne rien repondre a un clic.
+ */
+export async function actionEntrerDansLEspace() {
+  const { agence } = await exigerSession();
+  if (!agence.guide_telecharge_le) redirect("/bienvenue?rappel=1");
+  redirect("/dashboard");
 }
 
 // ------------------------------------------------------------------ agence
