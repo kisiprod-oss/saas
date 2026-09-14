@@ -45,6 +45,12 @@ const ESPACES: Espace[] = [
     ],
     action: { libelle: "Créer mon espace agence", href: "/inscription" },
     secondaire: { libelle: "Voir les tarifs", href: "/tarifs" },
+    image: {
+      src: "/apercu/biens-detail.webp",
+      alt: "Écran « Mes biens » de Sen Gestion : la liste du portefeuille de l'agence, "
+        + "avec pour chaque logement sa localisation, son type, son loyer et son état.",
+      largeur: 1424, hauteur: 1000, ajustement: "couvrir",
+    },
   },
   {
     cle: "locataires",
@@ -62,6 +68,12 @@ const ESPACES: Espace[] = [
     ],
     action: { libelle: "Accéder à mon espace locataire", href: "/espace-locataire/connexion" },
     secondaire: { libelle: "Chercher un logement", href: "/#annonces" },
+    image: {
+      src: "/apercu/quittance-detail.webp",
+      alt: "Quittance de loyer éditée par Sen Gestion : en-tête de l'agence, locataire, "
+        + "bien loué, période, loyer et charges, total réglé.",
+      largeur: 1050, hauteur: 1075, ajustement: "contenir",
+    },
   },
   {
     cle: "artisans",
@@ -77,6 +89,12 @@ const ESPACES: Espace[] = [
     ],
     action: { libelle: "Proposer mes services", href: "/pro/candidature" },
     secondaire: { libelle: "Voir l'annuaire", href: "/professionnels" },
+    image: {
+      src: "/photos/artisan-electricien.webp",
+      alt: "Illustration : un électricien intervient sur un tableau électrique, "
+        + "ses outils posés à côté de lui.",
+      largeur: 760, hauteur: 510, ajustement: "couvrir",
+    },
   },
 ];
 
