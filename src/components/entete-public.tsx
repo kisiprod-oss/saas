@@ -51,29 +51,37 @@ export function EntetePublic() {
     <header className="sticky top-0 z-40 border-b border-slate-200 bg-white/90 backdrop-blur">
       <div className="mx-auto flex max-w-6xl items-center justify-between px-4 py-3">
         <Link href="/"><LogoSen /></Link>
+        {/* xl, et non sm. Mesure : cette rangee demande environ 1 100 px pour
+            tenir sur UNE ligne. Affichee des 640 px, elle debordait de la
+            barre et faisait defiler la page de cote sur toutes les tablettes ;
+            a 1 024 px elle se repliait sur deux lignes. En dessous de xl,
+            c'est le menu ci-dessous qui porte les liens — il les contient
+            tous, y compris « Appartement meuble », retire de la rangee pour
+            la meme raison. Aucun lien n'est perdu : ils figurent aussi dans
+            le pied de page. */}
         <nav className="flex items-center gap-2">
-          <Link href="/#annonces" className="hidden rounded-lg px-3 py-2 text-sm font-medium text-slate-600 hover:text-brand-700 sm:block">
+          <Link href="/#annonces" className="hidden rounded-lg px-3 py-2 text-sm font-medium text-slate-600 hover:text-brand-700 xl:block">
             Les annonces
           </Link>
-          <Link href="/courte-duree" className="hidden rounded-lg px-3 py-2 text-sm font-medium text-slate-600 hover:text-brand-700 sm:block">
-            Appartement meublé
+          <Link href="/decouvrir" className="hidden rounded-lg px-3 py-2 text-sm font-medium text-slate-600 hover:text-brand-700 xl:block">
+            Le projet
           </Link>
-          <Link href="/tarifs" className="hidden rounded-lg px-3 py-2 text-sm font-medium text-slate-600 hover:text-brand-700 sm:block">
+          <Link href="/tarifs" className="hidden rounded-lg px-3 py-2 text-sm font-medium text-slate-600 hover:text-brand-700 xl:block">
             Tarifs
           </Link>
-          <Link href="/professionnels" className="hidden rounded-lg px-3 py-2 text-sm font-medium text-slate-600 hover:text-brand-700 sm:block">
+          <Link href="/professionnels" className="hidden rounded-lg px-3 py-2 text-sm font-medium text-slate-600 hover:text-brand-700 xl:block">
             Professionnels
           </Link>
-          <Link href="/espace-locataire/connexion" className="hidden rounded-lg px-3 py-2 text-sm font-medium text-slate-600 hover:text-brand-700 sm:block">
+          <Link href="/espace-locataire/connexion" className="hidden rounded-lg px-3 py-2 text-sm font-medium text-slate-600 hover:text-brand-700 xl:block">
             Espace locataire
           </Link>
           <Link href="/connexion" className="btn-secondaire">Espace agence</Link>
-          <Link href="/inscription" className="btn-primaire hidden sm:inline-flex">Créer mon agence</Link>
+          <Link href="/inscription" className="btn-primaire hidden xl:inline-flex">Créer mon agence</Link>
 
           {/* Sous sm, les liens ci-dessus disparaissent : ce menu les reprend
               tous, sans JavaScript (details/summary), pour qu'ils restent
               atteignables sur mobile — l'essentiel du trafic visé. */}
-          <details className="relative sm:hidden">
+          <details className="relative xl:hidden">
             <summary
               className="flex h-9 w-9 cursor-pointer list-none items-center justify-center rounded-lg text-slate-600 hover:bg-slate-100 [&::-webkit-details-marker]:hidden"
               aria-label="Menu"
@@ -86,6 +94,9 @@ export function EntetePublic() {
               </Link>
               <Link href="/courte-duree" className="block rounded-lg px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50">
                 Appartement meublé
+              </Link>
+              <Link href="/decouvrir" className="block rounded-lg px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50">
+                Le projet
               </Link>
               <Link href="/tarifs" className="block rounded-lg px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50">
                 Tarifs
@@ -123,6 +134,7 @@ export function PiedPublic() {
             <p className="font-semibold text-slate-900">Espace professionnel</p>
             <ul className="mt-2 space-y-1.5 text-slate-500">
               <li><Link href="/courte-duree" className="hover:text-brand-700">Louer un appartement meublé</Link></li>
+              <li><Link href="/decouvrir" className="hover:text-brand-700">Le projet Sen Gestion</Link></li>
               <li><Link href="/tarifs" className="hover:text-brand-700">Tarifs et formules</Link></li>
               <li><Link href="/professionnels" className="hover:text-brand-700">Artisans et professionnels</Link></li>
               <li><Link href="/connexion" className="hover:text-brand-700">Se connecter</Link></li>
@@ -132,7 +144,10 @@ export function PiedPublic() {
           </div>
         </div>
         <div className="mt-8 flex flex-wrap items-center justify-between gap-4 border-t border-slate-100 pt-6">
-          <p className="text-xs text-slate-400">
+          {/* slate-500 et non 400 : mesure sur les pixels, la ligne de bas de
+              page tombait a 2,63:1 sur blanc, sous le seuil de lisibilite.
+              Elle porte la devise des montants — ce n'est pas decoratif. */}
+          <p className="text-xs text-slate-500">
             © {new Date().getFullYear()} Sen Gestion — Dakar, Sénégal. Montants en francs CFA (XOF).
           </p>
           <nav className="flex flex-wrap gap-4 text-xs text-slate-500">

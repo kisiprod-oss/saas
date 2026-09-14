@@ -230,6 +230,41 @@ body {
   transition-delay: var(--retard, 0ms);
 }
 
+/* --------- Page « Le projet » : apparition au défilement, sans JavaScript ---------
+   `animation-timeline: view()` accroche l'animation à l'entrée de l'élément dans
+   l'écran : le navigateur s'en charge seul, sans script, sans observateur, et
+   sans classe à poser au bon moment.
+
+   TOUT EST DANS LE @supports. Là où la propriété n'existe pas — Safari et
+   Firefox à ce jour — aucune de ces règles ne s'applique, et le contenu reste
+   simplement visible. On ne peut donc pas tomber sur une page vide faute d'une
+   propriété CSS : c'est exactement le piège que le bloc précédent règle, lui,
+   avec `data-anim`.
+
+   La durée est volontairement absente : avec une timeline de défilement, c'est
+   la position dans l'écran qui fait avancer l'animation, pas le temps. */
+@supports (animation-timeline: view()) {
+  @media (prefers-reduced-motion: no-preference) {
+    .apparait {
+      animation-name: monte-doux;
+      animation-timing-function: linear;
+      animation-fill-mode: both;
+      animation-timeline: view();
+      animation-range: entry 5% cover 28%;
+    }
+  }
+}
+
+/* L'accent d'un titre, en italique de labeur contre le sans-serif du reste.
+   Georgia est installé partout : aucun fichier à télécharger pour trois mots,
+   ce qui compte sur une connexion mobile. */
+.accent-serif {
+  font-family: Georgia, "Times New Roman", serif;
+  font-style: italic;
+  font-weight: 400;
+  letter-spacing: -0.01em;
+}
+
 /* --------- Phrase écrite au stylo, puis encrée ---------
    Tout se joue en CSS : les tracés sont déjà dans la page (voir
    texte-manuscrit.tsx), il ne reste qu'à les découvrir. `pathLength="1"` sur

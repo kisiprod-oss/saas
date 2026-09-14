@@ -24,6 +24,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
   const pages: MetadataRoute.Sitemap = [
     { url: url("/"), changeFrequency: "daily", priority: 1 },
     { url: url("/courte-duree"), changeFrequency: "weekly", priority: 0.9 },
+    { url: url("/decouvrir"), changeFrequency: "monthly", priority: 0.8 },
     { url: url("/tarifs"), changeFrequency: "monthly", priority: 0.8 },
     { url: url("/professionnels"), changeFrequency: "weekly", priority: 0.7 },
     { url: url("/pro"), changeFrequency: "monthly", priority: 0.6 },
