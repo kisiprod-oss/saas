@@ -116,7 +116,7 @@ export function FormulaireReservation({
 
       <div className="grid gap-3 sm:grid-cols-2">
         <div>
-          <label className="etiquette" htmlFor="nom">Votre nom <span className="text-rose-500">*</span></label>
+          <label className="etiquette" htmlFor="nom">Votre nom <span className="text-rose-600">*</span></label>
           <input id="nom" name="nom" required placeholder="Awa Diop" className="champ" />
         </div>
         <ChampTelephone obligatoire aide="Où que vous soyez : l'hôte vous joindra dessus." />

@@ -18,7 +18,7 @@ export function ChoixEtoiles() {
 
   return (
     <fieldset>
-      <legend className="etiquette">Votre note <span className="text-rose-500">*</span></legend>
+      <legend className="etiquette">Votre note <span className="text-rose-600">*</span></legend>
 
       <div className="mt-1 flex items-center gap-1" onMouseLeave={() => setSurvolee(0)}>
         {[1, 2, 3, 4, 5].map((n) => (

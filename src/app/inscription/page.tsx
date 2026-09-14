@@ -49,20 +49,20 @@ export default async function PageInscription({ searchParams }: { searchParams: 
 
           <form action={actionInscription} className="mt-6 space-y-4">
             <div>
-              <label className="etiquette" htmlFor="nomAgence">Nom de l&apos;agence <span className="text-rose-500">*</span></label>
+              <label className="etiquette" htmlFor="nomAgence">Nom de l&apos;agence <span className="text-rose-600">*</span></label>
               <input id="nomAgence" name="nomAgence" required placeholder="Ex : Teranga Immobilier" className="champ" />
             </div>
 
             <div className="grid gap-4 sm:grid-cols-2">
               <div>
-                <label className="etiquette" htmlFor="nom">Votre nom <span className="text-rose-500">*</span></label>
+                <label className="etiquette" htmlFor="nom">Votre nom <span className="text-rose-600">*</span></label>
                 <input id="nom" name="nom" required placeholder="Awa Diop" className="champ" />
               </div>
               <ChampTelephone aide="Sénégal ou étranger : choisissez votre pays." />
             </div>
 
             <div>
-              <label className="etiquette" htmlFor="email">Adresse e-mail <span className="text-rose-500">*</span></label>
+              <label className="etiquette" htmlFor="email">Adresse e-mail <span className="text-rose-600">*</span></label>
               <input id="email" name="email" type="email" required placeholder="vous@agence.sn" className="champ" />
             </div>
 

@@ -188,7 +188,7 @@ export default async function PagePayerLoyer({ searchParams }: { searchParams: P
 
                 <div className="grid gap-4 sm:grid-cols-2">
                   <div>
-                    <label className="etiquette" htmlFor="montant">Montant envoyé <span className="text-rose-500">*</span></label>
+                    <label className="etiquette" htmlFor="montant">Montant envoyé <span className="text-rose-600">*</span></label>
                     <input
                       id="montant" name="montant" required inputMode="numeric"
                       defaultValue={aRegler.reste} className="champ"

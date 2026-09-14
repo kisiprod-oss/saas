@@ -35,7 +35,7 @@ export function ChampTelephone({
   return (
     <div>
       <label className="etiquette" htmlFor={nom}>
-        {label} {obligatoire && <span className="text-rose-500">*</span>}
+        {label} {obligatoire && <span className="text-rose-600">*</span>}
       </label>
 
       <div className="flex gap-2">

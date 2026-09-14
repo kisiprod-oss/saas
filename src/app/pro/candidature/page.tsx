@@ -62,18 +62,18 @@ export default async function PageCandidature({ searchParams }: { searchParams: 
             <legend className="px-2 text-sm font-semibold text-brand-800">Qui êtes-vous ?</legend>
             <div className="mt-2 grid gap-4 sm:grid-cols-2">
               <div>
-                <label className="etiquette" htmlFor="nom">Nom ou raison sociale <span className="text-rose-500">*</span></label>
+                <label className="etiquette" htmlFor="nom">Nom ou raison sociale <span className="text-rose-600">*</span></label>
                 <input id="nom" name="nom" required placeholder="Moussa Diallo" className="champ" />
               </div>
               <div>
-                <label className="etiquette" htmlFor="metier">Corps de métier <span className="text-rose-500">*</span></label>
+                <label className="etiquette" htmlFor="metier">Corps de métier <span className="text-rose-600">*</span></label>
                 <select id="metier" name="metier" required defaultValue="" className="champ">
                   <option value="" disabled>Choisissez…</option>
                   {METIERS.map((m) => <option key={m.valeur} value={m.valeur}>{m.libelle}</option>)}
                 </select>
               </div>
               <div>
-                <label className="etiquette" htmlFor="telephone">Téléphone <span className="text-rose-500">*</span></label>
+                <label className="etiquette" htmlFor="telephone">Téléphone <span className="text-rose-600">*</span></label>
                 <input id="telephone" name="telephone" required placeholder="77 123 45 67" className="champ" />
               </div>
               <div>
@@ -161,7 +161,7 @@ export default async function PageCandidature({ searchParams }: { searchParams: 
             <legend className="px-2 text-sm font-semibold text-brand-800">Votre accès</legend>
             <div className="mt-2 grid gap-4 sm:grid-cols-2">
               <div>
-                <label className="etiquette" htmlFor="email">Adresse e-mail <span className="text-rose-500">*</span></label>
+                <label className="etiquette" htmlFor="email">Adresse e-mail <span className="text-rose-600">*</span></label>
                 <input id="email" name="email" type="email" required placeholder="vous@exemple.sn" className="champ" />
               </div>
               <ChampMotDePasse />

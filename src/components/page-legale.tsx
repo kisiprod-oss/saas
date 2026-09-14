@@ -12,7 +12,7 @@ export function PageLegale({
 
       <main className="mx-auto max-w-3xl px-4 py-12">
         <h1 className="text-3xl font-bold tracking-tight text-slate-900">{titre}</h1>
-        <p className="mt-2 text-sm text-slate-500">Dernière mise à jour : {miseAJour}</p>
+        <p className="mt-2 text-sm text-slate-600">Dernière mise à jour : {miseAJour}</p>
 
         {mentionsIncompletes() && (
           <div className="mt-6 rounded-lg border border-amber-300 bg-amber-50 px-4 py-3 text-sm text-amber-900">

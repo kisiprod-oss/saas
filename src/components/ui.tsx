@@ -112,7 +112,7 @@ export function Champ({
   return (
     <div>
       <label className="etiquette" htmlFor={nom}>
-        {label} {obligatoire && <span className="text-rose-500">*</span>}
+        {label} {obligatoire && <span className="text-rose-600">*</span>}
       </label>
       <input
         id={nom}
@@ -138,7 +138,7 @@ export function Selection({
   return (
     <div>
       <label className="etiquette" htmlFor={nom}>
-        {label} {obligatoire && <span className="text-rose-500">*</span>}
+        {label} {obligatoire && <span className="text-rose-600">*</span>}
       </label>
       <select id={nom} name={nom} defaultValue={valeur ?? ""} required={obligatoire} className="champ">
         {vide && <option value="">{vide}</option>}

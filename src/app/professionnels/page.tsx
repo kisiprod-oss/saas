@@ -148,7 +148,7 @@ export default async function PageProfessionnels({ searchParams }: { searchParam
                     <Etoiles note={a.note_moyenne ?? 0} nombre={a.nb_avis} />
                   </div>
                 ) : (
-                  <p className="mt-3 text-xs text-slate-400">Pas encore d&apos;avis client</p>
+                  <p className="mt-3 text-xs text-slate-600">Pas encore d&apos;avis client</p>
                 )}
 
                 <p className="mt-3 flex items-center gap-1.5 text-sm text-slate-500">
@@ -180,7 +180,7 @@ export default async function PageProfessionnels({ searchParams }: { searchParam
                     </Link>
                   )}
                 </div>
-                <p className="mt-2 text-center text-xs text-slate-400">
+                <p className="mt-2 text-center text-xs text-slate-600">
                   {a.origine === "candidature"
                     ? "Dossier vérifié par Sen Gestion"
                     : `Recommandé par ${a.agence_nom}`}

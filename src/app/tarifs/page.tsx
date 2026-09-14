@@ -143,8 +143,8 @@ export default async function PageTarifs({ searchParams }: { searchParams: Promi
                     </li>
                   ))}
                   {p.bientot?.map((a) => (
-                    <li key={a} className="flex items-start gap-2 text-sm text-slate-400">
-                      <span className="mt-0.5 shrink-0 rounded bg-slate-100 px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wide text-slate-500">
+                    <li key={a} className="flex items-start gap-2 text-sm text-slate-600">
+                      <span className="mt-0.5 shrink-0 rounded bg-slate-100 px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wide text-slate-700">
                         Bientôt
                       </span>
                       {a}
@@ -163,11 +163,11 @@ export default async function PageTarifs({ searchParams }: { searchParams: Promi
           })}
         </div>
 
-        <p className="mt-6 text-center text-sm text-slate-500">
+        <p className="mt-6 text-center text-sm text-slate-600">
           Tous les prix sont en francs CFA, sans engagement de durée.
           Paiement par Orange Money, Wave, virement ou chèque.
         </p>
-        <p className="mx-auto mt-2 max-w-2xl text-center text-sm text-slate-500">
+        <p className="mx-auto mt-2 max-w-2xl text-center text-sm text-slate-600">
           Les fonctions marquées <strong className="text-slate-600">Bientôt</strong> sont en
           cours de développement et ne sont pas encore disponibles. Nous préférons vous le
           dire avant que vous payiez.

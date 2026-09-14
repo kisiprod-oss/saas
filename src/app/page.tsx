@@ -198,7 +198,7 @@ export default async function PageVitrine({ searchParams }: { searchParams: Prom
             <h2 className="text-xl font-bold text-slate-900">
               {biens.length} bien{biens.length > 1 ? "s" : ""} disponible{biens.length > 1 ? "s" : ""}
             </h2>
-            <p className="mt-1 text-sm text-slate-500">
+            <p className="mt-1 text-sm text-slate-600">
               {aDesFiltres ? "Résultats de votre recherche" : "Les dernières annonces publiées"}
             </p>
           </div>
@@ -309,7 +309,7 @@ export default async function PageVitrine({ searchParams }: { searchParams: Prom
               Voir les tarifs
             </Link>
           </div>
-          <p className="mt-4 text-center text-sm text-slate-500">
+          <p className="mt-4 text-center text-sm text-slate-600">
             Gratuit jusqu&apos;à 3 biens et 5 factures par mois. Ensuite à partir de 5 000 FCFA par mois.
           </p>
         </div>

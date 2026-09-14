@@ -65,7 +65,7 @@ export function CarteBien({ bien, agenceNom }: Props) {
         </div>
 
         {bien.statut === "reserve" && (
-          <span className="absolute right-3 top-3 rounded-full bg-amber-500 px-2.5 py-1 text-xs font-semibold text-white shadow-sm">
+          <span className="absolute right-3 top-3 rounded-full bg-amber-500 px-2.5 py-1 text-xs font-semibold text-slate-900 shadow-sm">
             Réservé
           </span>
         )}
@@ -100,12 +100,12 @@ export function CarteBien({ bien, agenceNom }: Props) {
             <p className="text-lg font-bold text-brand-700">
               {fcfa(courteDuree ? (bien.prix_nuit ?? 0) : bien.loyer)}
             </p>
-            <p className="text-xs text-slate-400">
+            <p className="text-xs text-slate-600">
               {courteDuree ? "par nuit" : `par mois${bien.charges > 0 ? " + charges" : ""}`}
             </p>
           </div>
           {agenceNom && (
-            <p className="max-w-[45%] truncate text-right text-xs text-slate-400">{agenceNom}</p>
+            <p className="max-w-[45%] truncate text-right text-xs text-slate-600">{agenceNom}</p>
           )}
         </div>
       </div>

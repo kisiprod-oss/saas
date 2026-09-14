@@ -68,7 +68,12 @@ export function ChampMotDePasse({
               <li
                 key={r.cle}
                 className={`flex items-center gap-1.5 text-xs ${
-                  ok ? "text-succes-700" : commence ? "text-slate-500" : "text-slate-400"
+                  // Mesure sur les pixels : slate-400 tombait a 2,63:1 et
+                  // slate-500 frole le seuil. Ces lignes disent au visiteur
+                  // ce qu'il doit taper — les laisser palotes, c'est lui
+                  // cacher la consigne. La progression en trois temps est
+                  // conservee, un cran plus sombre a chaque fois.
+                  ok ? "text-succes-700" : commence ? "text-slate-700" : "text-slate-600"
                 }`}
               >
                 <span aria-hidden className="w-3 shrink-0 text-center">{ok ? "✓" : "•"}</span>
