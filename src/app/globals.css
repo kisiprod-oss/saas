@@ -230,6 +230,38 @@ body {
   transition-delay: var(--retard, 0ms);
 }
 
+/* ================================================================
+   Page « Le projet » : sa propre palette, et elle seule.
+
+   Vert profond dominant, or doux pour l'action, papier crème pour le fond.
+   Ce n'est PAS la palette du logiciel — celle-ci met le marine au premier
+   plan et réserve le vert à l'argent (voir tout en haut de ce fichier). Les
+   variables sont donc enfermées dans `.page-projet` : rien ne fuit vers le
+   reste du site, et on voit d'un coup d'œil où cette exception s'applique.
+
+   Contrastes mesurés : or sur vert profond 7,6:1 · blanc sur vert profond
+   12,5:1 · vert nuit sur or 9,1:1 · encre sur vert pâle 12:1.
+   L'or ne porte jamais de texte blanc — il tomberait sous 2:1.
+   ================================================================ */
+.page-projet {
+  --vert-profond: #083c32;
+  --vert-nuit:    #062b25;
+  --vert-pale:    #eaefe7;
+  --or-doux:      #eec477;
+  --papier:       #f8f7f2;
+  --encre:        #122f29;
+  --encre-douce:  #536860;
+}
+
+/* Les titres de cette page sont à empattements, le reste ne l'est pas.
+   Georgia derrière Lora : si la police distante ne se charge pas, le titre
+   garde son caractère au lieu de retomber sur la graisse du corps de texte. */
+.titre-projet {
+  font-family: Lora, Georgia, "Times New Roman", serif;
+  font-weight: 500;
+  letter-spacing: -0.015em;
+}
+
 /* --------- Page « Le projet » : apparition au défilement, sans JavaScript ---------
    `animation-timeline: view()` accroche l'animation à l'entrée de l'élément dans
    l'écran : le navigateur s'en charge seul, sans script, sans observateur, et

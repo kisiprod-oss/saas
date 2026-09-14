@@ -94,7 +94,12 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
         <link
-          href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap"
+          /* Lora ne sert que sur « Le projet ». Elle est pourtant declaree ici,
+             avec Inter : le navigateur ne telecharge le fichier d'une police
+             que si un texte l'emploie vraiment. Les autres pages ne paient
+             donc que quelques octets de feuille de style, et la regle reste
+             a un seul endroit. */
+          href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Lora:ital,wght@0,400..600;1,400..500&display=swap"
           rel="stylesheet"
         />
       </head>
