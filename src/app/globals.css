@@ -1,26 +1,52 @@
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --fond: #f5f7fa;
+  --fond-carte: #ffffff;
+  --texte: #14213d;
+  --texte-attenue: #5b6b82;
+  --bleu: #0b3d91;
+  --bleu-fonce: #082c6b;
+  --vert: #1b8a5a;
+  --vert-fonce: #146b45;
+  --bordure: #e1e6ee;
+  --alerte: #b3261e;
+  --avertissement: #b8860b;
 }
 
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
+  --color-fond: var(--fond);
+  --color-fond-carte: var(--fond-carte);
+  --color-texte: var(--texte);
+  --color-texte-attenue: var(--texte-attenue);
+  --color-bleu: var(--bleu);
+  --color-bleu-fonce: var(--bleu-fonce);
+  --color-vert: var(--vert);
+  --color-vert-fonce: var(--vert-fonce);
+  --color-bordure: var(--bordure);
+  --color-alerte: var(--alerte);
+  --color-avertissement: var(--avertissement);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+body {
+  background: var(--fond);
+  color: var(--texte);
+  font-family: var(--font-sans), Arial, Helvetica, sans-serif;
 }
 
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+.badge-demo {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  font-size: 0.7rem;
+  font-weight: 600;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  color: var(--avertissement);
+  background: #fdf3d8;
+  border: 1px solid #f0dca0;
+  border-radius: 9999px;
+  padding: 0.15rem 0.6rem;
 }
