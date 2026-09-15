@@ -113,16 +113,45 @@ export default async function DashboardLayout({ children }: { children: React.Re
 
       {/* -------------------------------- Contenu -------------------------------- */}
       <div className="flex-1">
-        <header className="flex items-center justify-between border-b border-slate-200 bg-white px-4 py-3 lg:hidden">
-          <div>
-            <p className="text-sm font-semibold text-slate-900">{agence.nom}</p>
-            <p className="text-xs text-slate-500">{utilisateur.nom}</p>
+        {/* SUR TELEPHONE, CE BANDEAU EST LE SEUL ENDROIT OU CES TROIS CHOSES
+            EXISTENT. Le bas de la barre laterale, qui les porte sur ordinateur,
+            est masque en dessous de 1024 px : le lien « Administration », le
+            guide et l'adresse de connexion y etaient donc introuvables pour
+            qui travaille au telephone — c'est-a-dire l'essentiel du public
+            vise. L'adresse compte particulierement : c'est elle qui decide de
+            l'acces a l'administration, et on la cherchait sans pouvoir la lire
+            nulle part. */}
+        <header className="border-b border-slate-200 bg-white px-4 py-3 lg:hidden">
+          <div className="flex items-center justify-between gap-3">
+            <div className="min-w-0">
+              <p className="truncate text-sm font-semibold text-slate-900">{agence.nom}</p>
+              <p className="truncate text-xs text-slate-500" title={utilisateur.email}>
+                {utilisateur.email}
+              </p>
+            </div>
+            <form action={actionDeconnexion} className="shrink-0">
+              <button type="submit" className="btn-secondaire px-3 py-2" aria-label="Se déconnecter">
+                <IconeSortie className="h-4 w-4" />
+              </button>
+            </form>
           </div>
-          <form action={actionDeconnexion}>
-            <button type="submit" className="btn-secondaire px-3 py-2">
-              <IconeSortie className="h-4 w-4" />
-            </button>
-          </form>
+
+          {/* Deuxieme ligne, et pas la premiere : mesure faite, le bouton
+              « Administration » pose a cote du nom de l'agence faisait
+              deborder la page de 53 px sur un ecran de 370 px. */}
+          <div className="mt-2 flex flex-wrap items-center gap-x-4 gap-y-2">
+            {administrateur && (
+              <Link
+                href="/admin"
+                className="rounded-lg bg-slate-900 px-3 py-2 text-xs font-semibold text-white hover:bg-slate-800"
+              >
+                Administration
+              </Link>
+            )}
+            <a href="/api/guide" className="inline-flex items-center gap-1.5 text-xs font-medium text-slate-600 hover:text-brand-700">
+              <IconeContrat className="h-4 w-4 shrink-0" /> Guide d&apos;utilisation
+            </a>
+          </div>
         </header>
 
         <main className="mx-auto max-w-6xl px-4 py-6 sm:py-8">{children}</main>

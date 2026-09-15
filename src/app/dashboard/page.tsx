@@ -123,7 +123,7 @@ export default async function PageTableauBord({ searchParams }: { searchParams: 
       )}
 
       {/* ------------------------------- Indicateurs ------------------------------- */}
-      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+      <div className="grid gap-4 [&>*]:min-w-0 sm:grid-cols-2 xl:grid-cols-4">
         <Indicateur
           titre="Encaissé ce mois"
           valeur={fcfa(s.encaisseMois)}
@@ -153,7 +153,7 @@ export default async function PageTableauBord({ searchParams }: { searchParams: 
         />
       </div>
 
-      <div className="mt-6 grid gap-6 lg:grid-cols-3">
+      <div className="mt-6 grid gap-6 [&>*]:min-w-0 lg:grid-cols-3">
         {/* ----------------------------- Graphique 6 mois ----------------------------- */}
         <Carte className="flex flex-col p-5 lg:col-span-2">
           <div className="mb-5 flex flex-wrap items-center justify-between gap-3">
