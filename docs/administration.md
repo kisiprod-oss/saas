@@ -54,8 +54,8 @@ correspondante dans la table `admins`.
 | Rôle | Ce qu'il ouvre |
 |---|---|
 | **Super administrateur** | Tout, y compris l'équipe. Vient de `ADMIN_EMAILS`. |
-| **Support** | Agences (lecture), utilisateurs, notes internes, journal. Pas la facturation, pas la modération. |
-| **Modérateur** | Annonces, artisans, journal. Pas les utilisateurs, pas la facturation. |
+| **Support** | Agences (lecture), utilisateurs, notes internes, **tickets d'assistance**, journal. Pas la facturation, pas la modération. |
+| **Modérateur** | Annonces, artisans, journal. Pas les utilisateurs, pas la facturation, pas les tickets. |
 | **Responsable facturation** | Abonnements, règlements, exports. Pas les utilisateurs, pas la modération. |
 
 Les trois derniers s'accordent depuis **Équipe**. Le rôle super administrateur
@@ -71,7 +71,7 @@ l'adresse à la main ne sert à rien.
 
 **Tableau de bord.** Les chiffres viennent de la base, jamais d'une estimation.
 Sous chaque nombre, une phrase dit ce qu'il compte exactement. Quand une
-fonction n'existe pas encore — les signalements, les tickets — l'écran l'écrit
+fonction n'existe pas encore — les signalements, à ce jour — l'écran l'écrit
 plutôt que d'afficher zéro. Les abonnements réglés sont le revenu de **Sen
 Gestion** ; les loyers appartiennent aux agences et n'apparaissent jamais comme
 un revenu de la plateforme.
@@ -105,6 +105,25 @@ corriger. Chaque décision est datée et signée.
 **et** un questionnaire métier réussi, et la date comme le nom de qui l'a posé
 restent enregistrés. Les pièces justificatives ne sont servies qu'aux personnes
 habilitées.
+
+**Support.** Les demandes d'assistance déposées par les agences depuis leur
+espace (menu *Support*). La liste est filtrable par statut, priorité, catégorie
+et responsable ; le compteur du menu montre ce qui reste ouvert.
+
+Sur la fiche d'un ticket, deux zones d'écriture à ne pas confondre :
+- *Répondre à l'agence* — visible par elle, dans son espace ;
+- *Note interne* — **jamais** visible par elle. Le filtre est dans la requête,
+  pas dans l'écran : la page de l'agence ne lit que les messages non internes.
+  Une note n'est donc pas seulement masquée, elle n'est pas envoyée.
+
+L'agence ne voit pas non plus quelle personne de l'équipe a répondu : elle lit
+« Équipe Sen Gestion ». Répondre à un ticket neuf le passe seul en *En cours*.
+Si une agence écrit sur un ticket marqué résolu, il se rouvre — le problème
+n'était visiblement pas terminé.
+
+Chaque agence ne voit que ses propres tickets : la requête prend son identifiant
+en paramètre, il n'existe aucune version sans. Changer le numéro dans l'adresse
+ne donne rien.
 
 **Journal.** Toutes les actions sensibles : qui, quoi, sur quoi, quand, et le
 motif. **Lecture seule** : aucun écran ne permet de corriger ni d'effacer une

@@ -33,6 +33,7 @@ const PICTOS = {
   annonces: "M4 6h16M4 12h16M4 18h10",
   artisans: "M14.5 5.5a3.5 3.5 0 0 0 4.6 4.6l-8 8a2.3 2.3 0 0 1-3.2-3.2z",
   facturation: "M6 3h9l4 4v14H6zM15 3v4h4M9.5 12h5M9.5 15.5h5",
+  support: "M12 21c-4.5-2.4-8-6.5-8-11.2V6.5L12 3l8 3.5v3.3c0 4.7-3.5 8.8-8 11.2zM9.5 12l2 2 3.5-4",
   journal: "M6 3h12v18l-6-3-6 3zM9.5 8h5M9.5 11.5h5",
   equipe: "M9 11a3 3 0 1 0 0-6 3 3 0 0 0 0 6M3 20v-1a5 5 0 0 1 10 0v1M16.5 11.5a2.5 2.5 0 1 0 0-5M21 20v-1a4.2 4.2 0 0 0-3.2-4",
   parametres: "M12 15.2a3.2 3.2 0 1 0 0-6.4 3.2 3.2 0 0 0 0 6.4M19.4 14a1.6 1.6 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.6 1.6 0 0 0-2.7 1.1v.3a2 2 0 1 1-4 0v-.2a1.6 1.6 0 0 0-2.8-1.1l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1A1.6 1.6 0 0 0 3.8 14H3.6a2 2 0 1 1 0-4h.2a1.6 1.6 0 0 0 1.1-2.7l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1A1.6 1.6 0 0 0 10 3.8v-.2a2 2 0 1 1 4 0v.2a1.6 1.6 0 0 0 2.7 1.1l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.6 1.6 0 0 0 1.1 2.7h.2a2 2 0 1 1 0 4h-.2a1.6 1.6 0 0 0-1.2.6z",
@@ -51,7 +52,7 @@ function Picto({ nom, className }: { nom: keyof typeof PICTOS; className?: strin
 const NOMS: Record<string, string> = {
   admin: "Administration", agences: "Agences", utilisateurs: "Utilisateurs",
   annonces: "Annonces", candidatures: "Artisans", plateforme: "Plateforme",
-  journal: "Journal", equipe: "Équipe", parametres: "Paramètres",
+  support: "Support", journal: "Journal", equipe: "Équipe", parametres: "Paramètres",
   "courte-duree": "Courte durée", quiz: "Questions", securite: "Sécurité",
 };
 

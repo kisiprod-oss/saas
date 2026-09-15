@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { exigerAdmin, peut, ROLES, type Permission } from "@/lib/admin";
 import { AdminCoque, type LienAdmin } from "@/components/admin-coque";
+import { compterTicketsOuverts } from "@/lib/support";
 import { un } from "@/lib/db";
 import { NON_INDEXABLE } from "@/lib/seo";
 
@@ -25,6 +26,7 @@ const MENU: { href: string; libelle: string; icone: LienAdmin["icone"]; permissi
   { href: "/admin/annonces", libelle: "Annonces", icone: "annonces", permission: "annonces.lire" },
   { href: "/admin/artisans", libelle: "Artisans", icone: "artisans", permission: "artisans.lire" },
   { href: "/admin/plateforme", libelle: "Facturation", icone: "facturation", permission: "facturation.lire" },
+  { href: "/admin/support", libelle: "Support", icone: "support", permission: "support.lire" },
   { href: "/admin/journal", libelle: "Journal", icone: "journal", permission: "journal.lire" },
   { href: "/admin/equipe", libelle: "Équipe", icone: "equipe", permission: "admins.gerer" },
   { href: "/admin/parametres", libelle: "Paramètres", icone: "parametres", permission: "parametres.lire" },
@@ -37,6 +39,7 @@ export default async function LayoutEspaceAdmin({ children }: { children: React.
     "SELECT COUNT(*) AS n FROM biens WHERE moderation = 'en_attente'")?.n ?? 0;
   const candidatures = un<{ n: number }>(
     "SELECT COUNT(*) AS n FROM artisans WHERE statut_candidature = 'en_attente'")?.n ?? 0;
+  const ticketsOuverts = peut(admin, "support.lire") ? compterTicketsOuverts() : 0;
 
   const liens: LienAdmin[] = MENU
     .filter((m) => peut(admin, m.permission))
@@ -44,6 +47,7 @@ export default async function LayoutEspaceAdmin({ children }: { children: React.
       href: m.href, libelle: m.libelle, icone: m.icone,
       badge: m.href === "/admin/annonces" ? aModerer
         : m.href === "/admin/artisans" ? candidatures
+        : m.href === "/admin/support" ? ticketsOuverts
         : undefined,
     }));
 

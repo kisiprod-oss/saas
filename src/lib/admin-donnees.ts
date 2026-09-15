@@ -129,10 +129,17 @@ export function indicateurs(jours: number): Indicateur[] {
     definition: "Contenus signalés par les visiteurs.",
     valeur: null, disponible: tableExiste("signalements"),
   });
+  const ticketsExistent = tableExiste("tickets");
   liste.push({
     cle: "tickets", libelle: "Tickets support",
-    definition: "Demandes d'assistance déposées par les agences.",
-    valeur: null, disponible: tableExiste("tickets"),
+    definition: "Demandes d'assistance déposées par les agences, non résolues.",
+    valeur: ticketsExistent
+      ? compte("SELECT COUNT(*) AS n FROM tickets WHERE statut != 'resolu'")
+      : null,
+    detail: ticketsExistent
+      ? `${compte("SELECT COUNT(*) AS n FROM tickets WHERE statut = 'nouveau'")} nouveau(x)`
+      : undefined,
+    disponible: ticketsExistent, href: "/admin/support",
   });
 
   return liste;

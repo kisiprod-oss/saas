@@ -15,6 +15,9 @@ import {
   reinitialiserTentatives, tropDeTentatives, utilisateurCourant,
 } from "./auth";
 import { adresseDuSite, envoyerEmail } from "./email";
+import {
+  ajouterMessage, estPriorite, estStatut, ticketPourEquipe,
+} from "./support";
 
 /**
  * Les gestes de l'espace d'administration.
@@ -380,6 +383,68 @@ export async function actionVerifierArtisan(fd: FormData) {
   ecrire("UPDATE artisans SET verifie_le = datetime('now'), verifie_par = ? WHERE id = ?", admin.email, id);
   journaliser(admin, { action: "artisan.badge_attribue", cible_type: "artisan", cible_id: id, details: a.nom });
   retour("/admin/artisans", { ok: "Badge « Vérifié » attribué." });
+}
+
+/* ==================================================================
+   Support (tickets)
+   ================================================================== */
+
+export async function actionRepondreTicket(fd: FormData) {
+  const { admin } = await exigerAdmin("support.repondre");
+  const id = nb(fd, "id");
+  const corps = txt(fd, "corps");
+  const ticket = ticketPourEquipe(id);
+  if (!ticket) redirect("/admin/support");
+  if (corps.length < 2) retour(`/admin/support/${id}`, { erreur: "Écrivez une réponse." });
+
+  ajouterMessage({ ticketId: id, auteurType: "equipe", auteur: admin.email, corps, interne: false });
+  // Une reponse a un ticket nouveau le fait avancer : personne n'a besoin
+  // de changer le statut a la main pour dire qu'on s'en occupe.
+  if (ticket.statut === "nouveau") {
+    ecrire("UPDATE tickets SET statut = 'en_cours' WHERE id = ?", id);
+  }
+  journaliser(admin, { action: "ticket.reponse", cible_type: "ticket", cible_id: ticket.numero });
+  revalidatePath("/admin/support");
+  retour(`/admin/support/${id}`, { ok: "Réponse envoyée à l'agence." });
+}
+
+export async function actionNoteInterneTicket(fd: FormData) {
+  const { admin } = await exigerAdmin("support.repondre");
+  const id = nb(fd, "id");
+  const corps = txt(fd, "corps");
+  const ticket = ticketPourEquipe(id);
+  if (!ticket) redirect("/admin/support");
+  if (corps.length < 2) retour(`/admin/support/${id}`, { erreur: "Écrivez une note." });
+
+  ajouterMessage({ ticketId: id, auteurType: "equipe", auteur: admin.email, corps, interne: true });
+  journaliser(admin, { action: "ticket.note_interne", cible_type: "ticket", cible_id: ticket.numero });
+  retour(`/admin/support/${id}`, { ok: "Note interne ajoutée. L'agence ne la voit pas." });
+}
+
+export async function actionGererTicket(fd: FormData) {
+  const { admin } = await exigerAdmin("support.repondre");
+  const id = nb(fd, "id");
+  const statut = txt(fd, "statut");
+  const priorite = txt(fd, "priorite");
+  const responsable = txt(fd, "responsable");
+  const ticket = ticketPourEquipe(id);
+  if (!ticket) redirect("/admin/support");
+
+  if (!estStatut(statut)) retour(`/admin/support/${id}`, { erreur: "Statut inconnu." });
+  if (!estPriorite(priorite)) retour(`/admin/support/${id}`, { erreur: "Priorité inconnue." });
+
+  ecrire(
+    `UPDATE tickets SET statut = ?, priorite = ?, responsable = ?,
+            resolu_le = CASE WHEN ? = 'resolu' THEN datetime('now') ELSE NULL END
+      WHERE id = ?`,
+    statut, priorite, responsable || null, statut, id,
+  );
+  journaliser(admin, {
+    action: "ticket.mis_a_jour", cible_type: "ticket", cible_id: ticket.numero,
+    details: `statut=${statut} · priorité=${priorite}${responsable ? ` · ${responsable}` : ""}`,
+  });
+  revalidatePath("/admin/support");
+  retour(`/admin/support/${id}`, { ok: "Ticket mis à jour." });
 }
 
 /* ==================================================================

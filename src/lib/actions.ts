@@ -55,6 +55,7 @@ import {
   corrigerSession, genererQuestions, ouvrirSessionQuiz, sessionEnCours,
   viderBanque, type SessionQuiz,
 } from "./quiz";
+import { ajouterMessage, estCategorie, ouvrirTicket, ticketDeLAgence } from "./support";
 import crypto from "node:crypto";
 
 // ------------------------------------------------------------- utilitaires
@@ -2358,4 +2359,37 @@ export async function actionProlongerFormule(fd: FormData) {
   revalidatePath("/admin/agences");
   revalidatePath("/admin/plateforme");
   redirect(`${retour}?ok=1`);
+}
+
+// -------------------------------------------------------- support (tickets)
+
+export async function actionOuvrirTicket(fd: FormData) {
+  const { utilisateur, agence } = await exigerSession();
+  const sujet = txt(fd, "sujet");
+  const categorie = txt(fd, "categorie");
+  const corps = txt(fd, "corps");
+
+  if (!sujet || !corps) erreur("/dashboard/support/nouveau", "Merci de remplir tous les champs.");
+  if (!estCategorie(categorie)) erreur("/dashboard/support/nouveau", "Catégorie inconnue.");
+
+  const { id } = ouvrirTicket({
+    agenceId: agence.id, utilisateurId: utilisateur.id, auteur: utilisateur.nom,
+    sujet, categorie, corps,
+  });
+  redirect(`/dashboard/support/${id}?ok=1`);
+}
+
+export async function actionRepondreTicketAgence(fd: FormData) {
+  const { utilisateur, agence } = await exigerSession();
+  const id = entier(fd, "id");
+  const corps = txt(fd, "corps");
+
+  // Le ticket doit appartenir a l'agence connectee : sans ce controle,
+  // changer un chiffre dans l'adresse donnerait acces au ticket d'une autre.
+  const ticket = ticketDeLAgence(id, agence.id);
+  if (!ticket) redirect("/dashboard/support");
+  if (!corps) erreur(`/dashboard/support/${id}`, "Écrivez un message.");
+
+  ajouterMessage({ ticketId: id, auteurType: "agence", auteur: utilisateur.nom, corps, interne: false });
+  redirect(`/dashboard/support/${id}?ok=1`);
 }

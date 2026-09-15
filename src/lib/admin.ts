@@ -65,6 +65,7 @@ export type Permission =
   | "annonces.lire" | "annonces.moderer"
   | "artisans.lire" | "artisans.moderer"
   | "facturation.lire"
+  | "support.lire" | "support.repondre"
   | "journal.lire"
   | "parametres.lire"
   | "admins.gerer"
@@ -78,19 +79,22 @@ const PERMISSIONS: Record<RoleAdmin, Permission[]> = {
     "annonces.lire", "annonces.moderer",
     "artisans.lire", "artisans.moderer",
     "facturation.lire",
+    "support.lire", "support.repondre",
     "journal.lire",
     "parametres.lire",
     "admins.gerer",
     "export",
   ],
   // Le support voit les agences et depanne leurs utilisateurs. Il ne voit ni
-  // les montants encaisses, ni les autres administrateurs.
+  // les montants encaisses, ni les autres administrateurs. Les tickets sont
+  // sa raison d'etre.
   support: [
     "tableau.lire",
     "agences.lire", "agences.notes",
     "utilisateurs.lire", "utilisateurs.ecrire",
     "annonces.lire",
     "artisans.lire",
+    "support.lire", "support.repondre",
     "journal.lire",
   ],
   // Le moderateur touche au contenu public, a rien d'autre.

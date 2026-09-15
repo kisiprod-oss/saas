@@ -5,7 +5,7 @@ import { usePathname } from "next/navigation";
 import {
   IconeAgence, IconeArgent, IconeBoiteReception, IconeCalendrier, IconeCarte,
   IconeCle, IconeContrat, IconeFacture, IconeGraphique, IconeMaison, IconeOutils,
-  IconeRelance, IconeTableauBord, IconeUtilisateurs,
+  IconeRelance, IconeSupport, IconeTableauBord, IconeUtilisateurs,
 } from "./icones";
 
 const LIENS = [
@@ -23,15 +23,16 @@ const LIENS = [
   { href: "/dashboard/reservations", libelle: "Réservations",   Icone: IconeCalendrier },
   { href: "/dashboard/demandes",    libelle: "Demandes",        Icone: IconeBoiteReception },
   { href: "/dashboard/artisans",    libelle: "Artisans",        Icone: IconeOutils },
+  { href: "/dashboard/support",     libelle: "Support",         Icone: IconeSupport },
   { href: "/dashboard/agence",      libelle: "Mon agence",      Icone: IconeAgence },
   { href: "/dashboard/abonnement",  libelle: "Mon abonnement",  Icone: IconeCarte },
 ];
 
 export function NavLaterale({
-  nouvellesDemandes, aRelancer, paiementsEnAttente, reservations,
+  nouvellesDemandes, aRelancer, paiementsEnAttente, reservations, ticketsOuverts,
 }: {
   nouvellesDemandes: number; aRelancer: number;
-  paiementsEnAttente: number; reservations: number;
+  paiementsEnAttente: number; reservations: number; ticketsOuverts: number;
 }) {
   const chemin = usePathname();
 
@@ -67,6 +68,11 @@ export function NavLaterale({
           {href === "/dashboard/paiements" && paiementsEnAttente > 0 && (
             <span className="ml-auto rounded-full bg-amber-500 px-2 py-0.5 text-xs font-bold text-white">
               {paiementsEnAttente}
+            </span>
+          )}
+          {href === "/dashboard/support" && ticketsOuverts > 0 && (
+            <span className="ml-auto rounded-full bg-sky-500 px-2 py-0.5 text-xs font-bold text-white">
+              {ticketsOuverts}
             </span>
           )}
         </Link>

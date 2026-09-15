@@ -6,6 +6,7 @@ import {
   compterARelancer, compterDemandesNouvelles, compterPaiementsEnAttente,
   compterReservationsDemandes,
 } from "@/lib/requetes";
+import { compterTicketsOuvertsAgence } from "@/lib/support";
 import { actionDeconnexion } from "@/lib/actions";
 import { NavLaterale } from "@/components/nav-laterale";
 import { LogoSen } from "@/components/entete-public";
@@ -48,6 +49,7 @@ export default async function DashboardLayout({ children }: { children: React.Re
   const aRelancer = compterARelancer(agence.id);
   const paiementsEnAttente = compterPaiementsEnAttente(agence.id);
   const reservations = compterReservationsDemandes(agence.id);
+  const ticketsOuverts = compterTicketsOuvertsAgence(agence.id);
   const administrateur = estAdmin(utilisateur.email);
 
   return (
@@ -71,6 +73,7 @@ export default async function DashboardLayout({ children }: { children: React.Re
             aRelancer={aRelancer}
             paiementsEnAttente={paiementsEnAttente}
             reservations={reservations}
+            ticketsOuverts={ticketsOuverts}
           />
         </div>
 

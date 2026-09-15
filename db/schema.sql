@@ -702,3 +702,50 @@ CREATE TABLE IF NOT EXISTS admin_journal (
 );
 CREATE INDEX IF NOT EXISTS idx_admin_journal_date ON admin_journal(cree_le DESC);
 CREATE INDEX IF NOT EXISTS idx_admin_journal_cible ON admin_journal(cible_type, cible_id);
+
+-- ================================================================
+--                    ASSISTANCE (TICKETS)
+-- ================================================================
+
+/*
+ * Les demandes d'assistance deposees par les agences.
+ *
+ * `agence_id` est le verrou : toute lecture cote agence le filtre, et
+ * aucune requete ne renvoie un ticket d'une autre agence. Cote equipe, la
+ * page voit tout — c'est le but — mais derriere une permission nommee.
+ */
+CREATE TABLE IF NOT EXISTS tickets (
+  id            INTEGER PRIMARY KEY AUTOINCREMENT,
+  numero        TEXT NOT NULL UNIQUE,          -- TIC-2026-0001
+  agence_id     INTEGER NOT NULL REFERENCES agences(id) ON DELETE CASCADE,
+  utilisateur_id INTEGER REFERENCES utilisateurs(id) ON DELETE SET NULL,
+  sujet         TEXT NOT NULL,
+  categorie     TEXT NOT NULL DEFAULT 'autre', -- technique | facturation | compte | autre
+  priorite      TEXT NOT NULL DEFAULT 'normale', -- basse | normale | haute | urgente
+  statut        TEXT NOT NULL DEFAULT 'nouveau', -- nouveau | en_cours | en_attente | resolu
+  responsable   TEXT,                          -- adresse de l'administrateur qui suit
+  cree_le       TEXT NOT NULL DEFAULT (datetime('now')),
+  maj_le        TEXT NOT NULL DEFAULT (datetime('now')),
+  resolu_le     TEXT
+);
+CREATE INDEX IF NOT EXISTS idx_tickets_agence ON tickets(agence_id, cree_le DESC);
+CREATE INDEX IF NOT EXISTS idx_tickets_statut ON tickets(statut, priorite);
+
+/*
+ * Les messages d'un ticket.
+ *
+ * `interne` SEPARE deux choses qui ne doivent jamais se melanger : la
+ * reponse que l'agence lit, et la note que l'equipe se laisse entre elle.
+ * Une seule requete decide de ce qui sort — celle de l'espace agence, qui
+ * exige `interne = 0`. La colonne existe pour cela et pour rien d'autre.
+ */
+CREATE TABLE IF NOT EXISTS ticket_messages (
+  id          INTEGER PRIMARY KEY AUTOINCREMENT,
+  ticket_id   INTEGER NOT NULL REFERENCES tickets(id) ON DELETE CASCADE,
+  auteur_type TEXT NOT NULL,                   -- agence | equipe
+  auteur      TEXT NOT NULL,                   -- nom ou adresse, pour l'affichage
+  corps       TEXT NOT NULL,
+  interne     INTEGER NOT NULL DEFAULT 0,      -- 1 = note d'equipe, jamais visible du client
+  cree_le     TEXT NOT NULL DEFAULT (datetime('now'))
+);
+CREATE INDEX IF NOT EXISTS idx_ticket_messages ON ticket_messages(ticket_id, cree_le);
