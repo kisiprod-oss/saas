@@ -884,7 +884,7 @@ export async function actionEtreRappele(fd: FormData) {
 
 /** L'administrateur classe un prospect (rappelé, devenu client, perdu). */
 export async function actionStatutProspect(fd: FormData) {
-  await exigerAdmin();
+  await exigerAdmin("agences.lire");
   const statuts = ["nouveau", "rappele", "client", "perdu"];
   const statut = txt(fd, "statut");
   if (!statuts.includes(statut)) erreur("/admin/courte-duree", "Statut inconnu.");
@@ -896,7 +896,7 @@ export async function actionStatutProspect(fd: FormData) {
 
 /** L'administrateur remplace les photos de la page Courte durée. */
 export async function actionImagesCourteDuree(fd: FormData) {
-  await exigerAdmin();
+  await exigerAdmin("agences.ecrire");
   const retour = "/admin/courte-duree";
 
   // On coupe a trois AVANT d'ecrire sur le disque : la page n'en montre que
@@ -1874,7 +1874,7 @@ export async function actionRendreQuiz(fd: FormData) {
 // ------------------------------------ administration des candidatures
 
 export async function actionStatuerCandidature(fd: FormData) {
-  await exigerAdmin();
+  await exigerAdmin("artisans.moderer");
   const id = entier(fd, "id");
   const decision = txt(fd, "decision");
 
@@ -1902,7 +1902,7 @@ export async function actionStatuerCandidature(fd: FormData) {
 
 /** L'administrateur remplit la banque de questions d'un métier. */
 export async function actionGenererQuestions(fd: FormData) {
-  await exigerAdmin();
+  await exigerAdmin("artisans.moderer");
   const metier = txt(fd, "metier");
 
   if (coche(fd, "remplacer")) viderBanque(metier);
@@ -2267,7 +2267,7 @@ function ajouterMois(depart: string, mois: number): string {
 
 /** L'administrateur fixe la formule d'une agence et la date de fin réglée. */
 export async function actionFormuleAgence(fd: FormData) {
-  await exigerAdmin();
+  await exigerAdmin("facturation.lire");
   const id = entier(fd, "id");
   const retour = `/admin/agences/${id}`;
 
@@ -2318,7 +2318,7 @@ export async function actionFormuleAgence(fd: FormData) {
  * Aucune donnée n'est touchée — uniquement les jetons.
  */
 export async function actionFermerToutesLesSessions() {
-  await exigerAdmin();
+  await exigerAdmin("admins.gerer");
 
   db.transaction(() => {
     ecrire("DELETE FROM sessions");
@@ -2336,7 +2336,7 @@ export async function actionFermerToutesLesSessions() {
 }
 
 export async function actionProlongerFormule(fd: FormData) {
-  await exigerAdmin();
+  await exigerAdmin("facturation.lire");
   const id = entier(fd, "id");
   const retour = `/admin/agences/${id}`;
 

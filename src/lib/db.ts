@@ -126,6 +126,33 @@ function migrer(base: Database.Database) {
     // Date a laquelle l'agence a telecharge le guide d'utilisation. NULL tant
     // qu'elle ne l'a pas fait : c'est ce qui declenche le passage oblige.
     ["agences", "guide_telecharge_le", "TEXT"],
+
+    // ---------------- Espace d'administration ----------------
+    // Suspension d'une agence. NULL = agence en service. La date et le motif
+    // vont ensemble : suspendre sans dire pourquoi laisse l'agence, et le
+    // support, devant un acces ferme sans explication.
+    ["agences", "suspendue_le", "TEXT"],
+    ["agences", "motif_suspension", "TEXT"],
+    // Notes de l'equipe sur une agence. JAMAIS affichees cote client :
+    // aucune requete de l'espace agence ne lit cette colonne.
+    ["agences", "notes_internes", "TEXT"],
+
+    // Moderation des annonces, SEPAREE de l'etat du bien.
+    // `statut` dit si le logement est disponible ou loue ; ceci dit si
+    // l'annonce a le droit de paraitre. Les deux sont independants : un bien
+    // loue peut avoir une annonce publiee et archivee plus tard.
+    // Valeur par defaut « publie » : les annonces deja en ligne le restent.
+    ["biens", "moderation", "TEXT NOT NULL DEFAULT 'publie'"],
+    ["biens", "moderation_motif", "TEXT"],
+    ["biens", "moderation_le", "TEXT"],
+    ["biens", "moderation_par", "TEXT"],
+
+    // Verification d'un artisan. Le badge ne s'attribue pas tout seul :
+    // il faut une date et un nom derriere.
+    ["artisans", "verifie_le", "TEXT"],
+    ["artisans", "verifie_par", "TEXT"],
+    ["artisans", "suspendu_le", "TEXT"],
+    ["artisans", "motif_suspension", "TEXT"],
   ] as const;
 
   for (const [table, colonne, type] of colonnes) {

@@ -18,7 +18,7 @@ type Params = { [cle: string]: string | string[] | undefined };
 export default async function PageCandidature({
   params, searchParams,
 }: { params: Promise<{ id: string }>; searchParams: Promise<Params> }) {
-  await exigerAdmin();
+  await exigerAdmin("artisans.moderer");
   const { id } = await params;
   const requete = await searchParams;
 

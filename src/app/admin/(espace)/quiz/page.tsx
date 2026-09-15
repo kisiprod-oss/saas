@@ -10,7 +10,7 @@ export const dynamic = "force-dynamic";
 type Params = { [cle: string]: string | string[] | undefined };
 
 export default async function PageAdminQuiz({ searchParams }: { searchParams: Promise<Params> }) {
-  await exigerAdmin();
+  await exigerAdmin("artisans.moderer");
   const params = await searchParams;
   const lire = (c: string) => {
     const v = params[c];

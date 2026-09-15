@@ -640,3 +640,65 @@ CREATE TABLE IF NOT EXISTS prospects (
   cree_le      TEXT NOT NULL DEFAULT (datetime('now'))
 );
 CREATE INDEX IF NOT EXISTS idx_prospects_statut ON prospects(statut, cree_le);
+
+-- ================================================================
+--                    ESPACE D'ADMINISTRATION
+-- ================================================================
+
+/*
+ * Les administrateurs de la PLATEFORME — a ne pas confondre avec les
+ * utilisateurs des agences, qui vivent dans `utilisateurs`.
+ *
+ * La table ne CREE aucun droit a elle seule : le premier super
+ * administrateur vient toujours de la variable ADMIN_EMAILS, posee chez
+ * l'hebergeur, hors de portee de l'application. Cette table sert a en
+ * ajouter d'autres, avec des roles plus etroits, et a leur attacher une
+ * seconde verification. Voir src/lib/admin.ts.
+ */
+CREATE TABLE IF NOT EXISTS admins (
+  id            INTEGER PRIMARY KEY AUTOINCREMENT,
+  email         TEXT NOT NULL UNIQUE,          -- toujours en minuscules
+  nom           TEXT,
+  -- super_admin | support | moderateur | facturation
+  role          TEXT NOT NULL DEFAULT 'support',
+  actif         INTEGER NOT NULL DEFAULT 1,
+  -- Secret TOTP, chiffre quand CLE_CHIFFREMENT est posee. Jamais reaffiche.
+  totp_secret   TEXT,
+  totp_actif    INTEGER NOT NULL DEFAULT 0,
+  cree_par      TEXT,
+  cree_le       TEXT NOT NULL DEFAULT (datetime('now')),
+  derniere_connexion_le TEXT
+);
+
+/*
+ * La seconde verification, une fois faite, vaut pour un temps limite.
+ * Elle est portee par une session SEPAREE de celle de l'agence : se
+ * deconnecter de l'administration ne deconnecte pas du tableau de bord,
+ * et reciproquement, fermer toutes les sessions ferme aussi celles-ci.
+ */
+CREATE TABLE IF NOT EXISTS sessions_admin (
+  token     TEXT PRIMARY KEY,
+  email     TEXT NOT NULL,
+  expire_le TEXT NOT NULL,
+  cree_le   TEXT NOT NULL DEFAULT (datetime('now'))
+);
+
+/*
+ * Le journal. On y ecrit, on n'y revient pas : aucun ecran ne permet de
+ * modifier ni de supprimer une ligne. Les valeurs sensibles (mots de
+ * passe, cles, secrets) n'y entrent jamais — seulement de quoi savoir qui
+ * a fait quoi, sur quoi, et pourquoi.
+ */
+CREATE TABLE IF NOT EXISTS admin_journal (
+  id         INTEGER PRIMARY KEY AUTOINCREMENT,
+  acteur     TEXT NOT NULL,
+  role       TEXT,
+  action     TEXT NOT NULL,
+  cible_type TEXT,
+  cible_id   TEXT,
+  motif      TEXT,
+  details    TEXT,
+  cree_le    TEXT NOT NULL DEFAULT (datetime('now'))
+);
+CREATE INDEX IF NOT EXISTS idx_admin_journal_date ON admin_journal(cree_le DESC);
+CREATE INDEX IF NOT EXISTS idx_admin_journal_cible ON admin_journal(cible_type, cible_id);

@@ -231,6 +231,37 @@ body {
 }
 
 /* ================================================================
+   Espace d'administration : la palette de la vitrine, au travail.
+
+   Vert profond pour la structure, ivoire pour le fond, dore pour ce qui
+   demande un geste. Les variables sont enfermees dans `.espace-admin` :
+   l'espace des agences garde son marine, rien ne se melange.
+
+   Contrastes mesures sur les pixels : ivoire sur vert profond 12,4:1 ·
+   dore sur vert nuit 9,1:1 · encre sur ivoire 14,6:1. Le dore ne porte
+   jamais de texte blanc, il tomberait sous 2:1.
+   ================================================================ */
+.espace-admin {
+  --adm-vert:      #083c32;
+  --adm-vert-nuit: #05271f;
+  --adm-vert-clair:#0f5546;
+  --adm-ivoire:    #f8f7f2;
+  --adm-dore:      #eec477;
+  --adm-encre:     #122f29;
+  --adm-encre-2:   #4f635c;
+  --adm-bord:      #dfe3da;
+}
+
+/* Le menu se replie. La largeur est portee par une variable pour que la
+   barre laterale ET le decalage du contenu suivent le meme nombre. */
+.espace-admin[data-menu="replie"] { --adm-menu: 4.5rem; }
+.espace-admin[data-menu="ouvert"] { --adm-menu: 16rem; }
+
+@media (prefers-reduced-motion: no-preference) {
+  .adm-transition { transition: width 220ms ease, transform 220ms ease, opacity 160ms ease; }
+}
+
+/* ================================================================
    Page « Le projet » : sa propre palette, et elle seule.
 
    Vert profond dominant, or doux pour l'action, papier crème pour le fond.

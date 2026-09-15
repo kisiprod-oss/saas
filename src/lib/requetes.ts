@@ -75,7 +75,14 @@ export function listerVitrine(filtres: {
   ville?: string; type?: string; chambres?: string; budgetMax?: string;
   recherche?: string; duree?: string;
 } = {}) {
-  const conditions = ["b.publie = 1", "b.statut IN ('disponible', 'reserve')"];
+  // `publie` est le choix de l'agence, `moderation` celui de l'equipe : il
+  // faut les DEUX pour paraitre. La colonne vaut « publie » par defaut, donc
+  // les annonces deja en ligne le restent — la moderation n'en cache aucune
+  // tant qu'un administrateur n'a rien decide.
+  const conditions = [
+    "b.publie = 1", "b.moderation = 'publie'",
+    "b.statut IN ('disponible', 'reserve')",
+  ];
   const params: unknown[] = [];
 
   if (filtres.ville) { conditions.push("b.ville = ?"); params.push(filtres.ville); }
@@ -108,7 +115,7 @@ export function lireBienPublic(id: number) {
   return un<Bien & { agence_nom: string; agence_telephone: string | null; agence_email: string | null }>(
     `SELECT b.*, a.nom AS agence_nom, a.telephone AS agence_telephone, a.email AS agence_email
        FROM biens b JOIN agences a ON a.id = b.agence_id
-      WHERE b.id = ? AND b.publie = 1`,
+      WHERE b.id = ? AND b.publie = 1 AND b.moderation = 'publie'`,
     id,
   );
 }

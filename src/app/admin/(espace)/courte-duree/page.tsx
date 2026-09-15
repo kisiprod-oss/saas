@@ -18,7 +18,7 @@ const ETATS = [
 ];
 
 export default async function PageAdminCourteDuree({ searchParams }: { searchParams: Promise<Params> }) {
-  await exigerAdmin();
+  await exigerAdmin("agences.lire");
   const requete = await searchParams;
   const images = imagesCourteDuree();
   const prospects = listerProspects();

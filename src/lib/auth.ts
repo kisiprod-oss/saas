@@ -47,6 +47,11 @@ export type Agence = {
   paiement_consignes: string | null;
   /** Quand l'agence a telecharge le guide. NULL = pas encore. */
   guide_telecharge_le: string | null;
+  /** Suspension par l'equipe Sen Gestion. NULL = agence en service. */
+  suspendue_le: string | null;
+  motif_suspension: string | null;
+  /** Notes de l'equipe. Jamais lues par l'espace agence. */
+  notes_internes: string | null;
 };
 
 /** Hache un mot de passe avec scrypt et un sel aleatoire. */
@@ -120,6 +125,14 @@ export async function exigerSession(): Promise<{ utilisateur: Utilisateur; agenc
   if (!utilisateur) redirect("/connexion");
   const agence = un<Agence>("SELECT * FROM agences WHERE id = ?", utilisateur.agence_id);
   if (!agence) redirect("/connexion");
+  // Une agence suspendue par l'equipe : la session est fermee ici plutot que
+  // laissee vivre. Sans cela, une session deja ouverte survivrait a la
+  // suspension jusqu'a son expiration, trente jours plus tard.
+  if (agence.suspendue_le) {
+    await fermerSession();
+    redirect("/connexion?message=" + encodeURIComponent(
+      "Votre accès est suspendu. Contactez Sen Gestion pour en connaître la raison."));
+  }
   return { utilisateur, agence };
 }
 

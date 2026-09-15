@@ -19,7 +19,7 @@ const ETATS = [
 ] as const;
 
 export default async function PageCandidatures({ searchParams }: { searchParams: Promise<Params> }) {
-  await exigerAdmin();
+  await exigerAdmin("artisans.moderer");
   const params = await searchParams;
   const brut = Array.isArray(params.statut) ? params.statut[0] : params.statut;
   const filtre = brut ?? "en_attente";

@@ -12,7 +12,7 @@ export const metadata = { title: "Vue d'ensemble" };
 export const dynamic = "force-dynamic";
 
 export default async function PagePlateforme() {
-  const { utilisateur } = await exigerAdmin();
+  const { utilisateur } = await exigerAdmin("facturation.lire");
   const p = plateforme();
   const equipe = collaborateurs();
   const admins = adressesAdminVisibles();
