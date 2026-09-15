@@ -291,7 +291,10 @@ export type ContexteAdmin = {
 export async function exigerAdmin(permission?: Permission): Promise<ContexteAdmin> {
   const session = await exigerSession();
   const admin = adminPour(session.utilisateur.email);
-  if (!admin) redirect("/dashboard");
+  // Vers la page qui EXPLIQUE, pas vers un renvoi muet : « je n'ai pas
+  // l'administration » s'est posé trois fois faute de pouvoir constater
+  // quelle adresse manquait.
+  if (!admin) redirect("/admin/acces");
 
   // Un administrateur racine sans ligne en base : on la cree pour qu'il
   // puisse y ranger son secret de seconde verification.
@@ -312,7 +315,7 @@ export async function exigerAdmin(permission?: Permission): Promise<ContexteAdmi
 export async function exigerAdminSansSecondeVerification(): Promise<ContexteAdmin> {
   const session = await exigerSession();
   const admin = adminPour(session.utilisateur.email);
-  if (!admin) redirect("/dashboard");
+  if (!admin) redirect("/admin/acces");
   if (admin.source === "variable") assurerLigneAdmin(admin.email, session.utilisateur.nom);
   return { ...session, admin };
 }
