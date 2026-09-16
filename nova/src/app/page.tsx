@@ -4,7 +4,7 @@ import { ApercuProduit } from "@/components/apercu-produit";
 import { Devanture, Livraison, Etoffes } from "@/components/illustrations";
 import {
   Etincelle, Panier, Camion, Carte, Boite, Graphique, Whatsapp, Bouclier,
-  Fleche, Coche,
+  Fleche, Coche, Lien,
 } from "@/components/icones";
 import { offresPubliques } from "@/lib/offres";
 import { boutiquesDemonstration } from "@/lib/requetes";
@@ -49,6 +49,17 @@ const FONCTIONS = [
     texte: "Il propose la structure de vos pages et rédige vos descriptions à partir des "
       + "caractéristiques que vous saisissez. Vous voyez la proposition avant qu'elle "
       + "s'applique, et vous pouvez revenir en arrière.",
+  },
+  {
+    // Formulation pesee : le chemin existe et fonctionne, mais certaines
+    // places de marche bloquent la lecture automatique. On le dit ici plutot
+    // que de le decouvrir a l'usage.
+    icone: Lien,
+    titre: "Une photo, ou le lien du fournisseur",
+    texte: "Photographiez votre produit, ou collez l'adresse de sa fiche chez votre "
+      + "fournisseur. L'assistant prépare le nom, les caractéristiques et la description ; "
+      + "vous relisez et vous fixez votre prix. Certains sites bloquent la lecture "
+      + "automatique de leurs pages : dans ce cas, la photo suffit.",
   },
   {
     icone: Boite,

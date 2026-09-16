@@ -57,6 +57,10 @@ export type Boutique = {
   domaine: string | null;
   domaine_jeton: string | null;
   domaine_verifie_le: string | null;
+  /** Taux de change saisis par le commercant, en JSON. Voir src/lib/devises.ts. */
+  taux_change: string;
+  /** Marge par defaut appliquee a un prix importe, en pourcentage. */
+  marge_import: number;
   etape_assistant: number;
   assistant_fini_le: string | null;
   offre: string;

@@ -5,6 +5,8 @@ import { paysServis, paysDe } from "@/lib/pays";
 import { quotaIa, peutPublier, offreEnVigueur } from "@/lib/offres";
 import { brouillon, modificationsEnAttente } from "@/lib/versions";
 import { produits, categories } from "@/lib/requetes";
+import { iaDistanteDisponible } from "@/lib/ia";
+import { lireTaux } from "@/lib/devises";
 import { couleurSure } from "@/lib/modeles";
 import { Etape1, Etape2, Etape3, Etape4, BoutonGenerer } from "@/components/assistant";
 import { RenduSections } from "@/components/sections-rendu";
@@ -112,7 +114,16 @@ export default async function PageCreer({
             }} />
           ) : null}
 
-          {etape === 4 ? <Etape4 devise={pays.devise_libelle} /> : null}
+          {etape === 4 ? (
+            <Etape4
+              devise={pays.devise_libelle}
+              categories={categories(boutique.id).map((c) => ({ id: c.id, nom: c.nom }))}
+              iaDisponible={iaDistanteDisponible()}
+              tauxSaisis={Object.keys(lireTaux(boutique.taux_change))}
+              marge={boutique.marge_import}
+              paysDevise={pays.devise}
+            />
+          ) : null}
 
           {etape === 5 ? (
             <Etape5

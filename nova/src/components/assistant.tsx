@@ -9,6 +9,7 @@ import { BoutonEnvoi, Message, ChampMontant, Photo, Rondelle } from "./ui";
 import { Etincelle, Plus, Croix, Coche } from "./icones";
 import { MODELES_LIBELLES, type Modele } from "@/lib/sections";
 import { ACTIVITES } from "@/lib/activites";
+import { Importateur } from "./importateur";
 
 /**
  * Les cinq écrans de l'assistant.
@@ -306,13 +307,60 @@ function ApercuModele({ modele, couleur }: { modele: Modele; couleur: string }) 
 
 // ---------------------------------------------------------------------------
 
-export function Etape4({ devise }: { devise: string }) {
+export function Etape4({
+  devise, categories, iaDisponible, tauxSaisis, marge, paysDevise,
+}: {
+  devise: string;
+  categories: { id: number; nom: string }[];
+  iaDisponible: boolean;
+  tauxSaisis: string[];
+  marge: number;
+  paysDevise: string;
+}) {
   const [etat, envoyer] = useActionState(actionEtape4, VIDE);
   const [caracteristiques, setCaracteristiques] = useState([{ nom: "", valeur: "" }]);
   const [apercus, setApercus] = useState<string[]>([]);
+  // L'import est propose EN PREMIER : c'est le geste le plus rapide, et celui
+  // qui donne le meilleur resultat quand le commercant a deja ses photos.
+  const [chemin, setChemin] = useState<"import" | "main">("import");
+
+  if (chemin === "import") {
+    return (
+      <div className="space-y-5">
+        <Importateur
+          categories={categories}
+          devise={devise}
+          iaDisponible={iaDisponible}
+          tauxSaisis={tauxSaisis}
+          marge={marge}
+          paysDevise={paysDevise}
+        />
+
+        <div className="flex flex-col gap-2.5 border-t border-encre-200 pt-5 sm:flex-row">
+          <button type="button" className="btn-secondaire flex-1"
+            onClick={() => setChemin("main")}>
+            Remplir la fiche moi-même
+          </button>
+          <form action={envoyer} className="flex-1">
+            <BoutonEnvoi className="btn-discret w-full" name="passer" value="1">
+              Je le ferai plus tard
+            </BoutonEnvoi>
+          </form>
+        </div>
+        <p className="text-center text-xs text-encre-500">
+          Dès qu&apos;un produit est ajouté, vous passez à l&apos;aperçu.
+        </p>
+      </div>
+    );
+  }
 
   return (
     <form action={envoyer} className="space-y-5">
+      <button type="button"
+        className="text-sm font-medium text-encre-600 underline-offset-4 hover:underline"
+        onClick={() => setChemin("import")}>
+        ← Partir plutôt d&apos;une photo ou d&apos;un lien
+      </button>
       {etat.erreur ? <Message ton="erreur">{etat.erreur}</Message> : null}
 
       <div>

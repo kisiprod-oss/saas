@@ -45,7 +45,7 @@ Boutiques publiques : `/b/chez-awa` et `/b/epicerie-teranga`.
 ### Les autres commandes
 
 ```bash
-npm run essais      # 31 essais automatisés sur la couche métier
+npm run essais      # 60 essais automatisés sur la couche métier
 npm run verifier    # tsc --noEmit
 npm run build       # compilation de production
 npm start           # serveur de production, port 3100
@@ -91,6 +91,9 @@ nova/
     │   ├── sections.ts        LE schéma du contenu, et sa validation
     │   ├── versions.ts        Brouillon / publié / historique
     │   ├── ia.ts              L'assistant, ses garde-fous, son quota
+    │   ├── import-web.ts      Lecture d'une page distante : LE code dangereux
+    │   ├── import-produit.ts  D'une page ou d'une photo à une fiche proposée
+    │   ├── devises.ts         Conversion des prix, parité fixe de l'euro
     │   ├── webhooks.ts        Notifications de paiement (signature, idempotence)
     │   ├── paiements.ts       État RÉEL de chaque intégration
     │   ├── offres.ts          Limites d'offre, appliquées côté serveur
@@ -107,7 +110,7 @@ nova/
 
 ---
 
-## Les cinq décisions qui structurent tout
+## Les six décisions qui structurent tout
 
 ### 1. Aucune requête sans `boutique_id`
 
@@ -171,13 +174,68 @@ bord additionne `montant_encaisse`, jamais `total`. Ouvrir WhatsApp est compté
 dans une table à part (`demandes_whatsapp`) : ce n'est ni un message envoyé,
 ni une vente.
 
+### 6. Ce qui revient du web n'est jamais cru sur parole
+
+Un lien de fiche — AliExpress, Alibaba, Amazon, eBay, n'importe quel
+fournisseur — ou une photo suffit à préparer un produit. Deux chemins, un seul
+principe : **le serveur va chercher, puis propose ; le commerçant relit et
+décide.**
+
+**Le lien est l'entrée la plus dangereuse du produit** : quelqu'un dicte au
+serveur une adresse à appeler. Quatre verrous, dans `src/lib/import-web.ts` :
+
+1. `http` et `https` uniquement — `file:`, `gopher:`, `data:` sont refusés
+   avant tout appel réseau.
+2. **Nous résolvons le nom nous-mêmes** et refusons si *l'une* des adresses
+   renvoyées est interne : boucle locale, réseaux privés, CGNAT, lien-local
+   (`169.254.169.254`, l'adresse des métadonnées d'hébergeur), IPv4
+   encapsulée en IPv6, plages réservées. Un nom qui pointe vers l'intérieur ne
+   passe pas, quel que soit le nom.
+3. Les redirections sont suivies **à la main**, quatre au maximum, et chaque
+   saut repasse le contrôle complet. Une page qui redirige vers un réseau
+   interne échoue au deuxième tour.
+4. Plafonds de taille et de durée, aucun cookie, aucun en-tête
+   d'authentification, agent identifié, et un type de contenu qui doit être du
+   HTML.
+
+**On ne lit que ce que la page publie pour être partagée** : les données
+structurées `schema.org`, les balises Open Graph, le titre. Rien n'est
+contourné. Quand un site refuse la lecture automatique — les grandes places de
+marché le font souvent — l'écran le dit et propose la photo.
+
+Ce qui revient est **une proposition**, jamais une écriture. Elle est
+enregistrée dans `imports_produit`, affichée dans un formulaire, et rien
+n'entre au catalogue avant l'envoi du commerçant. L'adresse de l'image n'est
+**pas** renvoyée par le navigateur : le formulaire envoie un numéro, et le
+serveur relit l'adresse dans la ligne d'import. Une adresse d'image glissée
+par un tiers n'a donc rien à contourner.
+
+**Le prix reste au commerçant.** Un prix trouvé chez un fournisseur est un
+prix d'achat : il ne couvre ni le transport, ni la douane, ni la marge. Nous le
+montrons tel quel, converti quand c'est possible, avec une proposition de prix
+de vente arrondie — et un champ vide plutôt qu'un montant inventé quand le
+taux manque. La parité euro / franc CFA est une **parité de droit**
+(1 € = 655,957 FCFA) ; toutes les autres devises utilisent le taux que le
+commerçant a lui-même saisi, celui de ses factures.
+
+**Les photos appartiennent au vendeur d'origine.** Reprendre celle d'une fiche
+demande une confirmation explicite, enregistrée avec sa date
+(`droits_confirmes_le`). Sans photo, le produit est créé **retiré de la vente**
+— il n'y a pas de fiche présentable sans image.
+
+**L'assistant réécrit, il ne recopie pas et n'invente pas.** La description est
+composée à partir des seules caractéristiques relevées. Il lui est interdit de
+déduire une taille, une contenance, un poids ou une composition, et de citer le
+fournisseur. Le nom du site n'est jamais pris pour une marque, et il est retiré
+du nom du produit : la boutique du commerçant est la sienne.
+
 ---
 
 ## Ce qui a été vérifié, et comment
 
 ### Essais automatisés — `npm run essais`
 
-31 essais, tous au vert. Ils exercent le **code de production**, compilé depuis
+60 essais, tous au vert. Ils exercent le **code de production**, compilé depuis
 `src/lib` : un essai qui réimplémente ce qu'il vérifie ne vérifie rien.
 
 | Ce qui est vérifié | Comment |
@@ -190,6 +248,9 @@ ni une vente.
 | Restauration de version | Remet le contenu sans rien publier, reste elle-même annulable, refuse une version vide ; dépublier conserve le contenu |
 | Limites d'offre | Découverte interdit la publication ; une formule échue retombe sur Découverte ; la limite de produits est par boutique |
 | Divers | Normalisation des numéros sénégalais (7 formes), chiffrement/déchiffrement, corps chiffré altéré rejeté, boutique suspendue retirée du web |
+| Filtre d'adresses de l'import | Chaque plage interne nommément (boucle locale, privées, CGNAT, lien-local, réservées, multicast), IPv4 encapsulée en IPv6, schémas refusés, nom de domaine qui résout vers l'intérieur, redirection vers l'intérieur |
+| Lecture d'une fiche distante | Pages enregistrées : `schema.org` en JSON-LD, `@graph`, bloc JSON cassé qui n'emporte pas les autres, Open Graph, microdonnées, titre seul, page vide ; apostrophe et chevron dans une valeur d'attribut ; nom du site retiré du nom, et nom légitime préservé |
+| Prix et conversion | Formats français (1.299,90) et anglais (1,299.90), symboles, `AggregateOffer`, prix négatif refusé, parité fixe de l'euro, taux manquant annoncé, taux du commerçant, arrondi du prix de vente par paliers |
 
 ### Parcours complet dans un vrai navigateur
 
@@ -205,6 +266,43 @@ confirmation → rechargement sans doublon → **« À régler à la réception 
 retour marchand : commande visible, encaissement séparé, stock décrémenté 4→3 →
 administration : suivi de la boutique → **zéro erreur JavaScript**.
 
+### Parcours d'import dans un vrai navigateur
+
+22 étapes, sur le même téléphone simulé :
+
+le bouton « Importer » depuis le catalogue → les trois chemins →
+**une adresse de métadonnées d'hébergeur (`169.254.169.254`) est refusée** →
+**`localhost` est refusé par la résolution du nom**, pas par une liste de noms
+interdits → un site qui refuse la lecture automatique donne un message
+utilisable → les limites des places de marché et la question des droits sur les
+photos sont annoncées avant la saisie → taux de change et marge enregistrés →
+la parité fixe de l'euro est expliquée et non demandée →
+**une page réellement distante est lue** et produit une fiche →
+aucun prix inventé quand la page n'en porte pas →
+**la fiche refuse de partir sans la confirmation des droits sur la photo** →
+produit créé, présent au catalogue, photo du fournisseur téléchargée,
+ré-encodée et rangée dans le dossier de la boutique → import tracé →
+une fiche abandonnée est notée « Abandonné » **côté serveur** →
+zéro erreur JavaScript, zéro erreur de console.
+
+#### Ce que cet environnement n'a pas permis de vérifier
+
+**Les places de marché elles-mêmes sont injoignables depuis ce bac à sable** :
+la sortie réseau est filtrée et répond `403` pour tout hôte non autorisé,
+`fr.aliexpress.com`, `amazon.fr` et `ebay.com` compris. Deux conséquences,
+dites sans détour :
+
+- L'analyseur est éprouvé sur des **pages enregistrées** qui reproduisent les
+  structures réelles. C'est la bonne façon de tester un analyseur, mais ce
+  n'est pas une preuve que telle fiche AliExpress d'aujourd'hui sera lue.
+- Le chemin réseau, lui, **a bien été exercé en vrai** sur les hôtes que ce bac
+  à sable autorise (`pypi.org`, `jsr.io`) : résolution de nom, contrôle
+  d'adresse, requête HTTP, redirections, lecture des balises, téléchargement de
+  l'image et ré-encodage. C'est la même mécanique, sur d'autres hôtes.
+
+À refaire sur un serveur à la sortie réseau ouverte, avec une dizaine de liens
+réels de chaque site, avant d'annoncer l'import comme fiable au public.
+
 ### Mise en page
 
 Aucun défilement horizontal sur **6 largeurs × 13 pages** (320, 360, 414, 768,
@@ -212,7 +310,9 @@ Aucun défilement horizontal sur **6 largeurs × 13 pages** (320, 360, 414, 768,
 
 ### Défauts trouvés et corrigés pendant ces vérifications
 
-Cinq, tous réels :
+Quatorze, tous réels. Les essais et les parcours ne sont pas là pour décorer.
+
+Sur le cœur du produit :
 
 1. **Panier muet** — une boutique sans retrait en magasin ne pouvait chiffrer
    aucun panier. Corrigé par un mode `estimation` dans `calculer()`.
@@ -222,6 +322,38 @@ Cinq, tous réels :
    quand il n'avait pas de `<label>`. Corrigé par un `aria-label`.
 4. **Débordement de l'en-tête à 768 px** — navigation étendue basculée à 1024.
 5. **Maquette d'accueil illisible** — le téléphone masquait les chiffres.
+
+Sur l'import, découverts par les essais :
+
+6. **Photos perdues** — un `image` JSON-LD donné comme tableau de chaînes
+   n'était pas lu : les fiches arrivaient sans aucune photo.
+7. **Prix négatif accepté** — `"-19.99"` était lu `19,99`. Refusé désormais.
+8. **Taux de change absurdes** — un tableau JSON dans le champ des taux
+   donnait des taux indexés par « 0 », « 1 », « 2 ».
+9. **Arrondi trop cher** — `200 000 × 1,10` vaut `220 000,00000000003` en
+   virgule flottante, ce qui faisait franchir un palier et vendre 1 000 F de
+   trop. Le calcul est passé en entiers.
+10. **Un nom sur deux tronqué** — la valeur d'un attribut entre guillemets
+    doubles était coupée au premier apostrophe : « Huile d'arachide » devenait
+    « Huile d ». En français, c'est un nom sur deux. Le guillemet ouvrant est
+    maintenant capturé, et c'est lui qui doit refermer.
+11. **Le nom du site pris pour une marque** — `og:site_name` alimentait le
+    champ « marque », la fiche annonçait « Marque : AliExpress », et
+    l'assistant le reprenait dans la description. C'est une caractéristique
+    produit inventée : exactement ce qu'on s'interdit.
+12. **Le fournisseur dans le nom du produit** — « Robe wax | AliExpress »
+    entrait tel quel au catalogue. Le nom du site est retiré, mais seulement
+    quand c'est bien lui : « Foulard en wax - 180 cm » garde sa taille.
+
+Sur l'import, découverts dans le navigateur :
+
+13. **Abandon jamais enregistré** — le bouton portait un `formAction` avec
+    `type="button"` : React l'ignorait en silence. La fiche disparaissait de
+    l'écran mais restait « Proposé » dans l'historique. C'est un avertissement
+    de console qui a mis ce défaut au jour.
+14. **Historique illisible sur téléphone** — coincée entre deux pastilles et
+    une date, l'adresse d'origine se réduisait à « h. » et ne disait donc plus
+    d'où venait le produit. Elle a désormais sa propre ligne.
 
 ---
 
@@ -247,6 +379,10 @@ Cinq, tous réels :
   livraison, abonnement avec historique de consommation IA, paramètres
 - Assistant IA : structure de page, descriptions, couleurs, demandes en
   français ; aperçu avant application ; quota juste
+- Import d'un produit depuis un lien ou une photo : lecture de la page,
+  fiche proposée et relue, conversion du prix, confirmation des droits sur la
+  photo, image du fournisseur téléchargée et ré-encodée, traçabilité complète
+  dans `imports_produit` — avec les réserves de la section suivante
 - Administration : vue d'ensemble, boutiques, suspension motivée et journalisée,
   offres modifiables, abonnements, intégrations, assistance, incidents, journal
 - Notifications de paiement : signature HMAC vérifiée, idempotence garantie par
@@ -263,6 +399,16 @@ Cinq, tous réels :
 - **Facturation des abonnements.** Demander une formule payante enregistre une
   demande ; l'équipe l'active à réception du règlement depuis
   `/administration/abonnements`. Aucun prélèvement automatique.
+- **Import depuis un lien.** Le chemin réseau et l'analyseur fonctionnent, mais
+  **aucune fiche AliExpress, Alibaba, Amazon ou eBay réelle n'a pu être lue
+  depuis cet environnement** (sortie réseau filtrée). Ces sites bloquent par
+  ailleurs souvent la lecture automatique : c'est annoncé à l'écran avant la
+  saisie, et nous ne cherchons pas à contourner leur protection. Tant que la
+  vérification sur serveur ouvert n'est pas faite, considérez ce chemin comme
+  « au mieux » et la photo comme le chemin sûr.
+- **Import depuis une photo.** Il demande la clé d'API de l'assistant. Sans
+  elle, l'onglet reste visible mais explique le prérequis manquant et renvoie
+  vers le lien ou la saisie à la main — il ne fait jamais semblant.
 
 ### Ce qui reste à brancher, et ce qu'il me faut de vous
 
@@ -272,6 +418,7 @@ Cinq, tous réels :
 | **Envoi d'e-mails** | Un compte chez un expéditeur (Brevo, Resend, Mailgun…) et son adresse d'API | `NOVA_SMTP_URL` + `NOVA_SMTP_CLE`. Adapter `envoyerLien()` dans `src/lib/actions-compte.ts` au format du fournisseur : ~15 lignes. |
 | **PayDunya** | Un compte marchand validé, puis ses clés publique/privée/master | Chaque commerçant les saisit lui-même. De notre côté : relire la documentation officielle en vigueur, vérifier le format de notification dans `lireEvenement()`, faire une transaction réelle en bac à sable puis en production, et seulement alors passer `etat: "disponible"`. |
 | **Wave / Orange Money** | Un accès API (demande auprès de l'opérateur, validation du compte marchand) | Rien n'est écrit à ce jour. À traiter pays par pays : l'API Orange diffère d'un pays à l'autre. |
+| **Import fiable depuis les places de marché** | Un compte développeur (et sa validation) chez chaque place de marché dont vous voulez importer, ou un compte chez un service d'extraction | Ces sites publient des API pour leurs revendeurs et partenaires ; l'accès demande une inscription et une validation. **Je n'ai pas pu consulter leur documentation depuis cet environnement** : à vérifier avant de choisir, comme pour le Mobile Money. La lecture publique actuelle reste utile et gratuite, mais dépend du bon vouloir de chaque site. L'endroit à modifier est unique : `recuperer()` dans `src/lib/import-web.ts`. |
 | **Sous-domaines** | Un enregistrement DNS générique `*.nova.shop` vers le serveur, et un certificat générique | `src/middleware.ts` réécrit déjà `<slug>.nova.shop` vers `/b/<slug>`. |
 | **Domaines personnalisés** | Selon l'hébergeur : API de certificats, ou intervention manuelle | La preuve de propriété par enregistrement TXT est écrite et vérifiée par DNS-over-HTTPS. L'émission du certificat HTTPS ne l'est pas, et l'interface le dit au commerçant. |
 | **Textes juridiques** | Raison sociale, RCCM, NINEA, adresse, e-mail de contact ; une relecture par un juriste | `/conditions` et `/confidentialite` : les mentions à compléter sont entre crochets, et un bandeau le signale. |
@@ -305,6 +452,7 @@ Cinq, tous réels :
 | Secrets des commerçants | AES-256-GCM, jamais renvoyés au navigateur, affichés masqués |
 | Notifications de paiement | HMAC-SHA256 vérifié à temps constant, idempotence par contrainte UNIQUE, montant plafonné |
 | Téléversements | Décodés par sharp et **ré-encodés** ; le type déclaré n'est jamais cru ; métadonnées EXIF (dont GPS) supprimées ; type de réponse figé à `image/webp` |
+| Appels sortants (SSRF) | Schémas `http`/`https` seuls ; nom résolu par nous et **toutes** les adresses renvoyées contrôlées ; plages internes refusées y compris `169.254.169.254` et l'IPv4 encapsulée en IPv6 ; 4 redirections au plus, chacune recontrôlée ; plafonds de taille et de durée ; aucun cookie ni en-tête d'authentification |
 | Injection SQL | Requêtes préparées partout, sans exception |
 | XSS | Aucun `dangerouslySetInnerHTML` ; chevrons retirés à l'entrée ; contenu IA validé contre un schéma fermé |
 | Suspension | Ferme les sessions ouvertes immédiatement, avec motif obligatoire (10 caractères minimum) et journalisation |

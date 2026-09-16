@@ -5,7 +5,7 @@ import { paysDe } from "@/lib/pays";
 import { offreEnVigueur } from "@/lib/offres";
 import { montant } from "@/lib/format";
 import { EcranVide, Photo } from "@/components/ui";
-import { Boite, Plus, Recherche, Alerte } from "@/components/icones";
+import { Boite, Plus, Recherche, Alerte, Etincelle } from "@/components/icones";
 import { actionBasculerProduit } from "@/lib/actions-catalogue";
 
 export const metadata = { title: "Produits" };
@@ -48,9 +48,14 @@ export default async function PageProduits({
             {place <= 3 && place > 0 ? ` Encore ${place} possible${place > 1 ? "s" : ""}.` : ""}
           </p>
         </div>
-        <Link href="/tableau-de-bord/produits/nouveau" className="btn-principal">
-          <Plus className="size-4" /> Ajouter
-        </Link>
+        <div className="flex flex-wrap gap-2">
+          <Link href="/tableau-de-bord/produits/importer" className="btn-secondaire">
+            <Etincelle className="size-4" /> Importer
+          </Link>
+          <Link href="/tableau-de-bord/produits/nouveau" className="btn-principal">
+            <Plus className="size-4" /> Ajouter
+          </Link>
+        </div>
       </header>
 
       {place <= 0 ? (
@@ -93,9 +98,14 @@ export default async function PageProduits({
             titre="Votre catalogue est vide"
             texte="Un produit, c'est une photo, un nom et un prix. Le reste peut attendre."
             action={
-              <Link href="/tableau-de-bord/produits/nouveau" className="btn-principal">
-                <Plus className="size-4" /> Ajouter mon premier produit
-              </Link>
+              <div className="flex flex-wrap justify-center gap-2">
+                <Link href="/tableau-de-bord/produits/importer" className="btn-principal">
+                  <Etincelle className="size-4" /> Partir d&apos;une photo ou d&apos;un lien
+                </Link>
+                <Link href="/tableau-de-bord/produits/nouveau" className="btn-secondaire">
+                  <Plus className="size-4" /> Remplir la fiche moi-même
+                </Link>
+              </div>
             }
           />
         ) : (

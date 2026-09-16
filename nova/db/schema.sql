@@ -125,6 +125,14 @@ CREATE TABLE IF NOT EXISTS boutiques (
   etape_assistant     INTEGER NOT NULL DEFAULT 1,
   assistant_fini_le   TEXT,
 
+  -- Taux de change saisis par le commercant, pour les imports depuis une
+  -- place de marche etrangere. JSON { "USD": 610, "CNY": 85 }.
+  -- L'euro n'y figure pas : sa parite avec le franc CFA est FIXE (voir
+  -- src/lib/devises.ts), il n'y a rien a saisir.
+  taux_change         TEXT NOT NULL DEFAULT '{}',
+  -- Marge appliquee par defaut au prix importe, en pourcentage. 0 = aucune.
+  marge_import        INTEGER NOT NULL DEFAULT 0,
+
   -- Abonnement
   offre               TEXT NOT NULL DEFAULT 'decouverte' REFERENCES offres(code),
   offre_expire_le     TEXT,
@@ -379,6 +387,39 @@ CREATE TABLE IF NOT EXISTS versions_boutique (
   cree_le      TEXT NOT NULL DEFAULT (datetime('now')),
   UNIQUE (boutique_id, numero)
 );
+
+-- ----------------------------------------------------------------------------
+--  Imports depuis une place de marche ou une photo
+--
+--  Chaque tentative laisse une trace, reussie ou non. Deux raisons :
+--
+--   1. RESPONSABILITE. Un import recopie un texte, un prix, parfois une image
+--      qui appartiennent a quelqu'un d'autre. Savoir quelle adresse a ete
+--      importee, quand, et par qui, est ce qui permet de repondre a une
+--      reclamation. La colonne `droits_confirmes_le` enregistre le moment ou
+--      le commercant a declare avoir le droit d'utiliser l'image.
+--
+--   2. MISE AU POINT. Les places de marche changent la structure de leurs
+--      pages sans preavis. `charge_utile` garde ce qui a ete extrait : quand
+--      un import rend n'importe quoi, on sait pourquoi sans redemander
+--      l'adresse au commercant.
+-- ----------------------------------------------------------------------------
+CREATE TABLE IF NOT EXISTS imports_produit (
+  id                  INTEGER PRIMARY KEY AUTOINCREMENT,
+  boutique_id         INTEGER NOT NULL REFERENCES boutiques(id) ON DELETE CASCADE,
+  utilisateur_id      INTEGER REFERENCES utilisateurs(id) ON DELETE SET NULL,
+  source              TEXT NOT NULL,                   -- lien | photo
+  origine             TEXT,                            -- amazon | ebay | aliexpress | alibaba | autre
+  adresse             TEXT,                            -- l'URL importee
+  statut              TEXT NOT NULL DEFAULT 'propose', -- propose | accepte | abandonne | echoue
+  erreur              TEXT,
+  charge_utile        TEXT,                            -- ce qui a ete extrait (JSON)
+  produit_id          INTEGER REFERENCES produits(id) ON DELETE SET NULL,
+  image_reprise       INTEGER NOT NULL DEFAULT 0,
+  droits_confirmes_le TEXT,
+  cree_le             TEXT NOT NULL DEFAULT (datetime('now'))
+);
+CREATE INDEX IF NOT EXISTS idx_imports_boutique ON imports_produit (boutique_id, cree_le DESC);
 
 CREATE TABLE IF NOT EXISTS operations_ia (
   id             INTEGER PRIMARY KEY AUTOINCREMENT,

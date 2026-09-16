@@ -69,6 +69,32 @@ const QUESTIONS: { question: string; reponse: React.ReactNode }[] = [
     </>,
   },
   {
+    question: "Puis-je créer un produit depuis un lien AliExpress ou Amazon ?",
+    reponse: <>
+      Vous pouvez essayer, et souvent ça marche : collez l&apos;adresse de la
+      fiche, nous lisons ce que la page publie pour le partage — nom,
+      caractéristiques, prix, photo — et nous vous proposons une fiche à
+      relire. Deux choses à savoir, dites franchement. Ces grands sites{" "}
+      <strong>bloquent souvent la lecture automatique</strong> de leurs pages ;
+      quand c&apos;est le cas, nous vous le disons au lieu de faire semblant, et
+      la photo de votre produit suffit alors. Et le prix trouvé est un{" "}
+      <strong>prix d&apos;achat</strong> : il ne couvre ni le transport, ni la
+      douane, ni votre marge — c&apos;est vous qui fixez le prix de vente.
+    </>,
+  },
+  {
+    question: "Les photos du fournisseur, j'ai le droit de les utiliser ?",
+    reponse: <>
+      C&apos;est à vérifier auprès de lui. Le texte et les photos d&apos;une
+      fiche appartiennent au vendeur qui l&apos;a publiée ; beaucoup de
+      fournisseurs autorisent leurs revendeurs à s&apos;en servir, certains non.
+      Nous ne reprenons donc jamais une photo sans que vous ayez confirmé avoir
+      ce droit, et votre confirmation est enregistrée avec sa date. La
+      description, elle, est réécrite à partir des caractéristiques relevées,
+      pas recopiée.
+    </>,
+  },
+  {
     question: "Si je modifie ma boutique, mes clients voient-ils les changements tout de suite ?",
     reponse: <>
       Non, et c&apos;est voulu. Vos modifications vont dans un brouillon que vous

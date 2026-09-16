@@ -5,6 +5,7 @@ import { paysDe } from "@/lib/pays";
 import { peutAjouterProduit, quotaIa } from "@/lib/offres";
 import { iaDistanteDisponible } from "@/lib/ia";
 import { FormulaireProduit } from "@/components/formulaire-produit";
+import { RaccourciImport } from "@/components/importateur";
 import { FlecheGauche } from "@/components/icones";
 
 export const metadata = { title: "Nouveau produit" };
@@ -33,12 +34,16 @@ export default async function PageNouveauProduit() {
           </div>
         </div>
       ) : (
-        <FormulaireProduit
-          categories={categories(boutique.id)}
-          devise={pays.devise_libelle}
-          iaDisponible={iaDistanteDisponible()}
-          quotaRestant={quota.restant}
-        />
+        <>
+          <RaccourciImport />
+          <p className="text-center text-sm text-encre-500">ou remplissez la fiche vous-même</p>
+            <FormulaireProduit
+            categories={categories(boutique.id)}
+            devise={pays.devise_libelle}
+            iaDisponible={iaDistanteDisponible()}
+            quotaRestant={quota.restant}
+          />
+        </>
       )}
     </div>
   );

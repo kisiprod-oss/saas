@@ -48,6 +48,8 @@ function ouvrir(): Database.Database {
 function migrer(base: Database.Database) {
   const colonnes: [string, string, string][] = [
     // [table, colonne, definition]
+    ["boutiques", "taux_change", "TEXT NOT NULL DEFAULT '{}'"],
+    ["boutiques", "marge_import", "INTEGER NOT NULL DEFAULT 0"],
   ];
   for (const [table, colonne, definition] of colonnes) {
     try {
