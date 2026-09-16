@@ -1,0 +1,222 @@
+@import "tailwindcss";
+
+/* ============================================================================
+   NOVA Boutique — les trois encres
+
+     anthracite   la structure : textes, titres, cadres, navigation
+     vert profond l'action     : le bouton principal, et lui seul
+     terre        l'alerte     : stock bas, impayé, attention
+
+   Le fond n'est pas blanc pur mais blanc cassé. Sur un écran de téléphone en
+   plein soleil — la condition d'usage réelle du public visé — le blanc franc
+   éblouit et fait disparaître les bordures fines. Le blanc cassé garde les
+   contours lisibles et repose l'œil.
+
+   Chaque ton porteur de texte a été choisi au-dessus de 4,5:1 sur son fond.
+   Les tons clairs (50 à 200) ne servent que de fonds : rien n'est jamais
+   écrit dessus en clair.
+   ============================================================================ */
+
+@theme {
+  /* Vert profond : la couleur de l'action. Le ton 700 est celui des boutons
+     (8,1:1 sous du texte blanc) ; le 600 pour le survol. */
+  --color-vert-50:  #ecf7f1;
+  --color-vert-100: #d2ebdf;
+  --color-vert-200: #a6d7c0;
+  --color-vert-300: #6fbc9b;
+  --color-vert-400: #3d9a73;
+  --color-vert-500: #1f7d58;
+  --color-vert-600: #146449;
+  --color-vert-700: #0e5c3f;
+  --color-vert-800: #0b472f;
+  --color-vert-900: #083524;
+
+  /* Anthracite : les textes et la structure. Le 900 pour les titres, le 600
+     pour le texte secondaire (7,0:1 sur le fond crème). */
+  --color-encre-50:  #f6f7f6;
+  --color-encre-100: #eceeec;
+  --color-encre-200: #d8dcd9;
+  --color-encre-300: #b5bdb8;
+  --color-encre-400: #8b958f;
+  --color-encre-500: #69736d;
+  --color-encre-600: #515953;
+  --color-encre-700: #3d443f;
+  --color-encre-800: #2a2f2c;
+  --color-encre-900: #1f2421;
+
+  /* Terre : l'alerte et le compte à rebours. Jamais une décoration. */
+  --color-terre-50:  #fdf3ec;
+  --color-terre-100: #fae1cf;
+  --color-terre-200: #f3c09e;
+  --color-terre-500: #c2571f;
+  --color-terre-600: #a4461a;
+  --color-terre-700: #853715;
+
+  /* Fonds */
+  --color-craie: #faf9f6;  /* le fond de toutes les pages */
+  --color-ivoire: #f3f1ec; /* les zones en creux, les en-têtes de tableau */
+
+  --font-sans: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto,
+               "Helvetica Neue", Arial, sans-serif;
+}
+
+html {
+  -webkit-text-size-adjust: 100%;
+  scroll-behavior: smooth;
+}
+
+body {
+  background-color: var(--color-craie);
+  color: var(--color-encre-900);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+  /* La barre d'onglets du mobile est fixée en bas : sans cette réserve, le
+     dernier bouton de chaque page passe dessous et devient inatteignable. */
+  padding-bottom: env(safe-area-inset-bottom);
+}
+
+/* Anneau de focus visible AU CLAVIER et pas à la souris. Il est vert, épais,
+   et décollé de l'élément pour rester visible sur fond sombre comme clair. */
+:focus-visible {
+  outline: 2px solid var(--color-vert-700);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+/* Quelqu'un qui a demandé moins d'animations à son système en reçoit moins.
+   Ce n'est pas une préférence esthétique : les mouvements déclenchent des
+   malaises chez une partie des utilisateurs. */
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+@layer components {
+  /* ---------------- Surfaces ---------------- */
+  .carte {
+    @apply rounded-2xl border border-encre-200 bg-white;
+  }
+  .carte-douce {
+    @apply rounded-2xl border border-encre-200/70 bg-white/70;
+  }
+
+  /* ---------------- Boutons ----------------
+     Une base commune, puis une variante par usage. La hauteur minimale de
+     44 px n'est pas décorative : c'est la taille d'une pulpe de doigt. */
+  .btn,
+  .btn-principal,
+  .btn-secondaire,
+  .btn-discret,
+  .btn-danger {
+    @apply inline-flex min-h-11 items-center justify-center gap-2 rounded-xl px-4
+           py-2.5 text-sm font-semibold transition-colors cursor-pointer
+           disabled:cursor-not-allowed disabled:opacity-50;
+  }
+  .btn-principal  { @apply bg-vert-700 text-white hover:bg-vert-800; }
+  .btn-secondaire { @apply border border-encre-300 bg-white text-encre-800 hover:bg-encre-50; }
+  .btn-discret    { @apply text-encre-700 hover:bg-encre-100; }
+  .btn-danger     { @apply border border-red-200 bg-white text-red-700 hover:bg-red-50; }
+  .btn-petit      { @apply min-h-9 rounded-lg px-3 py-1.5 text-xs; }
+
+  /* ---------------- Formulaires ---------------- */
+  .champ {
+    @apply w-full rounded-xl border border-encre-300 bg-white px-3.5 py-2.5
+           text-base text-encre-900 placeholder:text-encre-400
+           focus:border-vert-600 focus:outline-none focus:ring-2 focus:ring-vert-600/20;
+  }
+  /* 16 px minimum sur mobile : en dessous, iOS zoome tout seul à la saisie et
+     le formulaire sort de l'écran. */
+  .etiquette {
+    @apply mb-1.5 block text-sm font-medium text-encre-700;
+  }
+  .aide {
+    @apply mt-1.5 text-xs text-encre-500;
+  }
+  .erreur-champ {
+    @apply mt-1.5 text-xs font-medium text-red-700;
+  }
+
+  /* ---------------- Pastilles d'état ---------------- */
+  .puce {
+    @apply inline-flex items-center gap-1.5 rounded-full px-2.5 py-1
+           text-xs font-semibold whitespace-nowrap;
+  }
+  .puce-neutre  { @apply bg-encre-100 text-encre-700; }
+  .puce-vert    { @apply bg-vert-100 text-vert-800; }
+  .puce-terre   { @apply bg-terre-100 text-terre-700; }
+  .puce-rouge   { @apply bg-red-100 text-red-800; }
+  .puce-bleu    { @apply bg-sky-100 text-sky-900; }
+
+  /* ---------------- Messages ---------------- */
+  .message {
+    @apply flex items-start gap-3 rounded-xl border px-4 py-3 text-sm;
+  }
+  .message-info    { @apply border-sky-200 bg-sky-50 text-sky-900; }
+  .message-succes  { @apply border-vert-200 bg-vert-50 text-vert-900; }
+  .message-alerte  { @apply border-terre-200 bg-terre-50 text-terre-700; }
+  .message-erreur  { @apply border-red-200 bg-red-50 text-red-800; }
+
+  /* ---------------- Titres ---------------- */
+  .titre-page {
+    @apply text-2xl font-bold tracking-tight text-encre-900 sm:text-3xl;
+  }
+  .titre-section {
+    @apply text-lg font-semibold text-encre-900;
+  }
+
+  /* Lien passe-partout : souligné au survol, jamais bleu par défaut. */
+  .lien {
+    @apply font-medium text-vert-700 underline-offset-4 hover:underline;
+  }
+
+  /* Zone de saisie du texte long */
+  .zone-texte {
+    @apply w-full rounded-xl border border-encre-300 bg-white px-3.5 py-2.5
+           text-base leading-relaxed text-encre-900 placeholder:text-encre-400
+           focus:border-vert-600 focus:outline-none focus:ring-2 focus:ring-vert-600/20;
+  }
+}
+
+/* Apparition discrète, réservée aux blocs qui arrivent après coup (aperçu
+   d'une génération, message de confirmation). Annulée par la règle de
+   réduction des animations ci-dessus. */
+@keyframes nova-apparait {
+  from { opacity: 0; transform: translateY(6px); }
+  to   { opacity: 1; transform: none; }
+}
+.apparait { animation: nova-apparait 220ms ease-out both; }
+
+/* Squelette de chargement : un gris qui respire, pas un tourniquet. */
+@keyframes nova-respire {
+  0%, 100% { opacity: 1; }
+  50%      { opacity: 0.55; }
+}
+.squelette {
+  @apply rounded-lg bg-encre-200;
+  animation: nova-respire 1.6s ease-in-out infinite;
+}
+
+/* Le contenu d'une boutique publique utilise la couleur choisie par le
+   commerçant, injectée en variable CSS sur un conteneur. Aucune classe
+   Tailwind ne peut le faire : la valeur n'est connue qu'à l'exécution. */
+.boutique {
+  --couleur: var(--color-vert-700);
+}
+.boutique .fond-marque { background-color: var(--couleur); }
+.boutique .texte-marque { color: var(--couleur); }
+.boutique .bordure-marque { border-color: var(--couleur); }
+.boutique .btn-marque {
+  background-color: var(--couleur);
+  color: #fff;
+}
+.boutique .btn-marque:hover { filter: brightness(0.92); }
+
+/* Impression : les navigations et les boutons ne servent à rien sur papier. */
+@media print {
+  .sans-impression { display: none !important; }
+  body { background: #fff; }
+}
