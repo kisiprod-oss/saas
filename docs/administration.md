@@ -55,7 +55,7 @@ correspondante dans la table `admins`.
 |---|---|
 | **Super administrateur** | Tout, y compris l'équipe. Vient de `ADMIN_EMAILS`. |
 | **Support** | Agences (lecture), utilisateurs, notes internes, **tickets d'assistance**, journal. Pas la facturation, pas la modération. |
-| **Modérateur** | Annonces, artisans, journal. Pas les utilisateurs, pas la facturation, pas les tickets. |
+| **Modérateur** | Annonces, artisans, **signalements**, journal. Pas les utilisateurs, pas la facturation, pas les tickets. |
 | **Responsable facturation** | Abonnements, règlements, exports. Pas les utilisateurs, pas la modération. |
 
 Les trois derniers s'accordent depuis **Équipe**. Le rôle super administrateur
@@ -71,8 +71,7 @@ l'adresse à la main ne sert à rien.
 
 **Tableau de bord.** Les chiffres viennent de la base, jamais d'une estimation.
 Sous chaque nombre, une phrase dit ce qu'il compte exactement. Quand une
-fonction n'existe pas encore — les signalements, à ce jour — l'écran l'écrit
-plutôt que d'afficher zéro. Les abonnements réglés sont le revenu de **Sen
+fonction n'existe pas encore, l'écran l'écrit plutôt que d'afficher zéro. Les abonnements réglés sont le revenu de **Sen
 Gestion** ; les loyers appartiennent aux agences et n'apparaissent jamais comme
 un revenu de la plateforme.
 
@@ -105,6 +104,27 @@ corriger. Chaque décision est datée et signée.
 **et** un questionnaire métier réussi, et la date comme le nom de qui l'a posé
 restent enregistrés. Les pièces justificatives ne sont servies qu'aux personnes
 habilitées.
+
+**Signalements.** Ce que les visiteurs de la vitrine trouvent anormal. Le lien
+« La signaler » est replié au bas de chaque annonce publique&nbsp;: c'est un
+recours, pas une invitation. Personne n'a besoin de compte pour l'utiliser — une
+annonce trompeuse est vue par des gens qui ne sont clients de personne. Le
+garde-fou est ailleurs&nbsp;: **huit dépôts par appareil et par quart d'heure**,
+comptés dans la table qui sert déjà contre les essais de mots de passe, et qui
+se purge seule au bout d'un jour. La table des signalements, elle, ne garde
+aucune adresse IP.
+
+**Un signalement ne retire jamais rien tout seul.** Il ouvre un dossier, et un
+modérateur tranche&nbsp;: *retenu* ou *classé sans suite*, motif écrit
+obligatoire. Sans cela, dix messages coordonnés suffiraient à faire tomber
+l'annonce d'un concurrent.
+
+Trancher le signalement et retirer l'annonce restent **deux gestes séparés** :
+le premier dit « la personne avait raison », le second se fait en modération et
+exige son propre motif. La fiche relie les deux d'un lien, le code ne les
+confond pas. Quand plusieurs signalements visent le même contenu, la fiche le
+dit&nbsp;: un seul avis n'est pas une preuve, plusieurs venus séparément
+méritent un regard.
 
 **Support.** Les demandes d'assistance déposées par les agences depuis leur
 espace (menu *Support*). La liste est filtrable par statut, priorité, catégorie

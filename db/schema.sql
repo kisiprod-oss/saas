@@ -749,3 +749,36 @@ CREATE TABLE IF NOT EXISTS ticket_messages (
   cree_le     TEXT NOT NULL DEFAULT (datetime('now'))
 );
 CREATE INDEX IF NOT EXISTS idx_ticket_messages ON ticket_messages(ticket_id, cree_le);
+
+-- ================================================================
+--                        SIGNALEMENTS
+-- ================================================================
+
+/*
+ * Les contenus signales par les visiteurs de la vitrine.
+ *
+ * `cible_type` garde la table generique : les annonces aujourd'hui, les
+ * fiches d'artisans demain, sans nouvelle migration.
+ *
+ * CETTE TABLE NE GARDE AUCUNE ADRESSE IP. Le garde-fou anti-abus compte les
+ * depots par machine en reutilisant `tentatives_connexion`, qui retient une
+ * cle au plus 24 h et se purge seule. L'adresse ne rejoint donc jamais le
+ * signalement lui-meme : personne ne peut la retrouver en lisant un dossier,
+ * des annees plus tard. Le contact est facultatif, et c'est la personne qui
+ * choisit de l'ecrire.
+ */
+CREATE TABLE IF NOT EXISTS signalements (
+  id             INTEGER PRIMARY KEY AUTOINCREMENT,
+  cible_type     TEXT NOT NULL,                  -- bien | artisan
+  cible_id       INTEGER NOT NULL,
+  motif          TEXT NOT NULL,                  -- trompeur | indisponible | arnaque | coordonnees | choquant | autre
+  description    TEXT,
+  contact        TEXT,                           -- facultatif : pour pouvoir revenir vers la personne
+  statut         TEXT NOT NULL DEFAULT 'nouveau', -- nouveau | retenu | classe
+  motif_decision TEXT,
+  traite_par     TEXT,
+  traite_le      TEXT,
+  cree_le        TEXT NOT NULL DEFAULT (datetime('now'))
+);
+CREATE INDEX IF NOT EXISTS idx_signalements_statut ON signalements(statut, cree_le DESC);
+CREATE INDEX IF NOT EXISTS idx_signalements_cible  ON signalements(cible_type, cible_id);

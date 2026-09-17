@@ -124,10 +124,17 @@ export function indicateurs(jours: number): Indicateur[] {
   });
 
   // --- Ce qui n'existe pas encore : on le dit, on n'affiche pas zero ---
+  const signalementsExistent = tableExiste("signalements");
   liste.push({
     cle: "signalements", libelle: "Signalements",
-    definition: "Contenus signalés par les visiteurs.",
-    valeur: null, disponible: tableExiste("signalements"),
+    definition: "Contenus signalés par les visiteurs, en attente d'examen.",
+    valeur: signalementsExistent
+      ? compte("SELECT COUNT(*) AS n FROM signalements WHERE statut = 'nouveau'")
+      : null,
+    detail: signalementsExistent
+      ? `${compte("SELECT COUNT(*) AS n FROM signalements WHERE statut = 'retenu'")} retenu(s)`
+      : undefined,
+    disponible: signalementsExistent, href: "/admin/signalements",
   });
   const ticketsExistent = tableExiste("tickets");
   liste.push({

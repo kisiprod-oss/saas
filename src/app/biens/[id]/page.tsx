@@ -3,7 +3,8 @@ import { notFound } from "next/navigation";
 import { lireBienPublic, prochainsSejours } from "@/lib/requetes";
 import { aujourdhui, fcfa, periodeSejour, telephoneBrut, telephoneFr } from "@/lib/format";
 import { libelle, TYPES_BIEN } from "@/lib/constantes";
-import { actionEnvoyerDemande } from "@/lib/actions";
+import { actionEnvoyerDemande, actionSignaler } from "@/lib/actions";
+import { MOTIFS as MOTIFS_SIGNALEMENT } from "@/lib/signalements";
 import { toutesPhotos } from "@/components/carte-bien";
 import { EntetePublic, PiedPublic } from "@/components/entete-public";
 import { Alerte } from "@/components/ui";
@@ -93,6 +94,7 @@ export default async function PageBienPublic({
   const equipements = (bien.equipements ?? "").split(",").map((e) => e.trim()).filter(Boolean);
   const caution = bien.loyer * bien.caution_mois;
   const envoye = lire(requete, "envoye") === "1";
+  const signale = lire(requete, "signale") === "1";
   const erreur = lire(requete, "erreur");
 
   const courteDuree = bien.courte_duree === 1;
@@ -372,6 +374,53 @@ export default async function PageBienPublic({
                   />
                   <button type="submit" className="btn-primaire w-full">Envoyer ma demande</button>
                 </form>
+              </div>
+
+              {/* Signalement. Replie par defaut : c'est un recours, pas une
+                  invitation. Ouvert en <details>, il fonctionne sans
+                  JavaScript et reste atteignable au clavier. */}
+              <div className="carte p-5">
+                {signale ? (
+                  <Alerte type="succes">
+                    Merci. Votre signalement est parti à l&apos;équipe Sen Gestion, qui
+                    l&apos;examine. L&apos;annonce reste en ligne le temps de la vérification.
+                  </Alerte>
+                ) : (
+                  <details className="group">
+                    <summary className="cursor-pointer list-none text-sm font-medium text-slate-600 hover:text-brand-700">
+                      Un problème avec cette annonce ? La signaler
+                    </summary>
+                    <p className="mt-3 text-xs leading-relaxed text-slate-500">
+                      Votre signalement part à Sen Gestion, pas à l&apos;agence. Il est
+                      examiné par une personne&nbsp;: rien n&apos;est retiré automatiquement.
+                    </p>
+                    <form action={actionSignaler} className="mt-3 space-y-3">
+                      <input type="hidden" name="cible_type" value="bien" />
+                      <input type="hidden" name="cible_id" value={bien.id} />
+                      <div>
+                        <label className="sr-only" htmlFor="motif-signalement">Motif</label>
+                        <select id="motif-signalement" name="motif" required className="champ">
+                          {MOTIFS_SIGNALEMENT.map((m) => (
+                            <option key={m.valeur} value={m.valeur}>{m.libelle}</option>
+                          ))}
+                        </select>
+                      </div>
+                      <textarea
+                        name="description" rows={3} maxLength={2000}
+                        placeholder="Ce que vous avez constaté (facultatif)"
+                        className="champ"
+                      />
+                      <input
+                        name="contact" maxLength={200}
+                        placeholder="Votre e-mail ou téléphone (facultatif)"
+                        className="champ"
+                      />
+                      <button type="submit" className="btn-secondaire w-full">
+                        Envoyer le signalement
+                      </button>
+                    </form>
+                  </details>
+                )}
               </div>
             </div>
           </aside>

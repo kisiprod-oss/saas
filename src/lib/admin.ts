@@ -64,6 +64,7 @@ export type Permission =
   | "utilisateurs.lire" | "utilisateurs.ecrire"
   | "annonces.lire" | "annonces.moderer"
   | "artisans.lire" | "artisans.moderer"
+  | "signalements.lire" | "signalements.traiter"
   | "facturation.lire"
   | "support.lire" | "support.repondre"
   | "journal.lire"
@@ -78,6 +79,7 @@ const PERMISSIONS: Record<RoleAdmin, Permission[]> = {
     "utilisateurs.lire", "utilisateurs.ecrire",
     "annonces.lire", "annonces.moderer",
     "artisans.lire", "artisans.moderer",
+    "signalements.lire", "signalements.traiter",
     "facturation.lire",
     "support.lire", "support.repondre",
     "journal.lire",
@@ -97,12 +99,14 @@ const PERMISSIONS: Record<RoleAdmin, Permission[]> = {
     "support.lire", "support.repondre",
     "journal.lire",
   ],
-  // Le moderateur touche au contenu public, a rien d'autre.
+  // Le moderateur touche au contenu public, a rien d'autre. Les signalements
+  // portent justement sur ce contenu : ils sont son travail.
   moderateur: [
     "tableau.lire",
     "agences.lire",
     "annonces.lire", "annonces.moderer",
     "artisans.lire", "artisans.moderer",
+    "signalements.lire", "signalements.traiter",
     "journal.lire",
   ],
   facturation: [

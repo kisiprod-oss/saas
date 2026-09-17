@@ -56,6 +56,9 @@ import {
   viderBanque, type SessionQuiz,
 } from "./quiz";
 import { ajouterMessage, estCategorie, ouvrirTicket, ticketDeLAgence } from "./support";
+import {
+  enregistrerSignalement, estCible, estMotif as estMotifSignalement,
+} from "./signalements";
 import crypto from "node:crypto";
 
 // ------------------------------------------------------------- utilitaires
@@ -826,6 +829,55 @@ export async function actionEncaisserAcompte(fd: FormData) {
   revalidatePath("/dashboard/paiements");
   revalidatePath("/dashboard/relances");
   redirect(`/dashboard/locataires/${locataireId}?ok=1`);
+}
+
+// ------------------------------------------------------------ signalements
+
+/**
+ * Un visiteur signale un contenu de la vitrine. Sans compte, a dessein :
+ * une annonce trompeuse est vue par des gens qui ne sont clients de
+ * personne, et leur demander de s'inscrire reviendrait a ne jamais rien
+ * apprendre.
+ *
+ * Le garde-fou est donc ailleurs : huit depots par machine et par quart
+ * d'heure, comptes dans la meme table que les tentatives de connexion —
+ * qui se purge seule au bout d'un jour. L'adresse ne rejoint jamais le
+ * signalement enregistre.
+ *
+ * Deposer ne retire rien : un moderateur decide ensuite. Sinon, dix
+ * messages coordonnes suffiraient a faire tomber l'annonce d'un concurrent.
+ */
+export async function actionSignaler(fd: FormData) {
+  const cibleType = txt(fd, "cible_type");
+  const cibleId = entier(fd, "cible_id");
+  const motif = txt(fd, "motif");
+  const retourA = cibleType === "bien" ? `/biens/${cibleId}` : "/professionnels";
+
+  if (!estCible(cibleType)) erreur(retourA, "Contenu inconnu.");
+  if (!estMotifSignalement(motif)) erreur(retourA, "Choisissez un motif de signalement.");
+
+  // La cible doit exister ET etre publique : on ne signale pas ce qui n'est
+  // pas en ligne, et cela evite de sonder la base par ce formulaire.
+  const cible = cibleType === "bien"
+    ? un<{ id: number }>("SELECT id FROM biens WHERE id = ? AND publie = 1", cibleId)
+    : un<{ id: number }>("SELECT id FROM artisans WHERE id = ? AND publie = 1", cibleId);
+  if (!cible) erreur(retourA, "Ce contenu n'est plus en ligne.");
+
+  const origine = await adresseIp();
+  const cle = origine ? `signalement:${origine}` : null;
+  if (cle && tropDeTentatives(cle)) {
+    erreur(retourA, `Trop de signalements envoyés depuis cet appareil. Réessayez dans ${MINUTES_BLOCAGE} minutes.`);
+  }
+  if (cle) noterTentative(cle, false);
+
+  enregistrerSignalement({
+    cibleType, cibleId, motif,
+    description: vide(txt(fd, "description").slice(0, 2000)),
+    contact: vide(txt(fd, "contact").slice(0, 200)),
+  });
+
+  revalidatePath("/admin/signalements");
+  redirect(`${retourA}?signale=1`);
 }
 
 // ---------------------------------------------------------------- demandes

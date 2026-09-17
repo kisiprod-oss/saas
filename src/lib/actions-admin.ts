@@ -18,6 +18,7 @@ import { adresseDuSite, envoyerEmail } from "./email";
 import {
   ajouterMessage, estPriorite, estStatut, ticketPourEquipe,
 } from "./support";
+import { signalement as lireSignalement } from "./signalements";
 
 /**
  * Les gestes de l'espace d'administration.
@@ -383,6 +384,52 @@ export async function actionVerifierArtisan(fd: FormData) {
   ecrire("UPDATE artisans SET verifie_le = datetime('now'), verifie_par = ? WHERE id = ?", admin.email, id);
   journaliser(admin, { action: "artisan.badge_attribue", cible_type: "artisan", cible_id: id, details: a.nom });
   retour("/admin/artisans", { ok: "Badge « Vérifié » attribué." });
+}
+
+/* ==================================================================
+   Signalements
+   ================================================================== */
+
+/**
+ * Le moderateur tranche un signalement : retenu, ou classe sans suite.
+ *
+ * CE GESTE NE TOUCHE PAS AU CONTENU SIGNALE. Retenir un signalement dit
+ * « la personne avait raison » ; retirer l'annonce est une autre decision,
+ * qui se prend en moderation et exige son propre motif. Les confondre
+ * ferait disparaitre une annonce sans qu'aucun ecran ne dise pourquoi.
+ */
+export async function actionTraiterSignalement(fd: FormData) {
+  const { admin } = await exigerAdmin("signalements.traiter");
+  const id = nb(fd, "id");
+  const decision = txt(fd, "decision");
+  const motif = txt(fd, "motif");
+
+  const s = lireSignalement(id);
+  if (!s) redirect("/admin/signalements");
+  if (decision !== "retenu" && decision !== "classe") {
+    retour(`/admin/signalements/${id}`, { erreur: "Décision inconnue." });
+  }
+  // Un classement sans explication laisse le suivant devant la meme question.
+  if (motif.length < 10) {
+    retour(`/admin/signalements/${id}`, { erreur: "Expliquez votre décision en dix caractères au minimum." });
+  }
+
+  ecrire(
+    `UPDATE signalements SET statut = ?, motif_decision = ?,
+            traite_par = ?, traite_le = datetime('now') WHERE id = ?`,
+    decision, motif, admin.email, id,
+  );
+  journaliser(admin, {
+    action: decision === "retenu" ? "signalement.retenu" : "signalement.classe",
+    cible_type: "signalement", cible_id: id, motif,
+    details: `${s.cible_type} n°${s.cible_id}${s.cible_titre ? ` · ${s.cible_titre}` : ""}`,
+  });
+  revalidatePath("/admin/signalements");
+  retour(`/admin/signalements/${id}`, {
+    ok: decision === "retenu"
+      ? "Signalement retenu. Le contenu reste en ligne tant qu'il n'est pas modéré."
+      : "Signalement classé sans suite.",
+  });
 }
 
 /* ==================================================================
